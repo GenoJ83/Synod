@@ -29,12 +29,31 @@ const FileUploader = ({ onUploadSuccess }) => {
     };
 
     const handleUpload = async () => {
+        if (files.length === 0) return;
+
         setUploading(true);
-        // Simulate upload
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setUploading(false);
-        onUploadSuccess("Successfully synthesized knowledge from uploaded materials.");
-        setFiles([]);
+        try {
+            const formData = new FormData();
+            formData.append('file', files[0].file);
+
+            const response = await fetch('http://localhost:8000/analyze-file', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+
+            const data = await response.json();
+            onUploadSuccess(data);
+            setFiles([]);
+        } catch (error) {
+            console.error('Upload error:', error);
+            // You might want to add an error state/toast here
+        } finally {
+            setUploading(false);
+        }
     };
 
     return (
