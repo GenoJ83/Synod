@@ -1,5 +1,6 @@
 try:
-    from transformers import pipeline
+    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+    import torch
     HAS_TRANSFORMERS = True
 except ImportError:
     HAS_TRANSFORMERS = False
@@ -7,18 +8,25 @@ except ImportError:
 from typing import List, Optional
 
 class Summarizer:
-    def __init__(self, model_name: str = "facebook/bart-large-cnn"):
+    def __init__(self, model_name: str = "sshleifer/distilbart-cnn-12-6"):
         """
-        Initializes the summarization pipeline.
-        Default model is BART, which is excellent for abstractive summarization.
+        Initializes the summarization model and tokenizer.
+        Uses distilbart for a good balance of speed and quality.
         """
         self.has_transformers = HAS_TRANSFORMERS
         if HAS_TRANSFORMERS:
-            print(f"Loading summarization model: {model_name}...")
-            self.summarizer = pipeline("summarization", model=model_name)
+            try:
+                print(f"Loading summarization model: {model_name}...")
+                self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+                self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+                self.device = "cuda" if torch.cuda.is_available() else "cpu"
+                self.model.to(self.device)
+                print(f"Model loaded on {self.device}.")
+            except Exception as e:
+                print(f"Error loading model: {e}. Falling back to MOCK mode.")
+                self.has_transformers = False
         else:
             print("Transformers not found. Running in MOCK mode.")
-            self.summarizer = None
     
     def summarize(self, text: str, max_length: int = 150, min_length: int = 40) -> str:
         """
@@ -32,17 +40,13 @@ class Summarizer:
             sentences = text.split(". ")
             return ". ".join(sentences[:2]) + " (Mock Summary)"
 
-        # Split text into chunks if it's too long (transformers have a token limit)
-        # For simplicity, we'll assume the input is within limits for now or should be pre-chunked.
-        summary = self.summarizer(text, max_length=max_length, min_length=min_length, do_sample=False)
-        return summary[0]['summary_text']
-
-    def summarize_batch(self, texts: List[str]) -> List[str]:
-        """
-        Summarizes a list of text chunks.
-        """
-        summaries = self.summarizer(texts, max_length=150, min_length=40, do_sample=False)
-        return [s['summary_text'] for s in summaries]
+        try:
+            inputs = self.tokenizer([text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+            summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=max_length, min_length=min_length, early_stopping=True)
+            return self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+        except Exception as e:
+            print(f"Summary error: {e}")
+            return text[:200] + "..."
 
 if __name__ == "__main__":
     # Quick test

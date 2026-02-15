@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 # Initialize NLP modules
-summarizer = Summarizer(model_name="facebook/bart-large-cnn")
+summarizer = Summarizer(model_name="sshleifer/distilbart-cnn-12-6")
 extractor = ConceptExtractor()
 quiz_gen = QuizGenerator()
 file_extractor = ExtractorService()
