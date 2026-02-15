@@ -1,7 +1,7 @@
-# UCU Conclave: Intelligent Lecture and Course Content Assistant
+# Synod: Intelligent Lecture and Course Content Assistant
 
 ## Project Overview
-**UCU Conclave** is an advanced NLP-based assistant designed to streamline the analysis of university lecture materials. The system helps both lecturers and students by automatically extracting key concepts, generating concise summaries, and producing high-quality revision questions from slides and documents.
+**Synod** is an advanced NLP-based assistant designed to streamline the analysis of university lecture materials. The system helps both lecturers and students by automatically extracting key concepts, generating concise summaries, and producing high-quality revision questions from slides and documents.
 
 ## Group Details
 - **Group Members:** Geno Joshua, Mokili Promise Pierre, Pouch Mabor Makuei, Calvin Diego
@@ -41,7 +41,7 @@
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd "Lecture Assistant"
+   cd "Synod"
    ```
 2. Install dependencies:
    ```bash
