@@ -4,17 +4,20 @@ from pydantic import BaseModel
 from typing import List, Dict
 import uvicorn
 import os
+import shutil
+from pathlib import Path
 
 from app.nlp.summarizer import Summarizer
 from app.nlp.extractor import ConceptExtractor
 from app.nlp.quiz_gen import QuizGenerator
+from app.ingestion.extractor_service import ExtractorService
 
 app = FastAPI(title="Synod API")
 
 # Enable CORS for React development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify the actual origin
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,6 +27,10 @@ app.add_middleware(
 summarizer = Summarizer(model_name="t5-small")
 extractor = ConceptExtractor()
 quiz_gen = QuizGenerator()
+file_extractor = ExtractorService()
+
+UPLOAD_DIR = Path("data/uploads")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 class ProcessRequest(BaseModel):
     text: str
@@ -33,6 +40,25 @@ class ProcessResponse(BaseModel):
     concepts: List[str]
     quiz: Dict
 
+def process_logic(text: str):
+    if not text:
+        raise HTTPException(status_code=400, detail="Text is required")
+    
+    summary = summarizer.summarize(text)
+    concepts = extractor.extract_concepts(text)
+    
+    fibs = quiz_gen.generate_fill_in_the_blanks(summary, concepts)
+    mcqs = quiz_gen.generate_mcqs(summary, concepts, concepts)
+    
+    return {
+        "summary": summary,
+        "concepts": concepts,
+        "quiz": {
+            "fill_in_the_blanks": fibs,
+            "mcqs": mcqs
+        }
+    }
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to Synod API"}
@@ -40,26 +66,26 @@ async def root():
 @app.post("/analyze", response_model=ProcessResponse)
 async def analyze_text(request: ProcessRequest):
     try:
-        text = request.text
-        if not text:
-            raise HTTPException(status_code=400, detail="Text is required")
-        
-        summary = summarizer.summarize(text)
-        concepts = extractor.extract_concepts(text)
-        
-        # For simplicity, we'll generate both types of quiz questions
-        fibs = quiz_gen.generate_fill_in_the_blanks(summary, concepts)
-        mcqs = quiz_gen.generate_mcqs(summary, concepts, concepts)
-        
-        return {
-            "summary": summary,
-            "concepts": concepts,
-            "quiz": {
-                "fill_in_the_blanks": fibs,
-                "mcqs": mcqs
-            }
-        }
+        return process_logic(request.text)
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/analyze-file", response_model=ProcessResponse)
+async def analyze_file(file: UploadFile = File(...)):
+    try:
+        file_location = UPLOAD_DIR / file.filename
+        with file_location.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        text = file_extractor.extract_text(str(file_location))
+        
+        # Cleanup uploaded file after extraction
+        os.remove(file_location)
+        
+        return process_logic(text)
+    except Exception as e:
+        if 'file_location' in locals() and file_location.exists():
+            os.remove(file_location)
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
