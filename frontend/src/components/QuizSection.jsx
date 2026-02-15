@@ -72,149 +72,96 @@ const QuizSection = ({ quiz, onReset }) => {
                     Begin Quiz
                 </button>
             </div>
-        );
-    }
+        if (currentQuestion < quizData.length - 1) {
+            setCurrentQuestion(prev => prev + 1);
+            setSelectedAnswer(null);
+        } else {
+            setShowResults(true);
+        }
+    };
 
-    if (currentStep === 3) {
-        const percentage = Math.round((score / totalQuestions) * 100);
+    const resetQuiz = () => {
+        setCurrentQuestion(0);
+        setSelectedAnswer(null);
+        setShowResults(false);
+        setScore(0);
+    };
+
+    if (showResults) {
         return (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 text-center shadow-xl max-w-2xl mx-auto animate-fade-in">
-                <div className="relative w-32 h-32 mx-auto mb-8">
-                    <svg className="w-full h-full transform -rotate-90">
-                        <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-zinc-800" />
-                        <circle
-                            cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent"
-                            strokeDasharray={364.4}
-                            strokeDashoffset={364.4 - (percentage / 100) * 364.4}
-                            className="text-zinc-100 transition-all duration-1000 ease-out"
-                        />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center text-2xl font-black text-white">
-                        {percentage}%
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="pro-card p-12 text-center"
+            >
+                <div className="w-20 h-20 bg-blue-500/10 text-blue-500 rounded-[2rem] flex items-center justify-center mx-auto mb-8">
+                    <Trophy className="w-10 h-10" />
+                </div>
+                <h3 className="text-3xl font-bold mb-2">Synthesis Complete</h3>
+                <p className="text-app-muted mb-8 italic">"You've mastered the core concepts of this lecture."</p>
+
+                <div className="flex justify-center gap-12 mb-12">
+                    <div>
+                        <p className="text-[10px] font-bold text-app-muted uppercase tracking-widest mb-1">Score</p>
+                        <p className="text-4xl font-bold text-blue-500">{Math.round((score / quizData.length) * 100)}%</p>
+                    </div>
+                    <div className="w-[1px] bg-app-border" />
+                    <div>
+                        <p className="text-[10px] font-bold text-app-muted uppercase tracking-widest mb-1">Correct</p>
+                        <p className="text-4xl font-bold">{score}/{quizData.length}</p>
                     </div>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Session Complete</h3>
-                <p className="text-zinc-500 mb-10 text-lg">You correctly answered {score} of {totalQuestions} questions.</p>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="flex gap-4">
                     <button
-                        onClick={onReset}
-                        className="py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                        onClick={resetQuiz}
+                        className="flex-1 py-4 bg-app-card border border-app-border rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-app-bg transition-all"
                     >
-                        <RotateCcw className="w-4 h-4" /> Reset
+                        <RefreshCw className="w-4 h-4" />
+                        Retake Assessment
                     </button>
-                    <button
-                        className="py-3 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-xl transition-all"
-                        onClick={() => {
-                            setCurrentStep(0);
-                            setScore(0);
-                            setMcqIndex(0);
-                            setFibIndex(0);
-                        }}
-                    >
-                        Retake
+                    <button className="flex-1 py-4 bg-app-fg text-app-bg rounded-2xl font-bold shadow-xl hover:opacity-90 transition-all">
+                        Download Report
                     </button>
                 </div>
-            </div>
+            </motion.div>
         );
     }
 
-    const currentQuestion = currentStep === 1 ? mcqs[mcqIndex] : fibs[fibIndex];
-    const progress = ((mcqIndex + (currentStep === 2 ? mcqs.length : 0) + fibIndex) / totalQuestions) * 100;
+    const question = quizData[currentQuestion];
 
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 md:p-12 shadow-xl max-w-3xl mx-auto relative overflow-hidden animate-fade-in">
-            <div className="absolute top-0 left-0 w-full h-1 bg-zinc-800">
-                <div className="h-full bg-zinc-100 transition-all duration-500" style={{ width: `${progress}%` }} />
-            </div>
-
-            <div className="flex justify-between items-center mb-10">
-                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Q {mcqIndex + (currentStep === 2 ? mcqs.length : 0) + fibIndex + 1} / {totalQuestions}</span>
-                <span className="px-2 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
-                    {currentStep === 1 ? 'Multiple Choice' : 'Critical Recall'}
-                </span>
-            </div>
-
-            <h4 className="text-xl md:text-2xl font-bold text-zinc-100 mb-10 leading-relaxed">
-                {currentQuestion.question}
-            </h4>
-
-            <div className="space-y-3">
-                {currentStep === 1 ? (
-                    mcqs[mcqIndex].options.map((option, i) => (
-                        <button
-                            key={i}
-                            onClick={() => handleMcqSubmit(option)}
-                            className={cn(
-                                "w-full p-4 rounded-xl border text-left transition-all text-sm font-medium",
-                                selectedOption === option
-                                    ? isCorrect ? 'bg-emerald-950/20 border-emerald-500 text-emerald-500' : 'bg-red-950/20 border-red-500 text-red-500'
-                                    : showFeedback && option === currentQuestion.answer
-                                        ? 'bg-emerald-950/20 border-emerald-500 text-emerald-500'
-                                        : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-600'
-                            )}
-                            disabled={showFeedback}
-                        >
-                            <div className="flex items-center justify-between">
-                                <span>{option}</span>
-                                {showFeedback && option === currentQuestion.answer && <CheckCircle2 className="w-4 h-4" />}
-                                {showFeedback && selectedOption === option && !isCorrect && <XCircle className="w-4 h-4" />}
-                            </div>
-                        </button>
-                    ))
-                ) : (
-                    <div className="space-y-4">
-                        <input
-                            type="text"
-                            autoFocus
-                            value={fibAnswer}
-                            onChange={(e) => setFibAnswer(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleFibSubmit()}
-                            placeholder="Identify the concept..."
-                            className={cn(
-                                "w-full p-4 rounded-xl bg-zinc-950 border transition-all outline-none text-sm font-medium",
-                                showFeedback
-                                    ? isCorrect ? 'border-emerald-500 text-emerald-500' : 'border-red-500 text-red-500'
-                                    : 'border-zinc-800 text-zinc-100 focus:border-zinc-500'
-                            )}
-                            disabled={showFeedback}
-                        />
-                        {!showFeedback && (
-                            <button
-                                onClick={handleFibSubmit}
-                                className="w-full bg-zinc-100 text-zinc-950 py-3 rounded-lg font-bold text-sm"
-                            >
-                                Submit
-                            </button>
-                        )}
+        <div className="space-y-8">
+            <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-app-card border border-app-border rounded-lg flex items-center justify-center text-app-muted">
+                        <HelpCircle className="w-4 h-4" />
                     </div>
-                )}
-            </div>
-
-            <AnimatePresence>
-                {showFeedback && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-10 pt-8 border-t border-zinc-800/50 flex items-center justify-between"
-                    >
-                        <div className={cn(
+                    <div>
+                        <h3 className="text-xs font-bold uppercase tracking-widest">Knowledge Check</h3>
+                        <p className="text-[10px] font-bold text-app-muted uppercase tracking-tighter">Question {currentQuestion + 1} of {quizData.length}</p>
+                    </div>
+                </div>
+                <div className="flex gap-1">
+                    {quizData.map((_, i) => (
+                        <div
+                            key={i}
                             "flex items-center gap-3 font-bold text-xs uppercase tracking-widest",
-                            isCorrect ? 'text-emerald-500' : 'text-red-500'
-                        )}>
-                            {isCorrect ? <Award className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                            <span>{isCorrect ? 'Correct Perception' : `Reference Answer: ${currentQuestion.answer}`}</span>
-                        </div>
-                        <button
-                            onClick={nextQuestion}
-                            className="bg-zinc-800 hover:bg-zinc-700 p-2 rounded-lg transition-colors"
-                        >
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
-                    </motion.div>
+                        isCorrect ? 'text-emerald-500' : 'text-red-500'
+                    )}>
+                    {isCorrect ? <Award className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                    <span>{isCorrect ? 'Correct Perception' : `Reference Answer: ${currentQuestion.answer}`}</span>
+                </div>
+                <button
+                    onClick={nextQuestion}
+                    className="bg-zinc-800 hover:bg-zinc-700 p-2 rounded-lg transition-colors"
+                >
+                    <ChevronRight className="w-5 h-5" />
+                </button>
+            </motion.div>
                 )}
-            </AnimatePresence>
-        </div>
+        </AnimatePresence>
+        </div >
     );
 };
 
