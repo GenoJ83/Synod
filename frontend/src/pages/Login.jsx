@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Brain, Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const [email, setEmail] = useState('');
