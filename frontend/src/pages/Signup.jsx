@@ -1,151 +1,159 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Brain, Mail, Lock, User, ChevronRight, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Brain, Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const Signup = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
 
     const handleSignup = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError('');
-
-        // Simulated signup
+        // Simulate auth
         setTimeout(() => {
-            if (name && email && password) {
-                localStorage.setItem('synod_user', JSON.stringify({ name, email }));
-                navigate('/dashboard');
-            } else {
-                setError('Please fill in all fields correctly.');
-            }
+            localStorage.setItem('synod_user', JSON.stringify({ email, name }));
             setLoading(false);
-        }, 1200);
+            navigate('/dashboard');
+        }, 1500);
     };
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex flex-col justify-center items-center px-6 py-12">
+        <div className="min-h-screen bg-app-bg text-app-fg font-sans selection:bg-blue-500/30 transition-colors duration-300 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+            {/* Background Decoration */}
+            <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-purple-500/10 blur-[120px] rounded-full pointer-events-none" />
+
+            {/* Header / Nav */}
+            <div className="absolute top-8 left-8 right-8 flex justify-between items-center max-w-[1600px] mx-auto w-full">
+                <button
+                    onClick={() => navigate('/')}
+                    className="flex items-center gap-2 text-app-muted hover:text-app-fg transition-colors group"
+                >
+                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                    <span className="text-sm font-bold uppercase tracking-widest">Back</span>
+                </button>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2 text-app-muted hover:text-app-fg rounded-lg transition-colors border border-app-border bg-app-bg/50 backdrop-blur-sm"
+                        title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    >
+                        {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    </button>
+                    <span className="text-sm text-app-muted">
+                        Already have an account? <button onClick={() => navigate('/login')} className="text-blue-500 font-bold hover:underline">Log in</button>
+                    </span>
+                </div>
+            </div>
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md"
+                className="w-full max-w-md relative z-10 py-12"
             >
-                <div className="text-center mb-10">
-                    <div className="inline-flex items-center gap-3 mb-6">
-                        <div className="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center">
-                            <Brain className="w-5 h-5 text-zinc-950" />
-                        </div>
-                        <span className="text-xl font-bold tracking-tight">Synod</span>
+                <div className="flex flex-col items-center mb-10">
+                    <div className="w-16 h-16 bg-app-fg rounded-[2rem] flex items-center justify-center mb-6 shadow-2xl">
+                        <Brain className="w-8 h-8 text-app-bg" />
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight mb-2">Create Account</h1>
-                    <p className="text-zinc-500 font-medium">Join thousands of students saving time.</p>
+                    <p className="text-app-muted text-center font-medium">Join 5,000+ students using Synod.</p>
                 </div>
 
-                <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-8 shadow-xl">
+                <div className="pro-card p-8 bg-app-bg/40 backdrop-blur-xl border border-app-border">
                     <form onSubmit={handleSignup} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest px-1">Full Name</label>
+                            <label className="text-[10px] font-bold text-app-muted uppercase tracking-widest ml-1">Full Name</label>
                             <div className="relative group">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-zinc-100 transition-colors" />
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-app-muted group-focus-within:text-blue-500 transition-colors" />
                                 <input
                                     type="text"
                                     required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    placeholder="Geno Joshua"
-                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-zinc-600 transition-all font-medium"
+                                    placeholder="Alex Johnson"
+                                    className="w-full pl-10 pr-4 py-3 pro-input text-sm"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest px-1">Email Address</label>
+                            <label className="text-[10px] font-bold text-app-muted uppercase tracking-widest ml-1">Institutional Email</label>
                             <div className="relative group">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-zinc-100 transition-colors" />
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-app-muted group-focus-within:text-blue-500 transition-colors" />
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="name@university.edu"
-                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-zinc-600 transition-all font-medium"
+                                    placeholder="alex@university.edu"
+                                    className="w-full pl-10 pr-4 py-3 pro-input text-sm"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest px-1">Password</label>
+                            <label className="text-[10px] font-bold text-app-muted uppercase tracking-widest ml-1">Password</label>
                             <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-zinc-100 transition-colors" />
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-app-muted group-focus-within:text-blue-500 transition-colors" />
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Create a strong password"
-                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-zinc-600 transition-all font-medium"
+                                    className="w-full pl-10 pr-12 py-3 pro-input text-sm"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-app-muted hover:text-app-fg"
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 mt-2 px-1">
+                                <div className="h-1 bg-blue-500 rounded-full" />
+                                <div className="h-1 bg-blue-500 rounded-full" />
+                                <div className="h-1 bg-app-border rounded-full" />
                             </div>
                         </div>
 
-                        <div className="bg-zinc-950/50 border border-zinc-800/50 rounded-xl p-4 space-y-3">
-                            {[
-                                { label: 'Summarize Lectures', active: true },
-                                { label: 'Generate Assessments', active: true },
-                                { label: 'Organize History', active: true }
-                            ].map((item, i) => (
-                                <div key={i} className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                                    {item.label}
-                                </div>
-                            ))}
-                        </div>
-
-                        {error && (
-                            <div className="p-3 bg-red-950/20 border border-red-900/50 rounded-lg text-red-500 text-xs font-bold text-center">
-                                {error}
+                        <div className="flex items-start gap-3 px-1">
+                            <div className="mt-1">
+                                <CheckCircle2 className="w-4 h-4 text-blue-500" />
                             </div>
-                        )}
+                            <p className="text-[10px] text-app-muted leading-relaxed">
+                                I agree to the <span className="text-app-fg font-bold cursor-pointer">Terms of Service</span> and acknowledge the <span className="text-app-fg font-bold cursor-pointer">Privacy Policy</span>.
+                            </p>
+                        </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-zinc-100 hover:bg-white text-zinc-950 py-4 rounded-xl font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="w-full bg-app-fg text-app-bg py-4 rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group shadow-xl"
                         >
                             {loading ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Creating Account...
-                                </>
+                                <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                                 <>
-                                    Start Learning Free
-                                    <ChevronRight className="w-4 h-4" />
+                                    Create Account
+                                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
                         </button>
                     </form>
-
-                    <div className="mt-8 pt-8 border-t border-zinc-800/50 text-center">
-                        <p className="text-sm text-zinc-500">
-                            Already have an account? {' '}
-                            <Link to="/login" className="text-zinc-100 font-bold hover:underline">Log in here</Link>
-                        </p>
-                    </div>
                 </div>
 
-                <button
-                    onClick={() => navigate('/')}
-                    className="mt-8 flex items-center gap-2 text-zinc-600 hover:text-zinc-400 text-sm font-bold transition-colors mx-auto"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to landing
-                </button>
+                <p className="mt-8 text-center text-app-muted text-xs font-medium">
+                    Synod uses bank-grade encryption to protect your lecture data.
+                </p>
             </motion.div>
         </div>
     );
