@@ -12,3 +12,7 @@ pandas
 python-pptx
 pymupdf
 python-dotenv
+authlib
+pyjwt
+itsdangerous
+httpx
