@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     History as HistoryIcon, Search, Calendar, ChevronRight,
-    Trash2, ArrowLeft, Clock, Sun, Moon
+    Trash2, ArrowLeft, Clock, Sun, Moon, LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
@@ -73,8 +73,9 @@ const History = () => {
                             </div>
                             <button
                                 onClick={logout}
-                                className="text-[10px] font-bold uppercase tracking-widest text-app-muted hover:text-red-500 transition-colors"
+                                className="text-[10px] font-bold uppercase tracking-widest text-app-muted hover:text-red-500 transition-colors flex items-center gap-1"
                             >
+                                <LogOut className="w-3 h-3" />
                                 Logout
                             </button>
                         </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+// Trigger HMR after auth integration
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Brain, Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight } from 'lucide-react';
@@ -12,7 +13,18 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
-    const { login, loginWithOAuth } = useAuth();
+    const { login, loginWithOAuth, isAuthenticated } = useAuth();
+
+    React.useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/dashboard');
+        }
+    }, [isAuthenticated, navigate]);
+
+    const handleOAuth = (provider) => {
+        loginWithOAuth(provider);
+        navigate('/dashboard');
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -140,7 +152,7 @@ const Login = () => {
                         </div>
                         <div className="flex gap-4">
                             <button
-                                onClick={() => loginWithOAuth('google')}
+                                onClick={() => handleOAuth('google')}
                                 className="w-12 h-12 border border-app-border rounded-xl bg-app-card/50 flex items-center justify-center hover:bg-app-card hover:border-app-muted transition-all active:scale-95"
                                 title="Continue with Google"
                             >
@@ -152,7 +164,7 @@ const Login = () => {
                                 </svg>
                             </button>
                             <button
-                                onClick={() => loginWithOAuth('github')}
+                                onClick={() => handleOAuth('github')}
                                 className="w-12 h-12 border border-app-border rounded-xl bg-app-card/50 flex items-center justify-center hover:bg-app-card hover:border-app-muted transition-all active:scale-95"
                                 title="Continue with GitHub"
                             >

@@ -3,7 +3,7 @@ import axios from 'axios';
 import {
     FileText, BookOpen, Brain, CheckCircle2, ChevronRight,
     Loader2, History as HistoryIcon, Upload, Search,
-    Settings, User, Bell, ChevronLeft, Sun, Moon
+    Settings, User, Bell, ChevronLeft, Sun, Moon, LogOut
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -135,10 +135,11 @@ function Dashboard() {
                                 </div>
                                 <button
                                     onClick={logout}
-                                    className="p-1 text-app-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                    className="p-1 px-2 text-[10px] font-bold uppercase tracking-widest text-app-muted hover:text-red-500 hover:bg-red-500/10 rounded transition-all flex items-center gap-1 shrink-0"
                                     title="Logout"
                                 >
-                                    <Settings className="w-3 h-3" />
+                                    <LogOut className="w-3 h-3" />
+                                    <span>Logout</span>
                                 </button>
                             </div>
                         </div>
