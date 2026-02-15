@@ -13,6 +13,17 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('synod_user', JSON.stringify(userData));
     };
 
+    const loginWithOAuth = (provider) => {
+        // Simulate OAuth login
+        const userData = {
+            email: `oauth_${provider}@example.com`,
+            name: `OAuth ${provider} User`,
+            provider
+        };
+        setUser(userData);
+        localStorage.setItem('synod_user', JSON.stringify(userData));
+    };
+
     const logout = () => {
         setUser(null);
         localStorage.removeItem('synod_user');
@@ -21,7 +32,7 @@ export const AuthProvider = ({ children }) => {
     const isAuthenticated = !!user;
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+        <AuthContext.Provider value={{ user, login, logout, loginWithOAuth, isAuthenticated }}>
             {children}
         </AuthContext.Provider>
     );
