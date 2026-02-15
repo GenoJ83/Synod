@@ -4,16 +4,39 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-  --color-background: #0a0a0a;
-  --color-foreground: #ededed;
-  --color-muted: #a1a1aa;
-  --color-border: #27272a;
-  --color-accent: #3b82f6;
+  /* Semantic tokens that will be overridden by .light class */
+  --color-app-bg: #0a0a0a;
+  --color-app-fg: #ededed;
+  --color-app-muted: #a1a1aa;
+  --color-app-border: #27272a;
+  --color-app-card: rgba(24, 24, 27, 0.4);
+  /* zinc-900/40 */
+  --color-app-accent: #3b82f6;
+  --color-app-input: #0a0a0a;
 }
 
 @layer base {
+  :root {
+    --color-app-bg: #0a0a0a;
+    --color-app-fg: #ededed;
+    --color-app-muted: #a1a1aa;
+    --color-app-border: #27272a;
+    --color-app-card: rgba(24, 24, 27, 0.4);
+    --color-app-input: #0a0a0a;
+  }
+
+  .light {
+    --color-app-bg: #ffffff;
+    --color-app-fg: #0a0a0a;
+    --color-app-muted: #71717a;
+    --color-app-border: #e4e4e7;
+    --color-app-card: rgba(244, 244, 245, 0.6);
+    /* zinc-100/60 */
+    --color-app-input: #f4f4f5;
+  }
+
   body {
-    @apply bg-zinc-950 text-zinc-100 antialiased;
+    @apply bg-app-bg text-app-fg antialiased transition-colors duration-300;
     font-family: var(--font-sans);
     letter-spacing: -0.01em;
   }
@@ -24,31 +47,35 @@
     @apply max-w-[1600px] mx-auto px-6 md:px-12;
   }
 
-  /* Custom Scrollbar */
+  /* Custom Scrollbar - Theme Aware */
   ::-webkit-scrollbar {
     width: 10px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-zinc-950;
+    @apply bg-app-bg;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-zinc-800 border-2 border-zinc-950 rounded-full hover:bg-zinc-700 transition-colors;
+    @apply bg-zinc-800 border-2 border-app-bg rounded-full hover:bg-zinc-700 transition-colors;
+  }
+
+  .light ::-webkit-scrollbar-thumb {
+    @apply bg-zinc-300 hover:bg-zinc-400;
   }
 
   /* Professional Card Style */
   .pro-card {
-    @apply bg-zinc-900/40 border border-zinc-800 rounded-xl transition-all duration-200;
+    @apply bg-app-card border border-app-border rounded-xl transition-all duration-200;
   }
 
   .pro-card:hover {
-    @apply border-zinc-700 bg-zinc-900/60;
+    @apply border-zinc-500 light:bg-zinc-100/80;
   }
 
   /* Subtle Input Focus */
   .pro-input {
-    @apply bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-200 outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all;
+    @apply bg-app-input border border-app-border rounded-lg px-4 py-2 text-app-fg outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all;
   }
 
   @keyframes fadeIn {
