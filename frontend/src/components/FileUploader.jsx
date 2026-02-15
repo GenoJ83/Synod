@@ -65,46 +65,35 @@ const FileUploader = ({ onUploadSuccess }) => {
         <div className="w-full">
             <div
                 {...getRootProps()}
-                className={`relative border-2 border-dashed rounded-3xl p-12 transition-all cursor-pointer group flex flex-col items-center justify-center text-center
-                ${isDragActive ? 'border-blue-500 bg-blue-500/5' : 'border-slate-800 hover:border-slate-700 bg-slate-900/30'}`}
+                className={`relative border border-zinc-800 rounded-xl p-12 transition-all cursor-pointer group flex flex-col items-center justify-center text-center bg-zinc-950/50
+                ${isDragActive ? 'border-zinc-500 bg-zinc-900/50' : 'hover:border-zinc-700 hover:bg-zinc-900/30'}`}
             >
                 <input {...getInputProps()} />
 
                 <AnimatePresence mode='wait'>
                     {!file ? (
-                        <motion.div
-                            key="empty"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="flex flex-col items-center"
-                        >
-                            <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 mb-6 group-hover:scale-110 transition-transform">
-                                <Upload className="w-8 h-8" />
+                        <div className="flex flex-col items-center">
+                            <div className="w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-xl flex items-center justify-center text-zinc-500 mb-6 group-hover:bg-zinc-100 group-hover:text-zinc-950 transition-all">
+                                <Upload className="w-6 h-6" />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2">Drag & Drop Lecture Materials</h3>
-                            <p className="text-slate-500 text-sm max-w-xs">
-                                Support for PDF, PPTX, and TXT files.<br />MAX size: 10MB
+                            <h3 className="text-lg font-bold text-zinc-200 mb-2">Upload Lecture Materials</h3>
+                            <p className="text-zinc-500 text-sm max-w-xs">
+                                PDF, PPTX, or TXT (Max 10MB)
                             </p>
-                        </motion.div>
+                        </div>
                     ) : (
-                        <motion.div
-                            key="file"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-full max-w-md bg-slate-950 border border-slate-800 p-6 rounded-2xl relative"
-                        >
+                        <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 p-6 rounded-xl relative shadow-xl">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500">
+                                <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-400">
                                     <File className="w-6 h-6" />
                                 </div>
                                 <div className="flex-1 text-left overflow-hidden">
-                                    <h4 className="font-bold text-white truncate">{file.name}</h4>
-                                    <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                    <h4 className="font-bold text-zinc-200 truncate">{file.name}</h4>
+                                    <p className="text-[10px] font-bold text-zinc-500 uppercase">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                                 </div>
                                 <button
                                     onClick={removeFile}
-                                    className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                    className="p-2 text-zinc-600 hover:text-red-500 hover:bg-zinc-950 rounded-lg transition-all"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -117,20 +106,20 @@ const FileUploader = ({ onUploadSuccess }) => {
                                         handleUpload();
                                     }}
                                     disabled={status === 'uploading'}
-                                    className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2
-                                    ${status === 'uploading' ? 'bg-slate-800 text-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20'}`}
+                                    className={`w-full py-3 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2
+                                    ${status === 'uploading' ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-zinc-100 hover:bg-white text-zinc-950 shadow-sm'}`}
                                 >
                                     {status === 'uploading' ? (
                                         <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            Processing...
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Analyzing...
                                         </>
                                     ) : (
-                                        'Start Analysis'
+                                        'Process Document'
                                     )}
                                 </button>
                             </div>
-                        </motion.div>
+                        </div>
                     )}
                 </AnimatePresence>
             </div>
@@ -141,10 +130,10 @@ const FileUploader = ({ onUploadSuccess }) => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className={`mt-4 p-4 rounded-xl border flex items-center gap-3 ${status === 'success' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : 'bg-red-500/10 border-red-500/50 text-red-400'}`}
+                        className={`mt-4 p-4 rounded-xl border flex items-center gap-3 shadow-sm ${status === 'success' ? 'bg-emerald-950/20 border-emerald-900/50 text-emerald-500' : 'bg-red-950/20 border-red-900/50 text-red-500'}`}
                     >
                         {status === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                        <span className="font-bold text-sm tracking-tight">{message}</span>
+                        <span className="font-bold text-xs uppercase tracking-widest">{message}</span>
                     </motion.div>
                 )}
             </AnimatePresence>

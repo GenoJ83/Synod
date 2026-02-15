@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { CheckCircle2, XCircle, ChevronRight, HelpCircle, RotateCcw } from 'lucide-react';
+import { CheckCircle2, XCircle, ChevronRight, HelpCircle, RotateCcw, Award } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const QuizSection = ({ quiz, onReset }) => {
     const [currentStep, setCurrentStep] = useState(0); // 0: intro, 1: mcqs, 2: fibs, 3: result
@@ -56,44 +57,54 @@ const QuizSection = ({ quiz, onReset }) => {
 
     if (currentStep === 0) {
         return (
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 text-center shadow-2xl animate-in zoom-in duration-500">
-                <HelpCircle className="w-16 h-16 text-blue-500 mx-auto mb-6 opacity-50" />
-                <h3 className="text-3xl font-bold text-white mb-4">Ready for the Challenge?</h3>
-                <p className="text-slate-400 mb-8 max-w-md mx-auto">We've generated {totalQuestions} questions based on your lecture. Multiple choice and fill-in-the-blanks await!</p>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 text-center shadow-xl max-w-2xl mx-auto animate-fade-in">
+                <div className="w-16 h-16 bg-zinc-800 border border-zinc-700 rounded-2xl flex items-center justify-center mx-auto mb-8 text-zinc-400">
+                    <HelpCircle className="w-8 h-8" />
+                </div>
+                <h3 className="text-3xl font-bold text-white mb-4">Knowledge Assessment</h3>
+                <p className="text-zinc-500 mb-10 text-lg leading-relaxed">
+                    Test your understanding with {totalQuestions} generated questions.
+                </p>
                 <button
                     onClick={() => setCurrentStep(mcqs.length > 0 ? 1 : 2)}
-                    className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-blue-600/30"
+                    className="w-full bg-zinc-100 hover:bg-white text-zinc-950 py-4 rounded-xl font-bold text-sm transition-all shadow-sm"
                 >
-                    Start Quiz
+                    Begin Quiz
                 </button>
             </div>
         );
     }
 
     if (currentStep === 3) {
+        const percentage = Math.round((score / totalQuestions) * 100);
         return (
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 text-center shadow-2xl">
-                <div className="relative w-32 h-32 mx-auto mb-6">
-                    <div className="absolute inset-0 rounded-full border-4 border-slate-800"></div>
-                    <div
-                        className="absolute inset-0 rounded-full border-4 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
-                        style={{ clipPath: `inset(0 0 ${100 - (score / totalQuestions) * 100}% 0)` }}
-                    ></div>
-                    <div className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-white">
-                        {Math.round((score / totalQuestions) * 100)}%
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 text-center shadow-xl max-w-2xl mx-auto animate-fade-in">
+                <div className="relative w-32 h-32 mx-auto mb-8">
+                    <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-zinc-800" />
+                        <circle
+                            cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent"
+                            strokeDasharray={364.4}
+                            strokeDashoffset={364.4 - (percentage / 100) * 364.4}
+                            className="text-zinc-100 transition-all duration-1000 ease-out"
+                        />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center text-2xl font-black text-white">
+                        {percentage}%
                     </div>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Quiz Complete!</h3>
-                <p className="text-slate-400 mb-8">You scored {score} out of {totalQuestions} correct.</p>
-                <div className="flex gap-4 justify-center">
+                <h3 className="text-2xl font-bold text-white mb-2">Session Complete</h3>
+                <p className="text-zinc-500 mb-10 text-lg">You correctly answered {score} of {totalQuestions} questions.</p>
+
+                <div className="grid grid-cols-2 gap-4">
                     <button
                         onClick={onReset}
-                        className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all flex items-center gap-2"
+                        className="py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
                     >
                         <RotateCcw className="w-4 h-4" /> Reset
                     </button>
                     <button
-                        className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all"
+                        className="py-3 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-xl transition-all"
                         onClick={() => {
                             setCurrentStep(0);
                             setScore(0);
@@ -101,7 +112,7 @@ const QuizSection = ({ quiz, onReset }) => {
                             setFibIndex(0);
                         }}
                     >
-                        Try Again
+                        Retake
                     </button>
                 </div>
             </div>
@@ -109,93 +120,100 @@ const QuizSection = ({ quiz, onReset }) => {
     }
 
     const currentQuestion = currentStep === 1 ? mcqs[mcqIndex] : fibs[fibIndex];
+    const progress = ((mcqIndex + (currentStep === 2 ? mcqs.length : 0) + fibIndex) / totalQuestions) * 100;
 
     return (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden">
-            {/* Progress Bar */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-slate-800">
-                <div
-                    className="h-full bg-blue-500 transition-all duration-500"
-                    style={{ width: `${((mcqIndex + (currentStep === 2 ? mcqs.length : 0) + fibIndex) / totalQuestions) * 100}%` }}
-                ></div>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 md:p-12 shadow-xl max-w-3xl mx-auto relative overflow-hidden animate-fade-in">
+            <div className="absolute top-0 left-0 w-full h-1 bg-zinc-800">
+                <div className="h-full bg-zinc-100 transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
 
-            <div className="flex justify-between items-center mb-8">
-                <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Question {mcqIndex + (currentStep === 2 ? mcqs.length : 0) + fibIndex + 1} of {totalQuestions}</span>
-                <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-xs font-bold rounded-full border border-blue-500/20">
-                    {currentStep === 1 ? 'Multiple Choice' : 'Fill in the Blank'}
+            <div className="flex justify-between items-center mb-10">
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Q {mcqIndex + (currentStep === 2 ? mcqs.length : 0) + fibIndex + 1} / {totalQuestions}</span>
+                <span className="px-2 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                    {currentStep === 1 ? 'Multiple Choice' : 'Critical Recall'}
                 </span>
             </div>
 
-            <h4 className="text-xl md:text-2xl font-semibold text-white mb-8 leading-relaxed">
+            <h4 className="text-xl md:text-2xl font-bold text-zinc-100 mb-10 leading-relaxed">
                 {currentQuestion.question}
             </h4>
 
-            {currentStep === 1 ? (
-                <div className="grid gap-3">
-                    {currentQuestion.options.map((option, i) => (
+            <div className="space-y-3">
+                {currentStep === 1 ? (
+                    mcqs[mcqIndex].options.map((option, i) => (
                         <button
                             key={i}
                             onClick={() => handleMcqSubmit(option)}
-                            className={`p-4 rounded-2xl border text-left transition-all ${selectedOption === option
-                                    ? isCorrect
-                                        ? 'bg-green-500/10 border-green-500 text-green-500'
-                                        : 'bg-red-500/10 border-red-500 text-red-500'
+                            className={cn(
+                                "w-full p-4 rounded-xl border text-left transition-all text-sm font-medium",
+                                selectedOption === option
+                                    ? isCorrect ? 'bg-emerald-950/20 border-emerald-500 text-emerald-500' : 'bg-red-950/20 border-red-500 text-red-500'
                                     : showFeedback && option === currentQuestion.answer
-                                        ? 'bg-green-500/10 border-green-500 text-green-500'
-                                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:bg-slate-900/50'
-                                }`}
+                                        ? 'bg-emerald-950/20 border-emerald-500 text-emerald-500'
+                                        : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-600'
+                            )}
                             disabled={showFeedback}
                         >
                             <div className="flex items-center justify-between">
                                 <span>{option}</span>
-                                {showFeedback && option === currentQuestion.answer && <CheckCircle2 className="w-5 h-5" />}
-                                {showFeedback && selectedOption === option && !isCorrect && <XCircle className="w-5 h-5" />}
+                                {showFeedback && option === currentQuestion.answer && <CheckCircle2 className="w-4 h-4" />}
+                                {showFeedback && selectedOption === option && !isCorrect && <XCircle className="w-4 h-4" />}
                             </div>
                         </button>
-                    ))}
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    <input
-                        type="text"
-                        value={fibAnswer}
-                        onChange={(e) => setFibAnswer(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleFibSubmit()}
-                        placeholder="Type your answer..."
-                        className={`w-full p-4 rounded-2xl bg-slate-950 border transition-all outline-none ${showFeedback
-                                ? isCorrect ? 'border-green-500 text-green-500' : 'border-red-500 text-red-500'
-                                : 'border-slate-800 text-slate-300 focus:border-blue-500'
-                            }`}
-                        disabled={showFeedback}
-                    />
-                    {!showFeedback && (
-                        <button
-                            onClick={handleFibSubmit}
-                            className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl"
-                        >
-                            Submit Answer
-                        </button>
-                    )}
-                </div>
-            )}
+                    ))
+                ) : (
+                    <div className="space-y-4">
+                        <input
+                            type="text"
+                            autoFocus
+                            value={fibAnswer}
+                            onChange={(e) => setFibAnswer(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleFibSubmit()}
+                            placeholder="Identify the concept..."
+                            className={cn(
+                                "w-full p-4 rounded-xl bg-zinc-950 border transition-all outline-none text-sm font-medium",
+                                showFeedback
+                                    ? isCorrect ? 'border-emerald-500 text-emerald-500' : 'border-red-500 text-red-500'
+                                    : 'border-zinc-800 text-zinc-100 focus:border-zinc-500'
+                            )}
+                            disabled={showFeedback}
+                        />
+                        {!showFeedback && (
+                            <button
+                                onClick={handleFibSubmit}
+                                className="w-full bg-zinc-100 text-zinc-950 py-3 rounded-lg font-bold text-sm"
+                            >
+                                Submit
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
 
-            {showFeedback && (
-                <div className="mt-8 animate-in slide-in-from-top-4 duration-300">
-                    <div className={`p-4 rounded-2xl border flex items-center justify-between ${isCorrect ? 'bg-green-500/10 border-green-500/50 text-green-400' : 'bg-red-500/10 border-red-500/50 text-red-400'}`}>
-                        <div className="flex items-center gap-3">
-                            {isCorrect ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-                            <span className="font-bold">{isCorrect ? 'Impressive! Correct.' : `Incorrect. The answer is ${currentQuestion.answer}.`}</span>
+            <AnimatePresence>
+                {showFeedback && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-10 pt-8 border-t border-zinc-800/50 flex items-center justify-between"
+                    >
+                        <div className={cn(
+                            "flex items-center gap-3 font-bold text-xs uppercase tracking-widest",
+                            isCorrect ? 'text-emerald-500' : 'text-red-500'
+                        )}>
+                            {isCorrect ? <Award className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                            <span>{isCorrect ? 'Correct Perception' : `Reference Answer: ${currentQuestion.answer}`}</span>
                         </div>
                         <button
                             onClick={nextQuestion}
-                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                            className="bg-zinc-800 hover:bg-zinc-700 p-2 rounded-lg transition-colors"
                         >
-                            <ChevronRight className="w-6 h-6" />
+                            <ChevronRight className="w-5 h-5" />
                         </button>
-                    </div>
-                </div>
-            )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
