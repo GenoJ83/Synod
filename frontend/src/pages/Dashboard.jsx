@@ -1,6 +1,10 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
-import { FileText, BookOpen, Brain, CheckCircle2, ChevronRight, Loader2, History as HistoryIcon, Upload } from 'lucide-react';
+import {
+    FileText, BookOpen, Brain, CheckCircle2, ChevronRight,
+    Loader2, History as HistoryIcon, Upload, Search,
+    Settings, User, Bell, ChevronLeft
+} from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import QuizSection from '../components/QuizSection';
@@ -20,6 +24,8 @@ function Dashboard() {
     const [error, setError] = useState('');
     const [showQuiz, setShowQuiz] = useState(false);
     const [activeTab, setActiveTab] = useState('text'); // 'text' or 'file'
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+
     const quizRef = useRef(null);
     const navigate = useNavigate();
 
@@ -36,7 +42,6 @@ function Dashboard() {
             const data = response.data;
             setResult(data);
 
-            // Save to history
             const history = JSON.parse(localStorage.getItem('synod_history') || '[]');
             const newEntry = {
                 id: Date.now(),
@@ -56,8 +61,6 @@ function Dashboard() {
 
     const handleFileUploadSuccess = (data) => {
         setResult(data);
-
-        // Save to history
         const history = JSON.parse(localStorage.getItem('synod_history') || '[]');
         const newEntry = {
             id: Date.now(),
@@ -76,185 +79,209 @@ function Dashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-blue-500/30">
-            <header className="border-b border-white/5 bg-slate-950/50 backdrop-blur-xl sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
-                        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)] group-hover:rotate-12 transition-transform">
-                            <Brain className="w-6 h-6 text-white" />
-                        </div>
-                        <h1 className="text-2xl font-black tracking-tighter text-white">SYNOD</h1>
+        <div className="flex h-screen bg-zinc-950 text-zinc-100 overflow-hidden font-sans">
+            {/* Sidebar */}
+            <aside className={cn(
+                "bg-zinc-900/50 border-r border-zinc-800 transition-all duration-300 flex flex-col z-50",
+                sidebarOpen ? "w-64" : "w-20"
+            )}>
+                <div className="p-6 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-zinc-100 rounded flex items-center justify-center shrink-0">
+                        <Brain className="w-5 h-5 text-zinc-900" />
                     </div>
-                    <div className="flex items-center gap-6">
-                        <button
-                            onClick={() => navigate('/history')}
-                            className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all font-bold text-sm tracking-tight"
-                        >
-                            <HistoryIcon className="w-5 h-5" />
-                            History
-                        </button>
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 p-[1px]">
-                            <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center text-xs font-black uppercase tracking-widest border border-white/10">
-                                G
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <main className="max-w-5xl mx-auto px-6 py-16">
-                <div className="text-center mb-16 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                    <h2 className="text-5xl font-black mb-6 tracking-tight text-white leading-[1.1]">
-                        Unlock the power of <br /><span className="text-blue-500">Your Course Materials.</span>
-                    </h2>
-                    <p className="text-slate-400 text-xl max-w-2xl mx-auto leading-relaxed">
-                        Choose your preferred input method and let Synod handle the rest.
-                    </p>
+                    {sidebarOpen && <span className="font-bold tracking-tight text-xl">Synod</span>}
                 </div>
 
-                {/* Input Method Tabs */}
-                <div className="flex justify-center mb-10">
-                    <div className="bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800 flex gap-1">
-                        <button
-                            onClick={() => setActiveTab('text')}
-                            className={cn(
-                                "flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all",
-                                activeTab === 'text' ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "text-slate-500 hover:text-slate-300"
-                            )}
-                        >
-                            <FileText className="w-5 h-5" />
-                            Text Input
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('file')}
-                            className={cn(
-                                "flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all",
-                                activeTab === 'file' ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "text-slate-500 hover:text-slate-300"
-                            )}
-                        >
-                            <Upload className="w-5 h-5" />
-                            File Upload
-                        </button>
-                    </div>
-                </div>
+                <nav className="flex-1 px-4 space-y-2 mt-4">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+                    >
+                        <Search className="w-5 h-5" />
+                        {sidebarOpen && <span>Explore</span>}
+                    </button>
+                    <button
+                        className="w-full flex items-center gap-3 px-3 py-2 bg-zinc-800 text-white rounded-lg transition-colors"
+                    >
+                        <FileText className="w-5 h-5" />
+                        {sidebarOpen && <span>Analysis</span>}
+                    </button>
+                    <button
+                        onClick={() => navigate('/history')}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+                    >
+                        <HistoryIcon className="w-5 h-5" />
+                        {sidebarOpen && <span>History</span>}
+                    </button>
+                </nav>
 
-                <div className="bg-slate-900/40 border border-slate-800 rounded-[2.5rem] p-4 md:p-8 mb-16 shadow-2xl backdrop-blur-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent opacity-30" />
-
-                    {activeTab === 'text' ? (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                            <div className="flex items-center gap-2 px-2">
-                                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
-                                    <FileText className="w-5 h-5" />
-                                </div>
-                                <h3 className="font-black text-white uppercase tracking-widest text-xs">Analyze Notes</h3>
+                <div className="p-4 border-t border-zinc-800 space-y-4">
+                    {sidebarOpen && (
+                        <div className="px-2 space-y-1">
+                            <div className="flex items-center justify-between text-xs font-bold text-zinc-500 uppercase tracking-widest px-1">
+                                <span>Account</span>
+                                <Settings className="w-3 h-3" />
                             </div>
-                            <textarea
-                                value={text}
-                                onChange={(e) => setText(e.target.value)}
-                                placeholder="Paste your lecture notes, snippets, or articles here..."
-                                className="w-full h-80 bg-slate-950/60 border border-slate-800/50 rounded-3xl p-8 text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all resize-none text-lg leading-relaxed shadow-inner"
-                            />
-                            <div className="flex justify-between items-center px-2">
-                                <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">{text.length} characters</p>
-                                <button
-                                    onClick={() => handleAnalyze()}
-                                    disabled={loading || !text}
-                                    className={cn(
-                                        "px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl transition-all shadow-xl shadow-blue-600/20 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group",
-                                        loading && "animate-pulse"
-                                    )}
-                                >
-                                    {loading ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            Analyzing...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Analyze Content
-                                            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                        </>
-                                    )}
-                                </button>
+                            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-800 cursor-pointer transition-colors">
+                                <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px] font-bold">JD</div>
+                                <span className="text-sm font-medium">John Doe</span>
                             </div>
-                        </div>
-                    ) : (
-                        <div className="animate-in fade-in slide-in-from-left-4 duration-500">
-                            <FileUploader onUploadSuccess={handleFileUploadSuccess} />
                         </div>
                     )}
-
-                    {error && (
-                        <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm text-center font-bold tracking-tight">
-                            {error}
-                        </div>
-                    )}
+                    <button
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="w-full flex justify-center p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+                    >
+                        {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                    </button>
                 </div>
+            </aside>
 
-                {result && (
-                    <div className="space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-32">
-                        <div className="bg-slate-900/40 border border-slate-800 rounded-[2.5rem] p-12 shadow-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-16 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-700">
-                                <FileText className="w-64 h-64" />
-                            </div>
-                            <div className="flex items-center gap-3 mb-10">
-                                <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-500">
-                                    <CheckCircle2 className="w-6 h-6" />
-                                </div>
-                                <h3 className="text-3xl font-black text-white tracking-tighter">Instant Summary</h3>
-                            </div>
-                            <p className="text-slate-300 leading-relaxed text-2xl font-medium tracking-tight">
-                                {result.summary}
-                            </p>
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col overflow-hidden relative">
+                <header className="h-16 border-b border-zinc-900 bg-zinc-950/50 backdrop-blur-md flex items-center justify-between px-8 z-10">
+                    <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Active Workspace</h2>
+                    <div className="flex items-center gap-4">
+                        <button className="p-2 text-zinc-500 hover:text-white rounded-lg transition-colors">
+                            <Bell className="w-5 h-5" />
+                        </button>
+                        <div className="h-8 w-[1px] bg-zinc-800" />
+                        <div className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-md text-xs font-bold text-zinc-400">
+                            Pro Member
                         </div>
+                    </div>
+                </header>
 
-                        <div className="grid md:grid-cols-2 gap-10">
-                            <div className="bg-slate-900/40 border border-slate-800 rounded-[2.5rem] p-12">
-                                <div className="flex items-center gap-3 mb-8">
-                                    <div className="p-3 bg-purple-500/10 rounded-xl text-purple-500">
-                                        <BookOpen className="w-6 h-6" />
+                <main className="flex-1 overflow-y-auto bg-zinc-950 scroll-smooth">
+                    <div className="max-w-[1400px] mx-auto px-8 py-12">
+
+                        {/* Split View Container */}
+                        <div className={cn(
+                            "flex flex-col xl:flex-row gap-12 transition-all duration-500",
+                            result ? "items-start" : "items-center justify-center min-h-[70vh]"
+                        )}>
+
+                            {/* Input Section */}
+                            <div className={cn(
+                                "transition-all duration-500 w-full",
+                                result ? "xl:w-1/2 sticky top-8" : "max-w-4xl"
+                            )}>
+                                <div className="mb-10 text-left">
+                                    <h1 className="text-4xl font-bold tracking-tight mb-4">Lecture Analysis</h1>
+                                    <p className="text-zinc-500 text-lg">Input your course materials to extract intelligence.</p>
+                                </div>
+
+                                <div className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-6 shadow-sm">
+                                    <div className="flex gap-4 mb-6 border-b border-zinc-800 pb-4">
+                                        <button
+                                            onClick={() => setActiveTab('text')}
+                                            className={cn(
+                                                "text-sm font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all",
+                                                activeTab === 'text' ? "bg-zinc-100 text-zinc-950" : "text-zinc-500 hover:text-zinc-300"
+                                            )}
+                                        >
+                                            Raw Text
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('file')}
+                                            className={cn(
+                                                "text-sm font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all",
+                                                activeTab === 'file' ? "bg-zinc-100 text-zinc-950" : "text-zinc-500 hover:text-zinc-300"
+                                            )}
+                                        >
+                                            Documents
+                                        </button>
                                     </div>
-                                    <h3 className="text-2xl font-black text-white tracking-tighter">Key Concepts</h3>
-                                </div>
-                                <div className="flex flex-wrap gap-3">
-                                    {result.concepts.map((concept, i) => (
-                                        <span key={i} className="px-5 py-2.5 bg-slate-800/80 border border-slate-700/50 rounded-2xl text-[13px] font-black text-slate-400 hover:border-purple-500/50 hover:text-white hover:bg-slate-800 transition-all cursor-default uppercase tracking-tight">
-                                            {concept}
-                                        </span>
-                                    ))}
+
+                                    {activeTab === 'text' ? (
+                                        <div className="space-y-4 animate-fade-in">
+                                            <textarea
+                                                value={text}
+                                                onChange={(e) => setText(e.target.value)}
+                                                placeholder="Paste lecture notes here..."
+                                                className="w-full h-80 bg-zinc-950 border border-zinc-800 rounded-xl p-6 text-zinc-100 focus:border-zinc-500 transition-all resize-none font-mono text-sm leading-relaxed"
+                                            />
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{text.length} chars</span>
+                                                <button
+                                                    onClick={() => handleAnalyze()}
+                                                    disabled={loading || !text}
+                                                    className="bg-zinc-100 hover:bg-white text-zinc-950 px-6 py-3 rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50"
+                                                >
+                                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Analyze Content"}
+                                                    {!loading && <ChevronRight className="w-4 h-4" />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="animate-fade-in">
+                                            <FileUploader onUploadSuccess={handleFileUploadSuccess} />
+                                        </div>
+                                    )}
+
+                                    {error && <div className="mt-4 p-3 bg-red-950/20 border border-red-900/50 rounded-lg text-red-500 text-xs font-medium">{error}</div>}
                                 </div>
                             </div>
 
-                            <div className="bg-gradient-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/20 rounded-[2.5rem] p-12 flex flex-col justify-center items-center text-center relative overflow-hidden group">
-                                <div className="absolute top-[-20%] right-[-20%] w-64 h-64 bg-blue-500/10 blur-[100px] group-hover:bg-blue-500/20 transition-all duration-700" />
-                                <Brain className="w-20 h-20 text-blue-500 mb-8 group-hover:scale-110 transition-transform duration-700" />
-                                <h3 className="text-3xl font-black text-white mb-3 tracking-tighter">Your Quiz is Ready.</h3>
-                                <p className="text-slate-400 font-bold mb-10 text-lg">We've generated {result.quiz.mcqs.length + result.quiz.fill_in_the_blanks.length} questions from your materials.</p>
-                                <button
-                                    onClick={startQuiz}
-                                    className="w-full px-10 py-5 bg-white text-slate-950 font-black rounded-2xl hover:bg-slate-200 transition-all shadow-2xl transform active:scale-95"
-                                >
-                                    Start Assessment
-                                </button>
-                            </div>
+                            {/* Results View */}
+                            {result && (
+                                <div className="w-full xl:w-1/2 space-y-8 animate-fade-in pb-20">
+                                    <div className="pro-card p-8">
+                                        <div className="flex items-center gap-3 mb-6 text-emerald-500">
+                                            <CheckCircle2 className="w-5 h-5" />
+                                            <h3 className="text-sm font-bold uppercase tracking-widest">Executive Summary</h3>
+                                        </div>
+                                        <p className="text-zinc-300 text-lg leading-relaxed font-medium">
+                                            {result.summary}
+                                        </p>
+                                    </div>
+
+                                    <div className="grid sm:grid-cols-2 gap-8">
+                                        <div className="pro-card p-6">
+                                            <div className="flex items-center gap-3 mb-4 text-zinc-400">
+                                                <BookOpen className="w-4 h-4" />
+                                                <h3 className="text-xs font-bold uppercase tracking-widest">Foundational Concepts</h3>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {result.concepts.map((concept, i) => (
+                                                    <span key={i} className="px-3 py-1 bg-zinc-800 border border-zinc-700 rounded-md text-[11px] font-bold text-zinc-400 uppercase">
+                                                        {concept}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-zinc-100 text-zinc-950 rounded-xl p-8 flex flex-col items-center justify-center text-center">
+                                            <Brain className="w-10 h-10 mb-4 opacity-80" />
+                                            <h3 className="text-xl font-bold mb-2">Knowledge Check</h3>
+                                            <p className="text-zinc-600 text-sm mb-6">Generated {result.quiz.mcqs.length + result.quiz.fill_in_the_blanks.length} questions for this session.</p>
+                                            <button
+                                                onClick={startQuiz}
+                                                className="w-full bg-zinc-900 text-white py-3 rounded-lg font-bold hover:bg-black transition-colors"
+                                            >
+                                                Start Quiz
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {showQuiz && (
+                                        <div ref={quizRef} className="pt-8">
+                                            <QuizSection
+                                                quiz={result.quiz}
+                                                onReset={() => {
+                                                    setResult(null);
+                                                    setShowQuiz(false);
+                                                    setText('');
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
-
-                        {showQuiz && (
-                            <div ref={quizRef} className="pt-20 scroll-mt-24">
-                                <QuizSection
-                                    quiz={result.quiz}
-                                    onReset={() => {
-                                        setResult(null);
-                                        setShowQuiz(false);
-                                        setText('');
-                                    }}
-                                />
-                            </div>
-                        )}
                     </div>
-                )}
-            </main>
+                </main>
+            </div>
         </div>
     );
 }
