@@ -1,0 +1,12 @@
+transformers>=4.30.0
+torch>=2.0.0
+sentence-transformers
+spacy>=3.5.0
+nltk>=3.8.1
+scikit-learn
+pandas
+streamlit
+pydantic
+python-pptx
+pymupdf
+python-dotenv
