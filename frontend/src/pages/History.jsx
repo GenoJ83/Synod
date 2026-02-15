@@ -6,12 +6,14 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 const History = () => {
     const [history, setHistory] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
+    const { user, logout } = useAuth();
 
     useEffect(() => {
         const savedHistory = JSON.parse(localStorage.getItem('synod_history') || '[]');
@@ -64,6 +66,18 @@ const History = () => {
                         >
                             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                         </button>
+                        <div className="h-8 w-[1px] bg-app-border" />
+                        <div className="flex items-center gap-2 px-2 py-1 bg-app-card border border-app-border rounded-lg group">
+                            <div className="w-6 h-6 rounded-full bg-app-fg text-app-bg flex items-center justify-center text-[10px] font-bold">
+                                {user?.name?.split(' ').map(n => n[0]).join('') || 'JD'}
+                            </div>
+                            <button
+                                onClick={logout}
+                                className="text-[10px] font-bold uppercase tracking-widest text-app-muted hover:text-red-500 transition-colors"
+                            >
+                                Logout
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>

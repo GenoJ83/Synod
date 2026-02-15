@@ -1,77 +1,26 @@
 import React, { useState } from 'react';
-import { CheckCircle2, XCircle, ChevronRight, HelpCircle, RotateCcw, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+    CheckCircle2, AlertCircle, ChevronRight,
+    HelpCircle, Trophy, RefreshCw
+} from 'lucide-react';
 
-const QuizSection = ({ quiz, onReset }) => {
-    const [currentStep, setCurrentStep] = useState(0); // 0: intro, 1: mcqs, 2: fibs, 3: result
-    const [mcqIndex, setMcqIndex] = useState(0);
-    const [fibIndex, setFibIndex] = useState(0);
+const QuizSection = ({ quizData }) => {
+    const [currentQuestion, setCurrentQuestion] = useState(0);
+    const [selectedAnswer, setSelectedAnswer] = useState(null);
+    const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
-    const [selectedOption, setSelectedOption] = useState(null);
-    const [fibAnswer, setFibAnswer] = useState('');
-    const [showFeedback, setShowFeedback] = useState(false);
-    const [isCorrect, setIsCorrect] = useState(false);
 
-    const mcqs = quiz.mcqs || [];
-    const fibs = quiz.fill_in_the_blanks || [];
-    const totalQuestions = mcqs.length + fibs.length;
+    const handleAnswer = (index) => {
+        if (selectedAnswer !== null) return;
+        setSelectedAnswer(index);
 
-    const handleMcqSubmit = (option) => {
-        if (showFeedback) return;
-        setSelectedOption(option);
-        const correct = option === mcqs[mcqIndex].answer;
-        setIsCorrect(correct);
-        if (correct) setScore(score + 1);
-        setShowFeedback(true);
-    };
-
-    const nextQuestion = () => {
-        setShowFeedback(false);
-        setSelectedOption(null);
-        setFibAnswer('');
-
-        if (currentStep === 1) {
-            if (mcqIndex < mcqs.length - 1) {
-                setMcqIndex(mcqIndex + 1);
-            } else if (fibs.length > 0) {
-                setCurrentStep(2);
-            } else {
-                setCurrentStep(3);
-            }
-        } else if (currentStep === 2) {
-            if (fibIndex < fibs.length - 1) {
-                setFibIndex(fibIndex + 1);
-            } else {
-                setCurrentStep(3);
-            }
+        if (index === quizData[currentQuestion].correct) {
+            setScore(prev => prev + 1);
         }
     };
 
-    const handleFibSubmit = () => {
-        if (showFeedback) return;
-        const correct = fibAnswer.toLowerCase().trim() === fibs[fibIndex].answer.toLowerCase().trim();
-        setIsCorrect(correct);
-        if (correct) setScore(score + 1);
-        setShowFeedback(true);
-    };
-
-    if (currentStep === 0) {
-        return (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 text-center shadow-xl max-w-2xl mx-auto animate-fade-in">
-                <div className="w-16 h-16 bg-zinc-800 border border-zinc-700 rounded-2xl flex items-center justify-center mx-auto mb-8 text-zinc-400">
-                    <HelpCircle className="w-8 h-8" />
-                </div>
-                <h3 className="text-3xl font-bold text-white mb-4">Knowledge Assessment</h3>
-                <p className="text-zinc-500 mb-10 text-lg leading-relaxed">
-                    Test your understanding with {totalQuestions} generated questions.
-                </p>
-                <button
-                    onClick={() => setCurrentStep(mcqs.length > 0 ? 1 : 2)}
-                    className="w-full bg-zinc-100 hover:bg-white text-zinc-950 py-4 rounded-xl font-bold text-sm transition-all shadow-sm"
-                >
-                    Begin Quiz
-                </button>
-            </div>
+    const nextQuestion = () => {
         if (currentQuestion < quizData.length - 1) {
             setCurrentQuestion(prev => prev + 1);
             setSelectedAnswer(null);
@@ -146,22 +95,83 @@ const QuizSection = ({ quiz, onReset }) => {
                     {quizData.map((_, i) => (
                         <div
                             key={i}
-                            "flex items-center gap-3 font-bold text-xs uppercase tracking-widest",
-                        isCorrect ? 'text-emerald-500' : 'text-red-500'
-                    )}>
-                    {isCorrect ? <Award className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                    <span>{isCorrect ? 'Correct Perception' : `Reference Answer: ${currentQuestion.answer}`}</span>
+                            className={`h-1 w-6 rounded-full transition-all duration-500 ${i <= currentQuestion ? 'bg-blue-500' : 'bg-app-border'}`}
+                        />
+                    ))}
                 </div>
-                <button
-                    onClick={nextQuestion}
-                    className="bg-zinc-800 hover:bg-zinc-700 p-2 rounded-lg transition-colors"
-                >
-                    <ChevronRight className="w-5 h-5" />
-                </button>
+            </div>
+
+            <motion.div
+                key={currentQuestion}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="pro-card p-10 bg-app-card/30"
+            >
+                <h4 className="text-xl font-bold mb-10 leading-tight">{question.question}</h4>
+
+                <div className="grid grid-cols-1 gap-4">
+                    {question.options.map((option, i) => {
+                        const isSelected = selectedAnswer === i;
+                        const isCorrect = i === question.correct;
+                        const showCorrect = selectedAnswer !== null && isCorrect;
+                        const showWrong = isSelected && !isCorrect;
+
+                        return (
+                            <button
+                                key={i}
+                                onClick={() => handleAnswer(i)}
+                                disabled={selectedAnswer !== null}
+                                className={`
+                                    p-6 rounded-2xl border text-left transition-all flex items-center justify-between group
+                                    ${isSelected ? 'scale-[1.02]' : 'hover:scale-[1.01]'}
+                                    ${showCorrect ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500' :
+                                        showWrong ? 'bg-red-500/10 border-red-500 text-red-500' :
+                                            isSelected ? 'border-blue-500 bg-blue-500/5 text-blue-500' :
+                                                'border-app-border bg-app-card/50 hover:bg-app-card hover:border-app-muted'}
+                                `}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-8 h-8 rounded-lg border flex items-center justify-center font-bold text-xs transition-colors
+                                        ${showCorrect ? 'bg-emerald-500 border-emerald-400 text-white' :
+                                            showWrong ? 'bg-red-500 border-red-400 text-white' :
+                                                isSelected ? 'bg-blue-500 border-blue-400 text-white' :
+                                                    'bg-app-bg border-app-border text-app-muted group-hover:border-app-muted'}
+                                    `}>
+                                        {String.fromCharCode(65 + i)}
+                                    </div>
+                                    <span className="font-medium">{option}</span>
+                                </div>
+                                {showCorrect && <CheckCircle2 className="w-5 h-5" />}
+                                {showWrong && <AlertCircle className="w-5 h-5" />}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <AnimatePresence>
+                    {selectedAnswer !== null && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-10 flex items-center justify-between pt-10 border-t border-app-border"
+                        >
+                            <p className="text-sm font-medium text-app-muted italic">
+                                {selectedAnswer === question.correct ?
+                                    "Excellent deduction. Onward." :
+                                    "A learning opportunity. The correct path is clear now."}
+                            </p>
+                            <button
+                                onClick={nextQuestion}
+                                className="px-8 py-3 bg-app-fg text-app-bg rounded-xl font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-all shadow-lg"
+                            >
+                                {currentQuestion === quizData.length - 1 ? 'Finish Assessment' : 'Next Question'}
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </motion.div>
-                )}
-        </AnimatePresence>
-        </div >
+        </div>
     );
 };
 

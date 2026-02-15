@@ -70,7 +70,11 @@
   }
 
   .pro-card:hover {
-    @apply border-zinc-500 light:bg-zinc-100/80;
+    @apply border-zinc-500;
+  }
+
+  .light .pro-card:hover {
+    @apply bg-zinc-100/80;
   }
 
   /* Subtle Input Focus */

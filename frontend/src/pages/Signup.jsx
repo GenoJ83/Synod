@@ -12,13 +12,15 @@ const Signup = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
+    const { login } = useAuth();
 
     const handleSignup = async (e) => {
         e.preventDefault();
         setLoading(true);
         // Simulate auth
         setTimeout(() => {
-            localStorage.setItem('synod_user', JSON.stringify({ email, name }));
+            const userData = { email, name };
+            login(userData);
             setLoading(false);
             navigate('/dashboard');
         }, 1500);

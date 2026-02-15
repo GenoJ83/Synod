@@ -11,6 +11,7 @@ import QuizSection from '../components/QuizSection';
 import FileUploader from '../components/FileUploader';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 function cn(...inputs) {
     return twMerge(clsx(inputs));
@@ -30,6 +31,7 @@ function Dashboard() {
     const quizRef = useRef(null);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
+    const { user, logout } = useAuth();
 
     const handleAnalyze = async (manualText) => {
         const textToAnalyze = manualText || text;
@@ -124,9 +126,20 @@ function Dashboard() {
                                 <span>Account</span>
                                 <Settings className="w-3 h-3" />
                             </div>
-                            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-app-card cursor-pointer transition-colors">
-                                <div className="w-6 h-6 rounded-full bg-app-card border border-app-border flex items-center justify-center text-[10px] font-bold">JD</div>
-                                <span className="text-sm font-medium">John Doe</span>
+                            <div className="flex items-center justify-between p-2 rounded-lg hover:bg-app-card group cursor-pointer transition-colors">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-app-card border border-app-border flex items-center justify-center text-[10px] font-bold">
+                                        {user?.name?.split(' ').map(n => n[0]).join('') || 'JD'}
+                                    </div>
+                                    <span className="text-sm font-medium">{user?.name || 'John Doe'}</span>
+                                </div>
+                                <button
+                                    onClick={logout}
+                                    className="p-1 text-app-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                    title="Logout"
+                                >
+                                    <Settings className="w-3 h-3" />
+                                </button>
                             </div>
                         </div>
                     )}
@@ -180,13 +193,13 @@ function Dashboard() {
                                     <p className="text-zinc-500 text-lg">Input your course materials to extract intelligence.</p>
                                 </div>
 
-                                <div className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-6 shadow-sm">
-                                    <div className="flex gap-4 mb-6 border-b border-zinc-800 pb-4">
+                                <div className="pro-card p-6 shadow-sm bg-app-card/30">
+                                    <div className="flex gap-4 mb-6 border-b border-app-border pb-4">
                                         <button
                                             onClick={() => setActiveTab('text')}
                                             className={cn(
                                                 "text-sm font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all",
-                                                activeTab === 'text' ? "bg-zinc-100 text-zinc-950" : "text-zinc-500 hover:text-zinc-300"
+                                                activeTab === 'text' ? "bg-app-fg text-app-bg shadow-lg" : "text-app-muted hover:text-app-fg"
                                             )}
                                         >
                                             Raw Text
@@ -195,7 +208,7 @@ function Dashboard() {
                                             onClick={() => setActiveTab('file')}
                                             className={cn(
                                                 "text-sm font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all",
-                                                activeTab === 'file' ? "bg-zinc-100 text-zinc-950" : "text-zinc-500 hover:text-zinc-300"
+                                                activeTab === 'file' ? "bg-app-fg text-app-bg shadow-lg" : "text-app-muted hover:text-app-fg"
                                             )}
                                         >
                                             Documents
@@ -208,14 +221,14 @@ function Dashboard() {
                                                 value={text}
                                                 onChange={(e) => setText(e.target.value)}
                                                 placeholder="Paste lecture notes here..."
-                                                className="w-full h-80 bg-zinc-950 border border-zinc-800 rounded-xl p-6 text-zinc-100 focus:border-zinc-500 transition-all resize-none font-mono text-sm leading-relaxed"
+                                                className="w-full h-80 pro-input resize-none font-mono text-sm leading-relaxed"
                                             />
                                             <div className="flex justify-between items-center">
-                                                <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{text.length} chars</span>
+                                                <span className="text-[10px] font-bold text-app-muted uppercase tracking-widest">{text.length} chars</span>
                                                 <button
                                                     onClick={() => handleAnalyze()}
                                                     disabled={loading || !text}
-                                                    className="bg-zinc-100 hover:bg-white text-zinc-950 px-6 py-3 rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50"
+                                                    className="bg-app-fg hover:opacity-90 text-app-bg px-6 py-3 rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 shadow-md"
                                                 >
                                                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Analyze Content"}
                                                     {!loading && <ChevronRight className="w-4 h-4" />}
@@ -240,33 +253,33 @@ function Dashboard() {
                                             <CheckCircle2 className="w-5 h-5" />
                                             <h3 className="text-sm font-bold uppercase tracking-widest">Executive Summary</h3>
                                         </div>
-                                        <p className="text-zinc-300 text-lg leading-relaxed font-medium">
+                                        <p className="text-app-fg text-lg leading-relaxed font-medium">
                                             {result.summary}
                                         </p>
                                     </div>
 
                                     <div className="grid sm:grid-cols-2 gap-8">
                                         <div className="pro-card p-6">
-                                            <div className="flex items-center gap-3 mb-4 text-zinc-400">
+                                            <div className="flex items-center gap-3 mb-4 text-app-muted">
                                                 <BookOpen className="w-4 h-4" />
                                                 <h3 className="text-xs font-bold uppercase tracking-widest">Foundational Concepts</h3>
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 {result.concepts.map((concept, i) => (
-                                                    <span key={i} className="px-3 py-1 bg-zinc-800 border border-zinc-700 rounded-md text-[11px] font-bold text-zinc-400 uppercase">
+                                                    <span key={i} className="px-3 py-1 bg-app-card border border-app-border rounded-md text-[11px] font-bold text-app-muted uppercase">
                                                         {concept}
                                                     </span>
                                                 ))}
                                             </div>
                                         </div>
 
-                                        <div className="bg-zinc-100 text-zinc-950 rounded-xl p-8 flex flex-col items-center justify-center text-center">
+                                        <div className="bg-app-fg text-app-bg rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-xl">
                                             <Brain className="w-10 h-10 mb-4 opacity-80" />
                                             <h3 className="text-xl font-bold mb-2">Knowledge Check</h3>
-                                            <p className="text-zinc-600 text-sm mb-6">Generated {result.quiz.mcqs.length + result.quiz.fill_in_the_blanks.length} questions for this session.</p>
+                                            <p className="text-app-bg/70 text-sm mb-6 font-medium">Generated {result.quiz.mcqs.length + result.quiz.fill_in_the_blanks.length} questions for this session.</p>
                                             <button
                                                 onClick={startQuiz}
-                                                className="w-full bg-zinc-900 text-white py-3 rounded-lg font-bold hover:bg-black transition-colors"
+                                                className="w-full bg-app-bg text-app-fg py-3 rounded-lg font-bold hover:opacity-90 transition-opacity shadow-lg"
                                             >
                                                 Start Quiz
                                             </button>
