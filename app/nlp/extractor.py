@@ -1,7 +1,12 @@
-from sentence_transformers import SentenceTransformer, util
-import spacy
-from collections import Counter
+try:
+    from sentence_transformers import SentenceTransformer, util
+    import spacy
+    HAS_ML_DEPS = True
+except ImportError:
+    HAS_ML_DEPS = False
+
 import numpy as np
+from collections import Counter
 from typing import List, Tuple
 
 class ConceptExtractor:
@@ -9,20 +14,32 @@ class ConceptExtractor:
         """
         Initializes S-BERT and Spacy for text processing.
         """
-        print(f"Loading embedding model: {model_name}...")
-        self.model = SentenceTransformer(model_name)
-        try:
-            self.nlp = spacy.load("en_core_web_sm")
-        except OSError:
-            print("Downloading spacy model...")
-            import os
-            os.system("python -m spacy download en_core_web_sm")
-            self.nlp = spacy.load("en_core_web_sm")
+        self.has_deps = HAS_ML_DEPS
+        if HAS_ML_DEPS:
+            print(f"Loading embedding model: {model_name}...")
+            self.model = SentenceTransformer(model_name)
+            try:
+                self.nlp = spacy.load("en_core_web_sm")
+            except OSError:
+                print("Downloading spacy model...")
+                import os
+                os.system("python -m spacy download en_core_web_sm")
+                self.nlp = spacy.load("en_core_web_sm")
+        else:
+            print("ML dependencies not found. Running in MOCK mode.")
+            self.model = None
+            self.nlp = None
 
     def extract_concepts(self, text: str, top_n: int = 10) -> List[str]:
         """
         Extracts key concepts (noun phrases) and ranks them using centrality.
         """
+        if not self.has_deps:
+            # Mock concepts: very simple keyword extraction using split and frequency
+            words = text.lower().split()
+            unique_words = list(set([w for w in words if len(w) > 5]))
+            return unique_words[:top_n]
+
         doc = self.nlp(text)
         
         # Candidate selection: Noun phrases and proper nouns

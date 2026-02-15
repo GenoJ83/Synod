@@ -1,4 +1,9 @@
-from transformers import pipeline
+try:
+    from transformers import pipeline
+    HAS_TRANSFORMERS = True
+except ImportError:
+    HAS_TRANSFORMERS = False
+
 from typing import List, Optional
 
 class Summarizer:
@@ -7,8 +12,13 @@ class Summarizer:
         Initializes the summarization pipeline.
         Default model is BART, which is excellent for abstractive summarization.
         """
-        print(f"Loading summarization model: {model_name}...")
-        self.summarizer = pipeline("summarization", model=model_name)
+        self.has_transformers = HAS_TRANSFORMERS
+        if HAS_TRANSFORMERS:
+            print(f"Loading summarization model: {model_name}...")
+            self.summarizer = pipeline("summarization", model=model_name)
+        else:
+            print("Transformers not found. Running in MOCK mode.")
+            self.summarizer = None
     
     def summarize(self, text: str, max_length: int = 150, min_length: int = 40) -> str:
         """
@@ -17,6 +27,11 @@ class Summarizer:
         if not text or len(text.strip()) < 50:
             return text
         
+        if not self.has_transformers:
+            # Mock summary: just take the first few sentences
+            sentences = text.split(". ")
+            return ". ".join(sentences[:2]) + " (Mock Summary)"
+
         # Split text into chunks if it's too long (transformers have a token limit)
         # For simplicity, we'll assume the input is within limits for now or should be pre-chunked.
         summary = self.summarizer(text, max_length=max_length, min_length=min_length, do_sample=False)
