@@ -13,7 +13,7 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
-    const { login, loginWithOAuth, isAuthenticated } = useAuth();
+    const { login, isAuthenticated } = useAuth();
 
     React.useEffect(() => {
         if (isAuthenticated) {
@@ -22,8 +22,9 @@ const Login = () => {
     }, [isAuthenticated, navigate]);
 
     const handleOAuth = (provider) => {
-        loginWithOAuth(provider);
-        navigate('/dashboard');
+        // Redirect to backend OAuth endpoint
+        const backendUrl = 'http://localhost:8000';
+        window.location.href = `${backendUrl}/auth/${provider}/login`;
     };
 
     const handleLogin = async (e) => {
