@@ -238,7 +238,7 @@ function Dashboard() {
                                         </div>
                                     ) : (
                                         <div className="animate-fade-in">
-                                            <FileUploader onUploadSuccess={handleFileUploadSuccess} />
+                                            <FileUploader onUploadSuccess={handleFileUploadSuccess} onError={setError} />
                                         </div>
                                     )}
 

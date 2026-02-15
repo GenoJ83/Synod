@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, X, CheckCircle2, AlertCircle, Loader2, FileUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const FileUploader = ({ onUploadSuccess }) => {
+const FileUploader = ({ onUploadSuccess, onError }) => {
     const [files, setFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
 
@@ -50,7 +50,7 @@ const FileUploader = ({ onUploadSuccess }) => {
             setFiles([]);
         } catch (error) {
             console.error('Upload error:', error);
-            // You might want to add an error state/toast here
+            if (onError) onError(error.message || 'Failed to upload and analyze file');
         } finally {
             setUploading(false);
         }
