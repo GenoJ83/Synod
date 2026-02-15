@@ -11,8 +11,15 @@ from app.nlp.summarizer import Summarizer
 from app.nlp.extractor import ConceptExtractor
 from app.nlp.quiz_gen import QuizGenerator
 from app.ingestion.extractor_service import ExtractorService
+from app.auth import router as auth_router
 
 app = FastAPI(title="Synod API")
+
+# Session middleware for OAuth (required by Authlib)
+from starlette.middleware.sessions import SessionMiddleware
+import secrets
+
+app.add_middleware(SessionMiddleware, secret_key=secrets.token_urlsafe(32))
 
 # Enable CORS for React development
 app.add_middleware(
@@ -28,6 +35,9 @@ summarizer = Summarizer(model_name="sshleifer/distilbart-cnn-12-6")
 extractor = ConceptExtractor()
 quiz_gen = QuizGenerator()
 file_extractor = ExtractorService()
+
+# Register authentication routes
+app.include_router(auth_router)
 
 UPLOAD_DIR = Path("data/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
