@@ -69,7 +69,7 @@ function Dashboard() {
         const newEntry = {
             id: Date.now(),
             date: new Date().toISOString(),
-            title: "File Analysis: " + (data.summary.slice(0, 30) + "..."),
+            title: "File Analysis: " + ((data?.summary || "Uploaded file").slice(0, 30) + "..."),
             ...data
         };
         localStorage.setItem('synod_history', JSON.stringify([newEntry, ...history].slice(0, 50)));
@@ -266,11 +266,11 @@ function Dashboard() {
                                                 <h3 className="text-xs font-bold uppercase tracking-widest">Foundational Concepts</h3>
                                             </div>
                                             <div className="flex flex-wrap gap-2">
-                                                {result.concepts.map((concept, i) => (
+                                                {result?.concepts?.map((concept, i) => (
                                                     <span key={i} className="px-3 py-1 bg-app-card border border-app-border rounded-md text-[11px] font-bold text-app-muted uppercase">
                                                         {concept}
                                                     </span>
-                                                ))}
+                                                )) || <p className="text-app-muted text-sm">No concepts extracted yet.</p>}
                                             </div>
                                         </div>
 

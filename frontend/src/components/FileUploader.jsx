@@ -67,8 +67,41 @@ const FileUploader = ({ onUploadSuccess }) => {
                         exit={{ opacity: 0, y: 10 }}
                         className="space-y-3"
                     >
-                        {status === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                        <span className="font-bold text-xs uppercase tracking-widest">{message}</span>
+                        {files.map(({ file, id, status }) => (
+                            <div key={id} className="flex items-center justify-between p-4 bg-app-card border border-app-border rounded-xl">
+                                <div className="flex items-center gap-3 flex-1">
+                                    <FileText className="w-5 h-5 text-blue-500" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-sm truncate">{file.name}</p>
+                                        <p className="text-xs text-app-muted">{(file.size / 1024).toFixed(1)} KB</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => removeFile(id)}
+                                    className="p-2 hover:bg-app-bg rounded-lg transition-colors text-app-muted hover:text-red-500"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+
+                        <button
+                            onClick={handleUpload}
+                            disabled={uploading}
+                            className="w-full bg-app-fg text-app-bg py-3 rounded-xl font-bold text-sm hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {uploading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Processing...
+                                </>
+                            ) : (
+                                <>
+                                    <Upload className="w-4 h-4" />
+                                    Upload & Synthesize
+                                </>
+                            )}
+                        </button>
                     </motion.div>
                 )}
             </AnimatePresence>
