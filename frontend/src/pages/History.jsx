@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     History as HistoryIcon, Search, Calendar, ChevronRight,
@@ -9,16 +9,22 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
 const History = () => {
-    const [history, setHistory] = useState([]);
+    // Initialize history from localStorage lazily to avoid useEffect issues
+    const [history, setHistory] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                return JSON.parse(localStorage.getItem('synod_history') || '[]');
+            } catch (e) {
+                console.error('Error loading history:', e);
+                return [];
+            }
+        }
+        return [];
+    });
     const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const { user, logout } = useAuth();
-
-    useEffect(() => {
-        const savedHistory = JSON.parse(localStorage.getItem('synod_history') || '[]');
-        setHistory(savedHistory);
-    }, []);
 
     const deleteEntry = (id) => {
         const updated = history.filter(item => item.id !== id);
@@ -27,8 +33,8 @@ const History = () => {
     };
 
     const filteredHistory = history.filter(item =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.summary.toLowerCase().includes(searchQuery.toLowerCase())
+        (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.summary && item.summary.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
     return (
