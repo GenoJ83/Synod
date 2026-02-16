@@ -7,6 +7,7 @@ from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 import httpx
+import secrets
 
 from .oauth import oauth
 from .jwt_handler import create_access_token, verify_access_token
@@ -47,6 +48,34 @@ async def google_callback(request: Request):
             "picture": user_info.get("picture"),
             "provider": "google"
         }
+
+        # --- PERSIST GOOGLE USER TO DB ---
+        from ..database import SessionLocal
+        from ..models import User
+        
+        db = SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.email == user_data["email"]).first()
+            if not db_user:
+                # Create new user for Google login
+                # We use a dummy password since they login via Google
+                dummy_password = get_password_hash(secrets.token_urlsafe(16))
+                new_user = User(
+                    email=user_data["email"],
+                    hashed_password=dummy_password,
+                    full_name=user_data["name"]
+                )
+                db.add(new_user)
+                db.commit()
+                db.refresh(new_user)
+                print(f"Created new Google user in DB: {new_user.email}")
+            else:
+                print(f"Google user already exists in DB: {db_user.email}")
+        except Exception as db_e:
+            print(f"Database error during Google login: {db_e}")
+        finally:
+            db.close()
+        # ---------------------------------
         
         # Create JWT token
         jwt_token = create_access_token(user_data)
@@ -57,9 +86,11 @@ async def google_callback(request: Request):
         )
     
     except Exception as e:
+        import traceback
         print(f"Google OAuth error: {str(e)}")
+        traceback.print_exc()
         return RedirectResponse(
-            url=f"{FRONTEND_URL}/login?error=oauth_failed"
+            url=f"{FRONTEND_URL}/login?error=oauth_failed&details={str(e)}"
         )
 
 

@@ -21,9 +21,9 @@ app = FastAPI(title="Synod API")
 
 # Session middleware for OAuth (required by Authlib)
 from starlette.middleware.sessions import SessionMiddleware
-import secrets
 
-app.add_middleware(SessionMiddleware, secret_key=secrets.token_urlsafe(32))
+SESSION_SECRET = os.getenv("SESSION_SECRET", os.getenv("JWT_SECRET", "session_development_secret_key_123"))
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
 # Enable CORS for React development
 app.add_middleware(
