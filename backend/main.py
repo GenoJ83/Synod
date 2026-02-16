@@ -82,35 +82,7 @@ def process_logic(text: str):
     mcqs = quiz_gen.generate_mcqs(text, concepts, concepts)
 
     # 4. Generate explanations for each concept
-    explanations = {
-        "global": "These foundational concepts are key to understanding the lecture material.",
-        "concepts": []
-    }
-    
-    # Find sentences containing each concept for more meaningful explanations
-    import re
-    sentences = re.split(r'(?<=[.!?])\s+', text)
-    
-    for concept in concepts:
-        # Find sentences containing this concept
-        matching_sentences = []
-        concept_pattern = re.compile(re.escape(concept), re.IGNORECASE)
-        for sentence in sentences:
-            if len(sentence.split()) > 5 and concept_pattern.search(sentence):
-                matching_sentences.append(sentence.strip())
-                if len(matching_sentences) >= 2:
-                    break
-        
-        if matching_sentences:
-            explanations["concepts"].append({
-                "term": concept,
-                "reason": f"Mentioned in the lecture: '{matching_sentences[0][:100]}...'"
-            })
-        else:
-            explanations["concepts"].append({
-                "term": concept,
-                "reason": "Key concept identified in the lecture content."
-            })
+    explanations = explanation_gen.generate_all_explanations(concepts, text)
 
     return {
         "summary": summary,
