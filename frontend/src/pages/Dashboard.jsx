@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import axios from 'axios';
 import {
     FileText, BookOpen, Brain, CheckCircle2, ChevronRight,
@@ -28,6 +29,7 @@ function Dashboard() {
     const [activeTab, setActiveTab] = useState('text'); // 'text' or 'file'
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [selectedConcept, setSelectedConcept] = useState(null);
+    const [viewedConcepts, setViewedConcepts] = useState([]);
 
     const quizRef = useRef(null);
     const navigate = useNavigate();
@@ -275,38 +277,83 @@ function Dashboard() {
                                             <div className="flex items-center gap-3 mb-4 text-app-muted">
                                                 <BookOpen className="w-4 h-4" />
                                                 <h3 className="text-xs font-bold uppercase tracking-widest">Foundational Concepts</h3>
+                                                {result?.concepts && (
+                                                    <span className="ml-auto text-[10px] text-blue-400">
+                                                        {viewedConcepts.length}/{result.concepts.length} explored
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 {result?.concepts?.map((concept, i) => (
                                                     <button
                                                         key={i}
-                                                        onClick={() => setSelectedConcept(concept)}
-                                                        className="px-3 py-1 bg-app-card border border-app-border rounded-md text-[11px] font-bold text-app-muted uppercase hover:bg-blue-500/20 hover:border-blue-500/50 hover:text-blue-400 transition-all cursor-pointer"
+                                                        onClick={() => { setSelectedConcept(concept); if (!viewedConcepts.includes(concept)) { setViewedConcepts([...viewedConcepts, concept]); } }}
+                                                        className={`px-3 py-1 bg-app-card border rounded-md text-[11px] font-bold uppercase transition-all cursor-pointer ${
+                                                            selectedConcept === concept 
+                                                                ? 'border-blue-500 bg-blue-500/20 text-blue-400' 
+                                                                : viewedConcepts.includes(concept)
+                                                                    ? 'border-green-500/30 text-green-400/70'
+                                                                    : 'border-app-border text-app-muted hover:bg-blue-500/20 hover:border-blue-500/50 hover:text-blue-400'
+                                                        }`}
                                                     >
                                                         {concept}
                                                     </button>
                                                 )) || <p className="text-app-muted text-sm">No concepts extracted yet.</p>}
                                             </div>
 
-                                            {/* Concept Explanation Popover */}
+                                            {/* Interactive Concept Explanation */}
                                             {selectedConcept && result?.explanations?.concepts && (
-                                                <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                                                    <div className="flex items-start justify-between gap-4">
-                                                        <div>
-                                                            <h4 className="text-sm font-bold text-blue-400 uppercase mb-1">{selectedConcept}</h4>
-                                                            <p className="text-sm text-app-fg">
-                                                                {result.explanations.concepts.find(c => c.term === selectedConcept)?.reason || 
-                                                                 result.explanations.global}
-                                                            </p>
+                                                <motion.div 
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="mt-4 p-5 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl"
+                                                >
+                                                    <div className="flex items-start justify-between gap-4 mb-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                                                <BookOpen className="w-4 h-4 text-blue-400" />
+                                                            </div>
+                                                            <h4 className="text-base font-bold text-blue-400">{selectedConcept}</h4>
                                                         </div>
                                                         <button
                                                             onClick={() => setSelectedConcept(null)}
-                                                            className="text-app-muted hover:text-app-fg p-1"
+                                                            className="text-app-muted hover:text-app-fg p-1 hover:bg-app-card rounded"
                                                         >
                                                             ×
                                                         </button>
                                                     </div>
-                                                </div>
+                                                    
+                                                    <p className="text-sm text-app-fg leading-relaxed mb-4">
+                                                        {result.explanations.concepts.find(c => c.term === selectedConcept)?.reason || 
+                                                         result.explanations.global}
+                                                    </p>
+                                                    
+                                                    {/* Related Concepts */}
+                                                    <div className="pt-3 border-t border-blue-500/20">
+                                                        <p className="text-[10px] font-bold text-app-muted uppercase tracking-wider mb-2">Related Concepts</p>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {result?.concepts?.filter(c => c !== selectedConcept).slice(0, 4).map((related, i) => (
+                                                                <button
+                                                                    key={i}
+                                                                    onClick={() => setSelectedConcept(related)}
+                                                                    className="px-2 py-1 bg-app-card/50 border border-app-border/50 rounded text-[10px] text-app-muted hover:text-blue-400 hover:border-blue-500/50 transition-all"
+                                                                >
+                                                                    {related}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {/* Action buttons */}
+                                                    <div className="flex gap-2 mt-4">
+                                                        <button 
+                                                            onClick={() => { setShowQuiz(true); setTimeout(() => quizRef.current?.scrollIntoView({ behavior: 'smooth' }), 100); }}
+                                                            className="flex-1 py-2 bg-blue-500 text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors"
+                                                        >
+                                                            Test Your Knowledge
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
                                             )}
                                         </div>
 

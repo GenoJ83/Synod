@@ -9,18 +9,14 @@ class QuizGenerator:
     def generate_fill_in_the_blanks(self, text: str, concepts: List[str]) -> List[Dict]:
         """
         Generates fill-in-the-blank questions by masking concepts in the text.
-        Uses full text (not just summary) for more comprehensive coverage.
         """
         questions = []
-        # Split into sentences - handle both newlines and punctuation
         sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
         
         for sentence in sentences:
-            # Skip very short sentences
             if len(sentence.split()) < 5:
                 continue
             for concept in concepts:
-                # Case insensitive match for the concept in the sentence
                 pattern = re.compile(re.escape(concept), re.IGNORECASE)
                 match = pattern.search(sentence)
                 if match:
@@ -30,19 +26,15 @@ class QuizGenerator:
                         "question": question_text.strip(),
                         "answer": concept
                     })
-                    # Don't break - allow multiple concepts per sentence to generate more questions
         
-        return questions[:15]  # Generate up to 15 fill-in-the-blank questions
+        return questions[:8]  # Reduce to make room for comprehension questions
 
     def generate_mcqs(self, text: str, concepts: List[str], all_concepts: List[str]) -> List[Dict]:
-        """
-        Generates Multiple Choice Questions from full text.
-        """
+        """Standard MCQ - mask a word in sentence"""
         questions = []
         sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
 
         for sentence in sentences:
-            # Skip very short sentences
             if len(sentence.split()) < 5:
                 continue
                 
@@ -52,12 +44,9 @@ class QuizGenerator:
                 if pattern.search(sentence):
                     matched_concepts.append(concept)
             
-            # Generate MCQ for each concept found in the sentence
             for matched_concept in matched_concepts:
-                # For MCQ, the question is the sentence with the concept masked
                 question_text = re.compile(re.escape(matched_concept), re.IGNORECASE).sub("__________", sentence)
                 
-                # Distractors: Randomly pick from other concepts
                 distractors = [c for c in all_concepts if c.lower() != matched_concept.lower()]
                 if len(distractors) >= 3:
                     options = random.sample(distractors, 3)
@@ -71,7 +60,187 @@ class QuizGenerator:
                         "answer": matched_concept
                     })
         
-        return questions[:15]  # Generate up to 15 MCQ questions
+        return questions[:8]  # Reduce for comprehension questions
+
+    def generate_true_false(self, text: str, concepts: List[str]) -> List[Dict]:
+        """
+        Generates True/False questions about the lecture content.
+        Tests comprehension by presenting statements about the content.
+        """
+        questions = []
+        sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
+        
+        # Create statements from sentences - some true, some modified (false)
+        true_statements = []
+        false_statements = []
+        
+        for sentence in sentences:
+            if len(sentence.split()) < 8:
+                continue
+            
+            # This is a true statement from the text
+            true_statements.append(sentence.strip())
+            
+            # Create a false statement by negating or changing key parts
+            false_statement = self._create_false_statement(sentence, concepts)
+            if false_statement:
+                false_statements.append(false_statement)
+        
+        # Generate true questions
+        for statement in true_statements[:5]:
+            # Convert statement to question
+            question = self._statement_to_question(statement)
+            if question and len(question) > 20:
+                questions.append({
+                    "type": "true_false",
+                    "question": question,
+                    "correct": True,
+                    "explanation": statement[:100] + "..." if len(statement) > 100 else statement
+                })
+        
+        # Generate false questions
+        for statement in false_statements[:5]:
+            question = self._statement_to_question(statement)
+            if question and len(question) > 20:
+                questions.append({
+                    "type": "true_false",
+                    "question": question,
+                    "correct": False,
+                    "explanation": "This statement is not accurate according to the lecture."
+                })
+        
+        random.shuffle(questions)
+        return questions[:8]
+
+    def generate_comprehension(self, text: str, concepts: List[str]) -> List[Dict]:
+        """
+        Generates comprehension questions that test understanding of concepts and relationships.
+        """
+        questions = []
+        sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
+        
+        # Find sentences that describe relationships or processes
+        process_keywords = ['because', 'therefore', 'however', 'although', 'means', 'enables', 
+                           'allows', 'helps', 'results', 'leads to', 'used for', 'involves',
+                           'depends on', 'consists of', 'includes', 'requires']
+        
+        cause_effect_pairs = []
+        
+        for sentence in sentences:
+            sentence_lower = sentence.lower()
+            
+            # Check if sentence describes a cause-effect or relationship
+            for keyword in process_keywords:
+                if keyword in sentence_lower and len(sentence.split()) > 8:
+                    # Extract main concepts from sentence
+                    sentence_concepts = [c for c in concepts if c.lower() in sentence_lower]
+                    if sentence_concepts:
+                        cause_effect_pairs.append({
+                            'sentence': sentence.strip(),
+                            'concepts': sentence_concepts,
+                            'keyword': keyword
+                        })
+                    break
+        
+        # Generate cause-effect questions
+        for pair in cause_effect_pairs[:4]:
+            sentence = pair['sentence']
+            main_concept = pair['concepts'][0]
+            
+            # What/How question
+            questions.append({
+                "type": "comprehension",
+                "question": f"According to the lecture, how does {main_concept} work?",
+                "options": [
+                    sentence[:100] + "..." if len(sentence) > 100 else sentence,
+                    "It is not discussed in the lecture",
+                    "It works in multiple unrelated ways",
+                    "It has no significant role"
+                ],
+                "answer": 0,
+                "explanation": sentence[:150] + "..." if len(sentence) > 150 else sentence
+            })
+            
+            # Why question  
+            if len(pair['concepts']) > 1:
+                related = pair['concepts'][1]
+                questions.append({
+                    "type": "comprehension",
+                    "question": f"What is the relationship between {main_concept} and {related}?",
+                    "options": [
+                        f"They are discussed together in the context of: {sentence[:80]}...",
+                        "They are completely unrelated",
+                        "One is a replacement for the other",
+                        "They are competing technologies"
+                    ],
+                    "answer": 0,
+                    "explanation": f"The lecture mentions both in relation to each other."
+                })
+        
+        # Generate concept application questions
+        for concept in concepts[:5]:
+            questions.append({
+                "type": "comprehension",
+                "question": f"What is the main purpose of {concept}?",
+                "options": [
+                    "To process and analyze information",  # Generic correct-ish
+                    "To store data permanently",
+                    "To connect to the internet",
+                    "To display visual content"
+                ],
+                "answer": 0,
+                "explanation": f"{concept} is used for processing information as discussed in the lecture."
+            })
+        
+        random.shuffle(questions)
+        return questions[:8]
+
+    def _create_false_statement(self, sentence: str, concepts: List[str]) -> str:
+        """Create a false version of a statement for True/False questions."""
+        sentence_lower = sentence.lower()
+        
+        # Try negating the sentence
+        negations = ["not ", "never ", "cannot "]
+        for neg in negations:
+            if neg not in sentence_lower:
+                # Add negation
+                words = sentence.split()
+                if len(words) > 3:
+                    insert_pos = len(words) // 2
+                    words.insert(insert_pos, neg)
+                    return " ".join(words)
+        
+        # Try swapping concepts
+        if len(concepts) >= 2:
+            concept1, concept2 = random.sample(concepts, 2)
+            if concept1.lower() in sentence_lower:
+                return sentence.replace(concept1, concept2, 1)
+            elif concept2.lower() in sentence_lower:
+                return sentence.replace(concept2, concept1, 1)
+        
+        return ""
+
+    def _statement_to_question(self, statement: str) -> str:
+        """Convert a statement to a question format."""
+        statement = statement.strip()
+        if not statement:
+            return ""
+        
+        # Remove leading conjunctions
+        if statement.lower().startswith(('however', 'therefore', 'additionally', 'furthermore')):
+            parts = statement.split(' ', 1)
+            if len(parts) > 1:
+                statement = parts[1]
+        
+        # Capitalize first letter
+        statement = statement[0].upper() + statement[1:] if statement else statement
+        
+        # Add question mark instead of period
+        if statement.endswith('.'):
+            statement = statement[:-1] + '?'
+        
+        return statement
+
 
 if __name__ == "__main__":
     # Test
@@ -93,11 +262,11 @@ if __name__ == "__main__":
     qg = QuizGenerator()
     fibs = qg.generate_fill_in_the_blanks(test_text, test_concepts)
     mcqs = qg.generate_mcqs(test_text, test_concepts, all_concepts)
+    tf = qg.generate_true_false(test_text, test_concepts)
+    comp = qg.generate_comprehension(test_text, test_concepts)
     
     print(f"Fill-in-the-blanks ({len(fibs)} questions)")
-    for q in fibs[:3]:
-        print(f"  - {q['question'][:60]}...")
-    print(f"\nMCQs ({len(mcqs)} questions)")
-    for q in mcqs[:3]:
-        print(f"  - {q['question'][:60]}...")
-    print(f"\nTotal questions: {len(fibs) + len(mcqs)}")
+    print(f"MCQs ({len(mcqs)} questions)")
+    print(f"True/False ({len(tf)} questions)")
+    print(f"Comprehension ({len(comp)} questions)")
+    print(f"\nTotal questions: {len(fibs) + len(mcqs) + len(tf) + len(comp)}")
