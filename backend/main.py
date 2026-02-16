@@ -1,15 +1,15 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 import uvicorn
 import os
 import shutil
 from pathlib import Path
 
-# from app.nlp.summarizer import Summarizer
-# from app.nlp.extractor import ConceptExtractor
-# from app.nlp.quiz_gen import QuizGenerator
+from app.nlp.summarizer import Summarizer
+from app.nlp.extractor import ConceptExtractor
+from app.nlp.quiz_gen import QuizGenerator
 from app.ingestion.extractor_service import ExtractorService
 from app.auth import router as auth_router
 
@@ -39,10 +39,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize NLP modules
-# summarizer = Summarizer(model_name="sshleifer/distilbart-cnn-12-6")
-# extractor = ConceptExtractor()
-# quiz_gen = QuizGenerator()
+"""
+Lightweight NLP pipeline wiring.
+The heavy model objects are instantiated once at startup and reused.
+Each component has an internal MOCK/fallback mode when dependencies are missing.
+"""
+summarizer = Summarizer(model_name=os.getenv("SUMMARY_MODEL", "sshleifer/distilbart-cnn-12-6"))
+extractor = ConceptExtractor(model_name=os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"))
+quiz_gen = QuizGenerator()
 file_extractor = ExtractorService()
 
 # Register authentication routes
@@ -58,19 +62,38 @@ class ProcessResponse(BaseModel):
     summary: str
     concepts: List[str]
     quiz: Dict
+    explanations: Optional[Dict] = None
+    metrics: Optional[Dict] = None
 
 def process_logic(text: str):
     if not text:
         raise HTTPException(status_code=400, detail="Text is required")
     
-    # NLP Components disabled for Auth verification
+    # 1. Summarization
+    summary = summarizer.summarize(text)
+
+    # 2. Concept extraction (ranked key phrases)
+    concepts = extractor.extract_concepts(text)
+
+    # 3. Quiz generation from summary + concepts
+    fibs = quiz_gen.generate_fill_in_the_blanks(summary, concepts)
+    mcqs = quiz_gen.generate_mcqs(summary, concepts, concepts)
+
+    # 4. Simple explanation scaffold (can be enriched later)
+    explanations = {
+        "global": "Concepts are ranked by semantic similarity to the overall lecture content.",
+        "concepts": [{"term": c, "reason": "High semantic similarity and frequent occurrence."} for c in concepts],
+    }
+
     return {
-        "summary": "AI processing is currently disabled for maintenance.",
-        "concepts": [],
+        "summary": summary,
+        "concepts": concepts,
         "quiz": {
-            "fill_in_the_blanks": [],
-            "mcqs": []
-        }
+            "fill_in_the_blanks": fibs,
+            "mcqs": mcqs,
+        },
+        "explanations": explanations,
+        "metrics": None,
     }
 
 @app.get("/")

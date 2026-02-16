@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Brain, Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
 
 const Signup = () => {
     const [name, setName] = useState('');
@@ -23,15 +24,14 @@ const Signup = () => {
 
     const handleOAuth = (provider) => {
         // Redirect to backend OAuth endpoint
-        const backendUrl = 'http://localhost:8000';
-        window.location.href = `${backendUrl}/auth/${provider}/login`;
+        window.location.href = `${API_BASE_URL}/auth/${provider}/login`;
     };
 
     const handleSignup = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/auth/register', {
+            const response = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password, full_name: name }),
