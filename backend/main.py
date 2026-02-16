@@ -13,6 +13,10 @@ from app.nlp.quiz_gen import QuizGenerator
 from app.ingestion.extractor_service import ExtractorService
 from app.auth import router as auth_router
 
+# Initialize Database
+from app.database import engine, Base
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI(title="Synod API")
 
 # Session middleware for OAuth (required by Authlib)
