@@ -17,6 +17,7 @@ const LandingPage = () => {
                             <Brain className="w-5 h-5 text-app-bg" />
                         </div>
                         <span className="text-xl font-bold tracking-tight">Synod</span>
+                        <span className="text-[8px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-bold uppercase tracking-tighter">v2.0</span>
                     </div>
                     <div className="flex items-center gap-8">
                         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-app-muted">
@@ -52,13 +53,21 @@ const LandingPage = () => {
                             loop
                             muted
                             playsInline
-                            className="w-full h-full object-cover opacity-40 dark:opacity-30"
+                            poster="https://images.pexels.com/photos/255379/pexels-photo-255379.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            onPlay={() => console.log("Video started playing")}
+                            onError={(e) => {
+                                console.error("Video error:", e);
+                                // Set a data attribute for remote debugging if needed
+                                e.currentTarget.setAttribute('data-error', 'true');
+                            }}
+                            className="w-full h-full object-cover opacity-60 dark:opacity-40"
                         >
-                            <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-low-poly-polygonal-motion-background-4k-34743-full-hd.mp4" type="video/mp4" />
+                            <source src="https://videos.pexels.com/video-files/3129957/3129957-uhd_2560_1440_25fps.mp4" type="video/mp4" />
+                            Your browser does not support the video tag.
                         </video>
                         {/* Gradient Overlay for Readability */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-app-bg/80 via-transparent to-app-bg" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-app-bg/60 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-app-bg/90 via-app-bg/20 to-app-bg" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-app-bg/70 via-transparent to-transparent" />
                     </div>
 
                     <div className="max-w-[1600px] mx-auto grid lg:grid-cols-2 gap-20 items-center relative z-10">
