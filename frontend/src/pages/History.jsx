@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     History as HistoryIcon, Search, Calendar, ChevronRight,
@@ -9,7 +9,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
 const History = () => {
-    // Initialize history from localStorage lazily to avoid useEffect issues
+    // Initialize history from localStorage lazily to avoid useEffect issues and brief empty state flash
     const [history, setHistory] = useState(() => {
         if (typeof window !== 'undefined') {
             try {
@@ -25,6 +25,11 @@ const History = () => {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const { user, logout } = useAuth();
+
+    // Update localStorage when history changes
+    useEffect(() => {
+        localStorage.setItem('synod_history', JSON.stringify(history));
+    }, [history]);
 
     const deleteEntry = (id) => {
         const updated = history.filter(item => item.id !== id);
@@ -129,7 +134,7 @@ const History = () => {
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="flex items-center gap-2 text-[10px] font-bold text-app-muted uppercase tracking-widest">
                                                 <Calendar className="w-3 h-3" />
-                                                {item.date ? new Date(item.date).toLocaleDateString() : new Date(item.id).toLocaleDateString()}
+                                                {item.date ? new Date(item.date).toLocaleDateString() : (item.id ? new Date(item.id).toLocaleDateString() : 'Unknown Date')}
                                             </div>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); deleteEntry(item.id); }}
@@ -138,17 +143,17 @@ const History = () => {
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
-                                        <h3 className="text-lg font-bold mb-3 group-hover:text-blue-500 transition-colors line-clamp-2">{item.title}</h3>
-                                        <p className="text-app-muted text-sm line-clamp-3 mb-6 flex-1 italic">"{item.summary}"</p>
+                                        <h3 className="text-lg font-bold mb-3 group-hover:text-blue-500 transition-colors line-clamp-2">{item.title || 'Untitled Analysis'}</h3>
+                                        <p className="text-app-muted text-sm line-clamp-3 mb-6 flex-1 italic">"{item.summary || 'No summary available'}"</p>
 
                                         <div className="pt-6 border-t border-app-border flex items-center justify-between">
                                             <div className="flex gap-1">
-                                                {item.concepts.slice(0, 2).map((c, i) => (
+                                                {(item.concepts || []).slice(0, 2).map((c, i) => (
                                                     <span key={i} className="px-2 py-1 bg-app-card border border-app-border rounded-md text-[10px] font-bold text-app-muted">
                                                         {c}
                                                     </span>
                                                 ))}
-                                                {item.concepts.length > 2 && <span className="text-[10px] text-app-muted font-bold self-center">+{item.concepts.length - 2}</span>}
+                                                {(item.concepts || []).length > 2 && <span className="text-[10px] text-app-muted font-bold self-center">+{(item.concepts || []).length - 2}</span>}
                                             </div>
                                             <button
                                                 onClick={() => navigate('/dashboard', { state: { result: item } })}

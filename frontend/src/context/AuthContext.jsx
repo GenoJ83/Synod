@@ -93,9 +93,14 @@ export const AuthProvider = ({ children }) => {
 
     const isAuthenticated = !!user;
 
+    // Don't return null during loading - this causes blank screen
+    // Instead, render children with loading state
     if (loading) {
-        // Optional: Return a loading spinner during initial verification
-        return null;
+        return (
+            <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+                <div className="text-zinc-400 text-sm">Loading...</div>
+            </div>
+        );
     }
 
     return (

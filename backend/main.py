@@ -10,6 +10,7 @@ from pathlib import Path
 from app.nlp.summarizer import Summarizer
 from app.nlp.extractor import ConceptExtractor
 from app.nlp.quiz_gen import QuizGenerator
+from app.nlp.explanation_generator import ExplanationGenerator
 from app.ingestion.extractor_service import ExtractorService
 from app.auth import router as auth_router
 
@@ -75,15 +76,40 @@ def process_logic(text: str):
     # 2. Concept extraction (ranked key phrases)
     concepts = extractor.extract_concepts(text)
 
-    # 3. Quiz generation from summary + concepts
-    fibs = quiz_gen.generate_fill_in_the_blanks(summary, concepts)
-    mcqs = quiz_gen.generate_mcqs(summary, concepts, concepts)
+    # 3. Quiz generation from full text and concepts
+    fibs = quiz_gen.generate_fill_in_the_blanks(text, concepts)
+    mcqs = quiz_gen.generate_mcqs(text, concepts, concepts)
 
-    # 4. Simple explanation scaffold (can be enriched later)
+    # 4. Generate explanations for each concept
     explanations = {
-        "global": "Concepts are ranked by semantic similarity to the overall lecture content.",
-        "concepts": [{"term": c, "reason": "High semantic similarity and frequent occurrence."} for c in concepts],
+        "global": "These foundational concepts are key to understanding the lecture material.",
+        "concepts": []
     }
+    
+    # Find sentences containing each concept for more meaningful explanations
+    import re
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    
+    for concept in concepts:
+        # Find sentences containing this concept
+        matching_sentences = []
+        concept_pattern = re.compile(re.escape(concept), re.IGNORECASE)
+        for sentence in sentences:
+            if len(sentence.split()) > 5 and concept_pattern.search(sentence):
+                matching_sentences.append(sentence.strip())
+                if len(matching_sentences) >= 2:
+                    break
+        
+        if matching_sentences:
+            explanations["concepts"].append({
+                "term": concept,
+                "reason": f"Mentioned in the lecture: '{matching_sentences[0][:100]}...'"
+            })
+        else:
+            explanations["concepts"].append({
+                "term": concept,
+                "reason": "Key concept identified in the lecture content."
+            })
 
     return {
         "summary": summary,

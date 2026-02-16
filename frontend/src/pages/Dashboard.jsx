@@ -27,6 +27,7 @@ function Dashboard() {
     const [showQuiz, setShowQuiz] = useState(false);
     const [activeTab, setActiveTab] = useState('text'); // 'text' or 'file'
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [selectedConcept, setSelectedConcept] = useState(null);
 
     const quizRef = useRef(null);
     const navigate = useNavigate();
@@ -277,11 +278,36 @@ function Dashboard() {
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 {result?.concepts?.map((concept, i) => (
-                                                    <span key={i} className="px-3 py-1 bg-app-card border border-app-border rounded-md text-[11px] font-bold text-app-muted uppercase">
+                                                    <button
+                                                        key={i}
+                                                        onClick={() => setSelectedConcept(concept)}
+                                                        className="px-3 py-1 bg-app-card border border-app-border rounded-md text-[11px] font-bold text-app-muted uppercase hover:bg-blue-500/20 hover:border-blue-500/50 hover:text-blue-400 transition-all cursor-pointer"
+                                                    >
                                                         {concept}
-                                                    </span>
+                                                    </button>
                                                 )) || <p className="text-app-muted text-sm">No concepts extracted yet.</p>}
                                             </div>
+
+                                            {/* Concept Explanation Popover */}
+                                            {selectedConcept && result?.explanations?.concepts && (
+                                                <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                                                    <div className="flex items-start justify-between gap-4">
+                                                        <div>
+                                                            <h4 className="text-sm font-bold text-blue-400 uppercase mb-1">{selectedConcept}</h4>
+                                                            <p className="text-sm text-app-fg">
+                                                                {result.explanations.concepts.find(c => c.term === selectedConcept)?.reason || 
+                                                                 result.explanations.global}
+                                                            </p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => setSelectedConcept(null)}
+                                                            className="text-app-muted hover:text-app-fg p-1"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="bg-app-fg text-app-bg rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-xl">

@@ -17,13 +17,25 @@ const QuizSection = ({ quiz }) => {
         const mcqs = quiz.mcqs || [];
         const fibs = quiz.fill_in_the_blanks || [];
         
-        // Convert to a format compatible with the quiz UI
-        return mcqs.map((q, index) => ({
+        // Convert MCQs to quiz format
+        const mcqQuestions = mcqs.map((q) => ({
             question: q.question,
             options: q.options || [],
             correct: q.options ? q.options.indexOf(q.answer) : 0,
             type: 'mcq'
         }));
+        
+        // Convert fill-in-the-blanks to quiz format
+        const fibQuestions = fibs.map((q) => ({
+            question: q.question,
+            options: [q.answer], // Single answer for FIB
+            correct: 0,
+            type: 'fib',
+            answer: q.answer
+        }));
+        
+        // Combine both types (MCQs first, then fill-in-the-blanks)
+        return [...mcqQuestions, ...fibQuestions];
     }, [quiz]);
 
     const handleAnswer = (index) => {
