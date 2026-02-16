@@ -25,8 +25,14 @@ BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 @router.get("/google/login")
 async def google_login(request: Request):
     """Redirect to Google OAuth authorization page"""
-    redirect_uri = f"{BACKEND_URL}/auth/google/callback"
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    try:
+        redirect_uri = f"{BACKEND_URL}/auth/google/callback"
+        return await oauth.google.authorize_redirect(request, redirect_uri)
+    except Exception as e:
+        print(f"Google login redirect error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return RedirectResponse(url=f"{FRONTEND_URL}/login?error=oauth_init_failed&details={str(e)}")
 
 
 @router.get("/google/callback")
@@ -99,8 +105,14 @@ async def google_callback(request: Request):
 @router.get("/github/login")
 async def github_login(request: Request):
     """Redirect to GitHub OAuth authorization page"""
-    redirect_uri = f"{BACKEND_URL}/auth/github/callback"
-    return await oauth.github.authorize_redirect(request, redirect_uri)
+    try:
+        redirect_uri = f"{BACKEND_URL}/auth/github/callback"
+        return await oauth.github.authorize_redirect(request, redirect_uri)
+    except Exception as e:
+        print(f"GitHub login redirect error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return RedirectResponse(url=f"{FRONTEND_URL}/login?error=oauth_init_failed&details={str(e)}")
 
 
 @router.get("/github/callback")
