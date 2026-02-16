@@ -44,14 +44,30 @@ const LandingPage = () => {
 
             <main className="pt-16">
                 {/* Full-width Hero */}
-                <section className="relative py-24 md:py-40 px-8 border-b border-app-border">
-                    <div className="max-w-[1600px] mx-auto grid lg:grid-cols-2 gap-20 items-center">
+                <section className="relative py-24 md:py-40 px-8 border-b border-app-border overflow-hidden">
+                    {/* Video Background */}
+                    <div className="absolute inset-0 z-0">
+                        <video
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover opacity-40 dark:opacity-30"
+                        >
+                            <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-low-poly-polygonal-motion-background-4k-34743-full-hd.mp4" type="video/mp4" />
+                        </video>
+                        {/* Gradient Overlay for Readability */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-app-bg/80 via-transparent to-app-bg" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-app-bg/60 via-transparent to-transparent" />
+                    </div>
+
+                    <div className="max-w-[1600px] mx-auto grid lg:grid-cols-2 gap-20 items-center relative z-10">
                         <motion.div
                             initial={{ opacity: 0, x: -30 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.6 }}
                         >
-                            <div className="inline-flex items-center text-app-muted font-bold uppercase tracking-[0.2em] text-[10px] mb-6 px-3 py-1 border border-app-border rounded-full">
+                            <div className="inline-flex items-center text-app-muted font-bold uppercase tracking-[0.2em] text-[10px] mb-6 px-3 py-1 border border-app-border rounded-full bg-app-bg/50 backdrop-blur-sm">
                                 Professional Learning Infrastructure
                             </div>
                             <h1 className="text-6xl md:text-8xl font-bold tracking-tight mb-8 leading-[0.95]">
@@ -64,7 +80,7 @@ const LandingPage = () => {
                             <div className="flex items-center gap-6">
                                 <button
                                     onClick={() => navigate('/dashboard')}
-                                    className="px-10 py-4 bg-app-fg text-app-bg font-bold rounded-xl hover:opacity-90 transition-all flex items-center gap-2"
+                                    className="px-10 py-4 bg-app-fg text-app-bg font-bold rounded-xl hover:opacity-90 transition-all flex items-center gap-2 shadow-2xl"
                                 >
                                     Start Analysis
                                     <ChevronRight className="w-4 h-4" />
