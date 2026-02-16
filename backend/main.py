@@ -48,6 +48,7 @@ Each component has an internal MOCK/fallback mode when dependencies are missing.
 summarizer = Summarizer(model_name=os.getenv("SUMMARY_MODEL", "sshleifer/distilbart-cnn-12-6"))
 extractor = ConceptExtractor(model_name=os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"))
 quiz_gen = QuizGenerator()
+explanation_gen = ExplanationGenerator()
 file_extractor = ExtractorService()
 
 # Register authentication routes
