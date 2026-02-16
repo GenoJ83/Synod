@@ -7,9 +7,9 @@ import os
 import shutil
 from pathlib import Path
 
-from app.nlp.summarizer import Summarizer
-from app.nlp.extractor import ConceptExtractor
-from app.nlp.quiz_gen import QuizGenerator
+# from app.nlp.summarizer import Summarizer
+# from app.nlp.extractor import ConceptExtractor
+# from app.nlp.quiz_gen import QuizGenerator
 from app.ingestion.extractor_service import ExtractorService
 from app.auth import router as auth_router
 
@@ -35,9 +35,9 @@ app.add_middleware(
 )
 
 # Initialize NLP modules
-summarizer = Summarizer(model_name="sshleifer/distilbart-cnn-12-6")
-extractor = ConceptExtractor()
-quiz_gen = QuizGenerator()
+# summarizer = Summarizer(model_name="sshleifer/distilbart-cnn-12-6")
+# extractor = ConceptExtractor()
+# quiz_gen = QuizGenerator()
 file_extractor = ExtractorService()
 
 # Register authentication routes
@@ -58,18 +58,13 @@ def process_logic(text: str):
     if not text:
         raise HTTPException(status_code=400, detail="Text is required")
     
-    summary = summarizer.summarize(text)
-    concepts = extractor.extract_concepts(text)
-    
-    fibs = quiz_gen.generate_fill_in_the_blanks(summary, concepts)
-    mcqs = quiz_gen.generate_mcqs(summary, concepts, concepts)
-    
+    # NLP Components disabled for Auth verification
     return {
-        "summary": summary,
-        "concepts": concepts,
+        "summary": "AI processing is currently disabled for maintenance.",
+        "concepts": [],
         "quiz": {
-            "fill_in_the_blanks": fibs,
-            "mcqs": mcqs
+            "fill_in_the_blanks": [],
+            "mcqs": []
         }
     }
 
