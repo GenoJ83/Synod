@@ -52,10 +52,13 @@ export const AuthProvider = ({ children }) => {
         verifyToken();
     }, []);
 
-    const login = (userData) => {
-        // Traditional email/password login (for future implementation)
+    const login = (userData, authToken) => {
+        // Traditional email/password login
         setUser(userData);
-        // Note: In a real implementation, this would also receive a token from the backend
+        if (authToken) {
+            setToken(authToken);
+            localStorage.setItem('synod_token', authToken);
+        }
     };
 
     const loginWithToken = async (jwtToken) => {

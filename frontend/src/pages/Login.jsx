@@ -30,13 +30,27 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate auth
-        setTimeout(() => {
-            const userData = { email, name: 'John Doe' };
-            login(userData);
-            setLoading(false);
+        try {
+            const response = await fetch('http://localhost:8000/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Login failed');
+            }
+
+            const data = await response.json();
+            login(data.user, data.token);
             navigate('/dashboard');
-        }, 1500);
+        } catch (error) {
+            console.error('Login error:', error);
+            alert(error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

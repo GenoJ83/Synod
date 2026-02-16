@@ -30,13 +30,27 @@ const Signup = () => {
     const handleSignup = async (e) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate auth
-        setTimeout(() => {
-            const userData = { email, name };
-            login(userData);
-            setLoading(false);
+        try {
+            const response = await fetch('http://localhost:8000/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, full_name: name }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Registration failed');
+            }
+
+            const data = await response.json();
+            login(data.user, data.token);
             navigate('/dashboard');
-        }, 1500);
+        } catch (error) {
+            console.error('Signup error:', error);
+            alert(error.message); // Simple alert for now, could be better UI
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
