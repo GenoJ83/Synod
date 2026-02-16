@@ -13,11 +13,11 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
+import { API_BASE_URL } from '../config';
+
 function cn(...inputs) {
     return twMerge(clsx(inputs));
 }
-
-const API_BASE_URL = 'http://localhost:8000';
 
 function Dashboard() {
     const [text, setText] = useState('');

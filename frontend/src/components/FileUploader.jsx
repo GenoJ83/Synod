@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, X, CheckCircle2, AlertCircle, Loader2, FileUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE_URL } from '../config';
 
 const FileUploader = ({ onUploadSuccess, onError }) => {
     const [files, setFiles] = useState([]);
@@ -36,7 +37,7 @@ const FileUploader = ({ onUploadSuccess, onError }) => {
             const formData = new FormData();
             formData.append('file', files[0].file);
 
-            const response = await fetch('http://localhost:8000/analyze-file', {
+            const response = await fetch(`${API_BASE_URL}/analyze-file`, {
                 method: 'POST',
                 body: formData,
             });
