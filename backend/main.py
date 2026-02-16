@@ -26,9 +26,14 @@ SESSION_SECRET = os.getenv("SESSION_SECRET", os.getenv("JWT_SECRET", "session_de
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
 # Enable CORS for React development
+ALLOWED_ORIGINS = [
+    os.getenv("FRONTEND_URL", "http://localhost:5173"),
+    "http://127.0.0.1:5173"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
