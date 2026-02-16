@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import {
     FileText, BookOpen, Brain, CheckCircle2, ChevronRight,
@@ -9,7 +9,7 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import QuizSection from '../components/QuizSection';
 import FileUploader from '../components/FileUploader';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -30,8 +30,18 @@ function Dashboard() {
 
     const quizRef = useRef(null);
     const navigate = useNavigate();
+    const location = useLocation();
     const { theme, toggleTheme } = useTheme();
     const { user, logout } = useAuth();
+
+    // Check for passed state from History (revisit feature)
+    useEffect(() => {
+        if (location.state?.result) {
+            setResult(location.state.result);
+            // Clear the state to prevent reloading old data on refresh
+            navigate(location.pathname, { replace: true });
+        }
+    }, [location, navigate]);
 
     const handleAnalyze = async (manualText) => {
         const textToAnalyze = manualText || text;

@@ -123,7 +123,7 @@ const History = () => {
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="flex items-center gap-2 text-[10px] font-bold text-app-muted uppercase tracking-widest">
                                                 <Calendar className="w-3 h-3" />
-                                                {new Date(item.id).toLocaleDateString()}
+                                                {item.date ? new Date(item.date).toLocaleDateString() : new Date(item.id).toLocaleDateString()}
                                             </div>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); deleteEntry(item.id); }}

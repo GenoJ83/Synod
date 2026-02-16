@@ -5,11 +5,26 @@ import {
     HelpCircle, Trophy, RefreshCw
 } from 'lucide-react';
 
-const QuizSection = ({ quizData }) => {
+const QuizSection = ({ quiz }) => {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
+
+    // Combine MCQs and fill-in-the-blanks into a single quiz array
+    const quizData = React.useMemo(() => {
+        if (!quiz) return [];
+        const mcqs = quiz.mcqs || [];
+        const fibs = quiz.fill_in_the_blanks || [];
+        
+        // Convert to a format compatible with the quiz UI
+        return mcqs.map((q, index) => ({
+            question: q.question,
+            options: q.options || [],
+            correct: q.options ? q.options.indexOf(q.answer) : 0,
+            type: 'mcq'
+        }));
+    }, [quiz]);
 
     const handleAnswer = (index) => {
         if (selectedAnswer !== null) return;
@@ -77,7 +92,7 @@ const QuizSection = ({ quizData }) => {
         );
     }
 
-    const question = quizData[currentQuestion];
+    const question = quizData[currentQuestion] || { question: "No questions available", options: [], correct: 0 };
 
     return (
         <div className="space-y-8">
