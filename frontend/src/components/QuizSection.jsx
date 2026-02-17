@@ -11,11 +11,13 @@ const QuizSection = ({ quiz }) => {
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
 
-    // Combine MCQs and fill-in-the-blanks into a single quiz array
+    // Combine all question types into a single quiz array
     const quizData = React.useMemo(() => {
         if (!quiz) return [];
         const mcqs = quiz.mcqs || [];
         const fibs = quiz.fill_in_the_blanks || [];
+        const trueFalse = quiz.true_false || [];
+        const comprehension = quiz.comprehension || [];
         
         // Convert MCQs to quiz format
         const mcqQuestions = mcqs.map((q) => ({
@@ -34,21 +36,50 @@ const QuizSection = ({ quiz }) => {
             answer: q.answer
         }));
         
-        // Combine both types (MCQs first, then fill-in-the-blanks)
-        return [...mcqQuestions, ...fibQuestions];
+        // Convert True/False questions
+        const tfQuestions = trueFalse.map((q) => ({
+            question: q.question,
+            options: ['True', 'False'],
+            correct: q.correct ? 0 : 1,
+            type: 'true_false',
+            explanation: q.explanation
+        }));
+        
+        // Convert comprehension questions
+        const compQuestions = comprehension.map((q) => ({
+            question: q.question,
+            options: q.options || [],
+            correct: q.answer || 0,
+            type: 'comprehension',
+            explanation: q.explanation
+        }));
+        
+        // Combine all types
+        return [...mcqQuestions, ...fibQuestions, ...tfQuestions, ...compQuestions];
     }, [quiz]);
+    
+    // Shuffle questions on first render (only once)
+    const [shuffledQuestions, setShuffledQuestions] = React.useState(null);
+    React.useEffect(() => {
+        if (quizData.length > 0 && !shuffledQuestions) {
+            const shuffled = [...quizData].sort(() => Math.random() - 0.5);
+            setShuffledQuestions(shuffled);
+        }
+    }, [quizData, shuffledQuestions]);
+    
+    const displayQuestions = shuffledQuestions || quizData;
 
     const handleAnswer = (index) => {
         if (selectedAnswer !== null) return;
         setSelectedAnswer(index);
 
-        if (index === quizData[currentQuestion].correct) {
+        if (index === displayQuestions[currentQuestion].correct) {
             setScore(prev => prev + 1);
         }
     };
 
     const nextQuestion = () => {
-        if (currentQuestion < quizData.length - 1) {
+        if (currentQuestion < displayQuestions.length - 1) {
             setCurrentQuestion(prev => prev + 1);
             setSelectedAnswer(null);
         } else {
@@ -79,12 +110,12 @@ const QuizSection = ({ quiz }) => {
                 <div className="flex justify-center gap-12 mb-12">
                     <div>
                         <p className="text-[10px] font-bold text-app-muted uppercase tracking-widest mb-1">Score</p>
-                        <p className="text-4xl font-bold text-blue-500">{Math.round((score / quizData.length) * 100)}%</p>
+                        <p className="text-4xl font-bold text-blue-500">{Math.round((score / displayQuestions.length) * 100)}%</p>
                     </div>
                     <div className="w-[1px] bg-app-border" />
                     <div>
                         <p className="text-[10px] font-bold text-app-muted uppercase tracking-widest mb-1">Correct</p>
-                        <p className="text-4xl font-bold">{score}/{quizData.length}</p>
+                        <p className="text-4xl font-bold">{score}/{displayQuestions.length}</p>
                     </div>
                 </div>
 
@@ -104,7 +135,18 @@ const QuizSection = ({ quiz }) => {
         );
     }
 
-    const question = quizData[currentQuestion] || { question: "No questions available", options: [], correct: 0 };
+    const question = displayQuestions[currentQuestion] || { question: "No questions available", options: [], correct: 0 };
+
+    // Get question type label
+    const getQuestionTypeLabel = (type) => {
+        switch(type) {
+            case 'mcq': return 'Multiple Choice';
+            case 'fib': return 'Fill in the Blank';
+            case 'true_false': return 'True or False';
+            case 'comprehension': return 'Comprehension';
+            default: return 'Question';
+        }
+    };
 
     return (
         <div className="space-y-8">
@@ -114,12 +156,12 @@ const QuizSection = ({ quiz }) => {
                         <HelpCircle className="w-4 h-4" />
                     </div>
                     <div>
-                        <h3 className="text-xs font-bold uppercase tracking-widest">Knowledge Check</h3>
-                        <p className="text-[10px] font-bold text-app-muted uppercase tracking-tighter">Question {currentQuestion + 1} of {quizData.length}</p>
+                        <h3 className="text-xs font-bold uppercase tracking-widest">{getQuestionTypeLabel(question.type)}</h3>
+                        <p className="text-[10px] font-bold text-app-muted uppercase tracking-tighter">Question {currentQuestion + 1} of {displayQuestions.length}</p>
                     </div>
                 </div>
                 <div className="flex gap-1">
-                    {quizData.map((_, i) => (
+                    {displayQuestions.map((_, i) => (
                         <div
                             key={i}
                             className={`h-1 w-6 rounded-full transition-all duration-500 ${i <= currentQuestion ? 'bg-blue-500' : 'bg-app-border'}`}

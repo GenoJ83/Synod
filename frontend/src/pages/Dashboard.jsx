@@ -360,7 +360,12 @@ function Dashboard() {
                                         <div className="bg-app-fg text-app-bg rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-xl">
                                             <Brain className="w-10 h-10 mb-4 opacity-80" />
                                             <h3 className="text-xl font-bold mb-2">Knowledge Check</h3>
-                                            <p className="text-app-bg/70 text-sm mb-6 font-medium">Generated {(result?.quiz?.mcqs?.length || 0) + (result?.quiz?.fill_in_the_blanks?.length || 0)} questions for this session.</p>
+                                            <p className="text-app-bg/70 text-sm mb-6 font-medium">Generated {
+                                                (result?.quiz?.mcqs?.length || 0) + 
+                                                (result?.quiz?.fill_in_the_blanks?.length || 0) + 
+                                                (result?.quiz?.true_false?.length || 0) + 
+                                                (result?.quiz?.comprehension?.length || 0)
+                                            } questions for this session.</p>
                                             <button
                                                 onClick={startQuiz}
                                                 className="w-full bg-app-bg text-app-fg py-3 rounded-lg font-bold hover:opacity-90 transition-opacity shadow-lg"

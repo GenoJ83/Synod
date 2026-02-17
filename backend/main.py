@@ -80,6 +80,8 @@ def process_logic(text: str):
     # 3. Quiz generation from full text and concepts
     fibs = quiz_gen.generate_fill_in_the_blanks(text, concepts)
     mcqs = quiz_gen.generate_mcqs(text, concepts, concepts)
+    true_false = quiz_gen.generate_true_false(text, concepts)
+    comprehension = quiz_gen.generate_comprehension(text, concepts)
 
     # 4. Generate explanations for each concept
     explanations = explanation_gen.generate_all_explanations(concepts, text)
@@ -90,6 +92,8 @@ def process_logic(text: str):
         "quiz": {
             "fill_in_the_blanks": fibs,
             "mcqs": mcqs,
+            "true_false": true_false,
+            "comprehension": comprehension,
         },
         "explanations": explanations,
         "metrics": None,
