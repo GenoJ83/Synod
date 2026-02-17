@@ -10,6 +10,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import AuthCallback from './pages/AuthCallback';
+import HowItWorks from './pages/HowItWorks';
+import Documentation from './pages/Documentation';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/documentation" element={<Documentation />} />
             <Route
               path="/dashboard"
               element={

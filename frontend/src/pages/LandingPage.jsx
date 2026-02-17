@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Brain, Search, BookOpen, Clock, FileText, ChevronRight, BarChart3, Globe, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -21,8 +21,8 @@ const LandingPage = () => {
                     </div>
                     <div className="flex items-center gap-8">
                         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-app-muted">
-                            <a href="#" className="hover:text-app-fg transition-colors">How it works</a>
-                            <a href="#" className="hover:text-app-fg transition-colors">Documentation</a>
+                            <Link to="/how-it-works" className="hover:text-app-fg transition-colors">How it works</Link>
+                            <Link to="/documentation" className="hover:text-app-fg transition-colors">Documentation</Link>
                         </nav>
                         <div className="flex items-center gap-4">
                             <button
@@ -157,6 +157,71 @@ const LandingPage = () => {
                                     <p className="text-app-muted text-sm leading-relaxed">{f.text}</p>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* How It Works */}
+                <section id="how-it-works" className="py-24 px-8">
+                    <div className="max-w-[1600px] mx-auto">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl font-bold mb-4">How It Works</h2>
+                            <p className="text-app-muted text-lg max-w-2xl mx-auto">
+                                Upload your lecture materials and get instant analysis with interactive quizzes
+                            </p>
+                        </div>
+                        <div className="grid md:grid-cols-4 gap-8">
+                            {[
+                                { step: "01", title: "Upload Content", text: "Paste lecture text or upload PDF, DOCX, or TXT files.", icon: FileText },
+                                { step: "02", title: "AI Analysis", text: "Our NLP extracts key concepts and generates summaries.", icon: Brain },
+                                { step: "03", title: "Learn Concepts", text: "Click any concept for explanations with lecture context.", icon: BookOpen },
+                                { step: "04", title: "Test Knowledge", text: "Take quizzes with 30+ questions to verify understanding.", icon: BarChart3 }
+                            ].map((item, i) => (
+                                <div key={i} className="relative">
+                                    <div className="bg-app-card border border-app-border rounded-2xl p-6 h-full">
+                                        <div className="text-[10px] font-bold text-blue-500 mb-4">{item.step}</div>
+                                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 mb-4">
+                                            <item.icon className="w-6 h-6" />
+                                        </div>
+                                        <h3 className="text-lg font-bold mb-2">{item.title}</h3>
+                                        <p className="text-app-muted text-sm">{item.text}</p>
+                                    </div>
+                                    {i < 3 && (
+                                        <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 text-app-muted">
+                                            <ChevronRight className="w-5 h-5" />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Quiz Types */}
+                <section id="quiz-types" className="py-24 px-8 bg-app-card/20">
+                    <div className="max-w-[1600px] mx-auto">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl font-bold mb-4">Comprehensive Testing</h2>
+                            <p className="text-app-muted text-lg max-w-2xl mx-auto">
+                                Four question types test both recall and comprehension
+                            </p>
+                        </div>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {[
+                                { type: "Fill-in-Blank", count: "8", desc: "Recall key terms from context", color: "blue" },
+                                { type: "Multiple Choice", count: "8", desc: "Identify correct concepts", color: "green" },
+                                { type: "True/False", count: "8", desc: "Verify factual understanding", color: "purple" },
+                                { type: "Comprehension", count: "5", desc: "Understand relationships", color: "orange" }
+                            ].map((quiz, i) => (
+                                <div key={i} className="bg-app-card border border-app-border rounded-xl p-6 text-center">
+                                    <div className={`text-4xl font-bold text-${quiz.color}-500 mb-2`}>{quiz.count}</div>
+                                    <div className="text-sm font-bold uppercase tracking-wider mb-1">{quiz.type}</div>
+                                    <div className="text-app-muted text-xs">{quiz.desc}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="text-center mt-8">
+                            <p className="text-app-muted">Total: <span className="text-blue-500 font-bold">~29 questions</span> per analysis</p>
                         </div>
                     </div>
                 </section>
