@@ -51,25 +51,24 @@ def setup_huggingface_token():
     if token:
         os.environ["HF_TOKEN"] = token
         os.environ["HUGGING_FACE_HUB_TOKEN"] = token
-        print(f"✓ Hugging Face token configured")
+        print("[OK] Hugging Face token configured")
         return True
     else:
-        print("⚠ No HF_TOKEN found. Downloads will be slower/unauthenticated.")
+        print("[WARNING] No HF_TOKEN found. Downloads will be slower/unauthenticated.")
         print("  Get a free token at: https://huggingface.co/settings/tokens")
         print("  Set it with: set HF_TOKEN=your_token_here")
         return False
 
 def download_model_with_hfhub():
-    """Download models using huggingface-cli or direct download."""
+    """Download models using huggingface_hub."""
     token = get_token()
     
-    print(f"\n{'='*60}")
+    print("\n" + "="*60)
     print("Downloading all models with Hugging Face Hub...")
-    print(f"{'='*60}")
+    print("="*60)
     
     try:
         from huggingface_hub import snapshot_download
-        import asyncio
         
         # Download each model
         for model_name in MODELS.values():
@@ -84,9 +83,9 @@ def download_model_with_hfhub():
                     token=token,
                     local_files_only=False
                 )
-                print(f"  ✓ {model_name} downloaded")
+                print(f"  [OK] {model_name} downloaded")
             except Exception as e:
-                print(f"  ✗ Error: {e}")
+                print(f"  [ERROR] {e}")
         
         # Download spaCy model
         print(f"\nDownloading spaCy model: en_core_web_sm")
@@ -96,9 +95,9 @@ def download_model_with_hfhub():
             text=True
         )
         if result.returncode == 0:
-            print(f"  ✓ en_core_web_sm downloaded")
+            print(f"  [OK] en_core_web_sm downloaded")
         else:
-            print(f"  ✗ spaCy error: {result.stderr}")
+            print(f"  [ERROR] spaCy error: {result.stderr}")
             
         return True
     except ImportError:
@@ -112,9 +111,9 @@ def download_with_transformers():
     
     token = get_token()
     
-    print(f"\n{'='*60}")
+    print("\n" + "="*60)
     print("Downloading models using transformers...")
-    print(f"{'='*60}")
+    print("="*60)
     
     results = {}
     
@@ -127,10 +126,10 @@ def download_with_transformers():
             
             AutoTokenizer.from_pretrained(model_name, token=token, cache_dir=cache_dir)
             AutoModelForSeq2SeqLM.from_pretrained(model_name, token=token, cache_dir=cache_dir)
-            print(f"  ✓ Success")
+            print(f"  [OK] Success")
             results[model_name] = True
         except Exception as e:
-            print(f"  ✗ Error: {e}")
+            print(f"  [ERROR] {e}")
             results[model_name] = False
     
     # Download embeddings model
@@ -139,10 +138,10 @@ def download_with_transformers():
         cache_dir = os.path.join(MODEL_DIR, "transformers", MODELS['embeddings'].replace("/", "_"))
         os.makedirs(cache_dir, exist_ok=True)
         SentenceTransformer(MODELS['embeddings'], cache_folder=cache_dir)
-        print(f"  ✓ Success")
+        print(f"  [OK] Success")
         results[MODELS['embeddings']] = True
     except Exception as e:
-        print(f"  ✗ Error: {e}")
+        print(f"  [ERROR] {e}")
         results[MODELS['embeddings']] = False
     
     # Download spaCy model
@@ -154,9 +153,9 @@ def download_with_transformers():
     )
     results["en_core_web_sm"] = result.returncode == 0
     if result.returncode == 0:
-        print(f"  ✓ Success")
+        print(f"  [OK] Success")
     else:
-        print(f"  ✗ Error")
+        print(f"  [ERROR]")
     
     return results
 
@@ -178,7 +177,7 @@ def create_offline_config():
     config_path = os.path.join(MODEL_DIR, "OFFLINE_CONFIG.txt")
     with open(config_path, "w") as f:
         f.write(config_content)
-    print(f"\n✓ Config saved: {config_path}")
+    print(f"\n[OK] Config saved: {config_path}")
 
 def main():
     """Download all required models."""
@@ -203,13 +202,13 @@ def main():
     # Create config
     create_offline_config()
     
-    print(f"\n{'='*60}")
+    print("\n" + "="*60)
     print("Download complete!")
-    print(f"{'='*60}")
+    print("="*60)
     print(f"\nModels saved to: {os.path.abspath(MODEL_DIR)}")
     
     if not has_token:
-        print("\n⚠ For faster future downloads, add your HF_TOKEN:")
+        print("\n[NOTE] For faster future downloads, add your HF_TOKEN:")
         print("   Create backend/.env with: HF_TOKEN=your_token")
 
 if __name__ == "__main__":
