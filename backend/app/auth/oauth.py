@@ -4,8 +4,11 @@ OAuth Client Configuration for Google and GitHub
 from authlib.integrations.starlette_client import OAuth
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Load .env from backend directory
+env_path = Path(__file__).parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 # Initialize OAuth registry
 oauth = OAuth()

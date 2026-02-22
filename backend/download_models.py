@@ -21,7 +21,7 @@ import subprocess
 MODELS = {
     "summarizer": "sshleifer/distilbart-cnn-12-6",
     "summarizer_test": "t5-small",
-    "embeddings": "all-MiniLM-L6-v2"
+    "embeddings": "sentence-transformers/all-MiniLM-L6-v2"
 }
 
 # Base directory for storing models
