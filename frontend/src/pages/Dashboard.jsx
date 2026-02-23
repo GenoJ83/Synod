@@ -13,12 +13,13 @@ import FileUploader from '../components/FileUploader';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { cn } from '../utils/cn';
+
+import AnalysisInput from '../components/dashboard/AnalysisInput';
+import ResultsDisplay from '../components/dashboard/ResultsDisplay';
+import ConceptExplorer from '../components/dashboard/ConceptExplorer';
 
 import { API_BASE_URL } from '../config';
-
-function cn(...inputs) {
-    return twMerge(clsx(inputs));
-}
 
 function Dashboard() {
     const [text, setText] = useState('');
@@ -207,172 +208,37 @@ function Dashboard() {
                                     <p className="text-zinc-500 text-lg">Input your course materials to extract intelligence.</p>
                                 </div>
 
-                                <div className="pro-card p-6 shadow-sm bg-app-card/30">
-                                    <div className="flex gap-4 mb-6 border-b border-app-border pb-4">
-                                        <button
-                                            onClick={() => setActiveTab('text')}
-                                            className={cn(
-                                                "text-sm font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all",
-                                                activeTab === 'text' ? "bg-app-fg text-app-bg shadow-lg" : "text-app-muted hover:text-app-fg"
-                                            )}
-                                        >
-                                            Raw Text
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab('file')}
-                                            className={cn(
-                                                "text-sm font-bold uppercase tracking-widest px-4 py-2 rounded-md transition-all",
-                                                activeTab === 'file' ? "bg-app-fg text-app-bg shadow-lg" : "text-app-muted hover:text-app-fg"
-                                            )}
-                                        >
-                                            Documents
-                                        </button>
-                                    </div>
-
-                                    {activeTab === 'text' ? (
-                                        <div className="space-y-4 animate-fade-in">
-                                            <textarea
-                                                value={text}
-                                                onChange={(e) => setText(e.target.value)}
-                                                placeholder="Paste lecture notes here..."
-                                                className="w-full h-80 pro-input resize-none font-mono text-sm leading-relaxed"
-                                            />
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-[10px] font-bold text-app-muted uppercase tracking-widest">{text.length} chars</span>
-                                                <button
-                                                    onClick={() => handleAnalyze()}
-                                                    disabled={loading || !text}
-                                                    className="bg-app-fg hover:opacity-90 text-app-bg px-6 py-3 rounded-lg font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 shadow-md"
-                                                >
-                                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Analyze Content"}
-                                                    {!loading && <ChevronRight className="w-4 h-4" />}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="animate-fade-in">
-                                            <FileUploader onUploadSuccess={handleFileUploadSuccess} onError={setError} />
-                                        </div>
-                                    )}
-
-                                    {error && <div className="mt-4 p-3 bg-red-950/20 border border-red-900/50 rounded-lg text-red-500 text-xs font-medium">{error}</div>}
-                                </div>
+                                <AnalysisInput
+                                    activeTab={activeTab}
+                                    setActiveTab={setActiveTab}
+                                    text={text}
+                                    setText={setText}
+                                    handleAnalyze={handleAnalyze}
+                                    handleFileUploadSuccess={handleFileUploadSuccess}
+                                    loading={loading}
+                                    error={error}
+                                    setError={setError}
+                                />
                             </div>
 
                             {/* Results View */}
                             {result && (
                                 <div className="w-full xl:w-1/2 space-y-8 animate-fade-in pb-20">
-                                    <div className="pro-card p-8">
-                                        <div className="flex items-center gap-3 mb-6 text-emerald-500">
-                                            <CheckCircle2 className="w-5 h-5" />
-                                            <h3 className="text-sm font-bold uppercase tracking-widest">Executive Summary</h3>
-                                        </div>
-                                        <p className="text-app-fg text-lg leading-relaxed font-medium">
-                                            {result.summary}
-                                        </p>
-                                    </div>
+                                    <ResultsDisplay
+                                        result={result}
+                                        startQuiz={startQuiz}
+                                    />
 
-                                    <div className="grid sm:grid-cols-2 gap-8">
-                                        <div className="pro-card p-6">
-                                            <div className="flex items-center gap-3 mb-4 text-app-muted">
-                                                <BookOpen className="w-4 h-4" />
-                                                <h3 className="text-xs font-bold uppercase tracking-widest">Foundational Concepts</h3>
-                                                {result?.concepts && (
-                                                    <span className="ml-auto text-[10px] text-blue-400">
-                                                        {viewedConcepts.length}/{result.concepts.length} explored
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-wrap gap-2">
-                                                {result?.concepts?.map((concept, i) => (
-                                                    <button
-                                                        key={i}
-                                                        onClick={() => { setSelectedConcept(concept); if (!viewedConcepts.includes(concept)) { setViewedConcepts([...viewedConcepts, concept]); } }}
-                                                        className={`px-3 py-1 bg-app-card border rounded-md text-[11px] font-bold uppercase transition-all cursor-pointer ${
-                                                            selectedConcept === concept 
-                                                                ? 'border-blue-500 bg-blue-500/20 text-blue-400' 
-                                                                : viewedConcepts.includes(concept)
-                                                                    ? 'border-green-500/30 text-green-400/70'
-                                                                    : 'border-app-border text-app-muted hover:bg-blue-500/20 hover:border-blue-500/50 hover:text-blue-400'
-                                                        }`}
-                                                    >
-                                                        {concept}
-                                                    </button>
-                                                )) || <p className="text-app-muted text-sm">No concepts extracted yet.</p>}
-                                            </div>
-
-                                            {/* Interactive Concept Explanation */}
-                                            {selectedConcept && result?.explanations?.concepts && (
-                                                <motion.div 
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    className="mt-4 p-5 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl"
-                                                >
-                                                    <div className="flex items-start justify-between gap-4 mb-3">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                                                <BookOpen className="w-4 h-4 text-blue-400" />
-                                                            </div>
-                                                            <h4 className="text-base font-bold text-blue-400">{selectedConcept}</h4>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => setSelectedConcept(null)}
-                                                            className="text-app-muted hover:text-app-fg p-1 hover:bg-app-card rounded"
-                                                        >
-                                                            ×
-                                                        </button>
-                                                    </div>
-                                                    
-                                                    <p className="text-sm text-app-fg leading-relaxed mb-4">
-                                                        {result.explanations.concepts.find(c => c.term === selectedConcept)?.reason || 
-                                                         result.explanations.global}
-                                                    </p>
-                                                    
-                                                    {/* Related Concepts */}
-                                                    <div className="pt-3 border-t border-blue-500/20">
-                                                        <p className="text-[10px] font-bold text-app-muted uppercase tracking-wider mb-2">Related Concepts</p>
-                                                        <div className="flex flex-wrap gap-1">
-                                                            {result?.concepts?.filter(c => c !== selectedConcept).slice(0, 4).map((related, i) => (
-                                                                <button
-                                                                    key={i}
-                                                                    onClick={() => setSelectedConcept(related)}
-                                                                    className="px-2 py-1 bg-app-card/50 border border-app-border/50 rounded text-[10px] text-app-muted hover:text-blue-400 hover:border-blue-500/50 transition-all"
-                                                                >
-                                                                    {related}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {/* Action buttons */}
-                                                    <div className="flex gap-2 mt-4">
-                                                        <button 
-                                                            onClick={() => { setShowQuiz(true); setTimeout(() => quizRef.current?.scrollIntoView({ behavior: 'smooth' }), 100); }}
-                                                            className="flex-1 py-2 bg-blue-500 text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors"
-                                                        >
-                                                            Test Your Knowledge
-                                                        </button>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </div>
-
-                                        <div className="bg-app-fg text-app-bg rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-xl">
-                                            <Brain className="w-10 h-10 mb-4 opacity-80" />
-                                            <h3 className="text-xl font-bold mb-2">Knowledge Check</h3>
-                                            <p className="text-app-bg/70 text-sm mb-6 font-medium">Generated {
-                                                (result?.quiz?.mcqs?.length || 0) + 
-                                                (result?.quiz?.fill_in_the_blanks?.length || 0) + 
-                                                (result?.quiz?.true_false?.length || 0) + 
-                                                (result?.quiz?.comprehension?.length || 0)
-                                            } questions for this session.</p>
-                                            <button
-                                                onClick={startQuiz}
-                                                className="w-full bg-app-bg text-app-fg py-3 rounded-lg font-bold hover:opacity-90 transition-opacity shadow-lg"
-                                            >
-                                                Start Quiz
-                                            </button>
-                                        </div>
+                                    <div className="grid sm:grid-cols-1 gap-8">
+                                        <ConceptExplorer
+                                            result={result}
+                                            selectedConcept={selectedConcept}
+                                            setSelectedConcept={setSelectedConcept}
+                                            viewedConcepts={viewedConcepts}
+                                            setViewedConcepts={setViewedConcepts}
+                                            setShowQuiz={setShowQuiz}
+                                            quizRef={quizRef}
+                                        />
                                     </div>
 
                                     {showQuiz && (
@@ -394,6 +260,15 @@ function Dashboard() {
                 </main>
             </div>
         </div>
+    );
+}
+
+export default Dashboard;
+                        </div >
+                    </div >
+                </main >
+            </div >
+        </div >
     );
 }
 

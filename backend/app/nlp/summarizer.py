@@ -38,15 +38,31 @@ class Summarizer:
         if not self.has_transformers:
             # Mock summary: just take the first few sentences
             sentences = text.split(". ")
-            return ". ".join(sentences[:2]) + " (Mock Summary)"
+            summary = ". ".join(sentences[:2]) + " (Mock Summary)"
+            return {
+                "summary": summary,
+                "metrics": {
+                    "compression_ratio": round(len(summary.split()) / max(1, len(text.split())), 3)
+                }
+            }
 
         try:
             inputs = self.tokenizer([text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
             summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=max_length, min_length=min_length, early_stopping=True)
-            return self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+            summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+            
+            # Simple compression metric
+            compression_ratio = len(summary.split()) / max(1, len(text.split()))
+            
+            return {
+                "summary": summary,
+                "metrics": {
+                    "compression_ratio": round(compression_ratio, 3)
+                }
+            }
         except Exception as e:
             print(f"Summary error: {e}")
-            return text[:200] + "..."
+            return {"summary": text[:200] + "...", "metrics": {"compression_ratio": 0.0}}
 
 if __name__ == "__main__":
     # Quick test
