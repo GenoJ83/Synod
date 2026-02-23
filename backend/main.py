@@ -66,6 +66,7 @@ class ProcessRequest(BaseModel):
 class ProcessResponse(BaseModel):
     summary: str
     concepts: List[str]
+    concept_details: Optional[List[Dict]] = None
     quiz: Dict
     explanations: Optional[Dict] = None
     metrics: Optional[Dict] = None
@@ -79,8 +80,9 @@ def process_logic(text: str):
     summary = sum_result["summary"]
     metrics = sum_result.get("metrics", {})
 
-    # 2. Concept extraction (ranked key phrases)
-    concepts = extractor.extract_concepts(text)
+    # 2. Concept extraction (returns list of dicts with term and relevance)
+    concept_data = extractor.extract_concepts(text)
+    concepts = [c["term"] for c in concept_data]
 
     # 3. Quiz generation from full text and concepts
     fibs = quiz_gen.generate_fill_in_the_blanks(text, concepts)
@@ -93,7 +95,8 @@ def process_logic(text: str):
 
     return {
         "summary": summary,
-        "concepts": concepts,
+        "concepts": concepts, # Still return simple list for legacy/compatibility
+        "concept_details": concept_data, # New detailed data
         "quiz": {
             "fill_in_the_blanks": fibs,
             "mcqs": mcqs,

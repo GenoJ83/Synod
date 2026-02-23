@@ -20,15 +20,29 @@ function ResultsDisplay({ result, startQuiz }) {
                     {result.summary}
                 </p>
                 {result.metrics?.compression_ratio && (
-                    <div className="mt-4 pt-4 border-t border-app-border/30 flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-app-muted uppercase tracking-widest">Efficiency:</span>
-                        <div className="flex-1 h-1 bg-app-card rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-emerald-500"
-                                style={{ width: `${Math.min(100, result.metrics.compression_ratio * 100)}%` }}
-                            />
+                    <div className="mt-4 pt-4 border-t border-app-border/30 flex flex-col gap-3">
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-app-muted uppercase tracking-widest min-w-[80px]">Efficiency:</span>
+                            <div className="flex-1 h-1 bg-app-card rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-emerald-500"
+                                    style={{ width: `${Math.min(100, result.metrics.compression_ratio * 100)}%` }}
+                                />
+                            </div>
+                            <span className="text-[10px] font-bold text-emerald-500">{(result.metrics.compression_ratio * 100).toFixed(1)}%</span>
                         </div>
-                        <span className="text-[10px] font-bold text-emerald-500">{(result.metrics.compression_ratio * 100).toFixed(1)}%</span>
+                        {result.metrics?.coverage_score !== undefined && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-app-muted uppercase tracking-widest min-w-[80px]">Precision:</span>
+                                <div className="flex-1 h-1 bg-app-card rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-blue-500"
+                                        style={{ width: `${Math.min(100, result.metrics.coverage_score * 100)}%` }}
+                                    />
+                                </div>
+                                <span className="text-[10px] font-bold text-blue-500">{(result.metrics.coverage_score * 100).toFixed(1)}%</span>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

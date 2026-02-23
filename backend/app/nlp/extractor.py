@@ -88,7 +88,7 @@ class ConceptExtractor:
         else:
             ranked_indices = [i for i in np.argsort(cos_scores)[::-1] if i in valid_indices]
         
-        return [candidate_list[i] for i in ranked_indices[:top_n]]
+        return [{"term": candidate_list[i], "relevance": round(float(cos_scores[i]), 3)} for i in ranked_indices[:top_n]]
 
     def extract_keywords(self, text: str, top_n: int = 5) -> List[str]:
         """
