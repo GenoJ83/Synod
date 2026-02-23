@@ -72,7 +72,6 @@ class Summarizer:
         if text_hash in self.cache:
             return self.cache[text_hash]
         
-        print(f"DEBUG: Summary has_transformers={self.has_transformers}")
         if not self.has_transformers:
             # Mock summary: just take the first few sentences
             sentences = text.split(". ")
