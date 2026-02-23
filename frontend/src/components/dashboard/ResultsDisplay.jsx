@@ -47,6 +47,25 @@ function ResultsDisplay({ result, startQuiz }) {
                 )}
             </div>
 
+            {result.takeaways && result.takeaways.length > 0 && (
+                <div className="pro-card p-8">
+                    <div className="flex items-center gap-3 mb-6 text-blue-500">
+                        <Brain className="w-5 h-5" />
+                        <h3 className="text-sm font-bold uppercase tracking-widest">Key Takeaways</h3>
+                    </div>
+                    <ul className="space-y-4">
+                        {result.takeaways.map((takeaway, idx) => (
+                            <li key={idx} className="flex gap-4 group">
+                                <span className="text-blue-500 font-bold shrink-0">{idx + 1}.</span>
+                                <p className="text-app-fg text-base font-medium leading-relaxed group-hover:text-blue-500 transition-colors">
+                                    {takeaway}
+                                </p>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
             <div className="bg-app-fg text-app-bg rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-xl">
                 <Brain className="w-10 h-10 mb-4 opacity-80" />
                 <h3 className="text-xl font-bold mb-2">Knowledge Check</h3>
