@@ -14,12 +14,21 @@ class Summarizer:
         Uses distilbart for a good balance of speed and quality.
         """
         self.has_transformers = HAS_TRANSFORMERS
+        self.cache = {} # Simple in-memory cache for speed
         if HAS_TRANSFORMERS:
             try:
                 print(f"Loading summarization model: {model_name}...")
                 self.tokenizer = AutoTokenizer.from_pretrained(model_name)
                 self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-                self.device = "cuda" if torch.cuda.is_available() else "cpu"
+                
+                # Device detection: CUDA -> MPS -> CPU
+                if torch.cuda.is_available():
+                    self.device = "cuda"
+                elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                    self.device = "mps"
+                else:
+                    self.device = "cpu"
+                
                 self.model.to(self.device)
                 print(f"Model loaded on {self.device}.")
             except Exception as e:
@@ -28,12 +37,17 @@ class Summarizer:
         else:
             print("Transformers not found. Running in MOCK mode.")
     
-    def summarize(self, text: str, max_length: int = 150, min_length: int = 40) -> str:
+    def summarize(self, text: str, max_length: int = 150, min_length: int = 40) -> dict:
         """
         Summarizes the input text.
         """
         if not text or len(text.strip()) < 50:
-            return text
+            return {"summary": text, "metrics": {"compression_ratio": 1.0}}
+        
+        # Cache check
+        text_hash = hash(text)
+        if text_hash in self.cache:
+            return self.cache[text_hash]
         
         if not self.has_transformers:
             # Mock summary: just take the first few sentences
@@ -54,12 +68,14 @@ class Summarizer:
             # Simple compression metric
             compression_ratio = len(summary.split()) / max(1, len(text.split()))
             
-            return {
+            result = {
                 "summary": summary,
                 "metrics": {
                     "compression_ratio": round(compression_ratio, 3)
                 }
             }
+            self.cache[text_hash] = result
+            return result
         except Exception as e:
             print(f"Summary error: {e}")
             return {"summary": text[:200] + "...", "metrics": {"compression_ratio": 0.0}}

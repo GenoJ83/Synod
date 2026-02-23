@@ -16,15 +16,29 @@ class ConceptExtractor:
         """
         self.has_deps = HAS_ML_DEPS
         if HAS_ML_DEPS:
-            print(f"Loading embedding model: {model_name}...")
-            self.model = SentenceTransformer(model_name)
             try:
-                self.nlp = spacy.load("en_core_web_sm")
-            except OSError:
-                print("Downloading spacy model...")
-                import os
-                os.system("python -m spacy download en_core_web_sm")
-                self.nlp = spacy.load("en_core_web_sm")
+                # Device detection: CUDA -> MPS -> CPU
+                import torch
+                if torch.cuda.is_available():
+                    self.device = "cuda"
+                elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                    self.device = "mps"
+                else:
+                    self.device = "cpu"
+                
+                print(f"Loading embedding model: {model_name} on {self.device}...")
+                self.model = SentenceTransformer(model_name, device=self.device)
+                
+                try:
+                    self.nlp = spacy.load("en_core_web_sm")
+                except OSError:
+                    print("Downloading spacy model...")
+                    import os
+                    os.system("python -m spacy download en_core_web_sm")
+                    self.nlp = spacy.load("en_core_web_sm")
+            except Exception as e:
+                print(f"Error initializing extractor: {e}. Falling back to MOCK mode.")
+                self.has_deps = False
         else:
             print("ML dependencies not found. Running in MOCK mode.")
             self.model = None
