@@ -29,8 +29,8 @@ class QuizGenerator:
         
         return questions[:8]  # Reduce to make room for comprehension questions
 
-    def generate_mcqs(self, text: str, concepts: List[str], all_concepts: List[str]) -> List[Dict]:
-        """Standard MCQ - mask a word in sentence"""
+    def generate_mcqs(self, text: str, concepts: List[str], all_concepts: List[str], extractor=None) -> List[Dict]:
+        """Standard MCQ - mask a word in sentence with semantically relevant distractors"""
         questions = []
         sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
 
@@ -47,9 +47,27 @@ class QuizGenerator:
             for matched_concept in matched_concepts:
                 question_text = re.compile(re.escape(matched_concept), re.IGNORECASE).sub("__________", sentence)
                 
-                distractors = [c for c in all_concepts if c.lower() != matched_concept.lower()]
-                if len(distractors) >= 3:
-                    options = random.sample(distractors, 3)
+                # Semantic Distractor Selection
+                distractors = []
+                other_candidates = [c for c in all_concepts if c.lower() != matched_concept.lower()]
+                
+                if extractor and extractor.has_deps and len(other_candidates) > 3:
+                    try:
+                        # Find distractors semantically similar to the answer
+                        from sentence_transformers import util
+                        ans_emb = extractor.model.encode([matched_concept], convert_to_tensor=True)
+                        cand_embs = extractor.model.encode(other_candidates, convert_to_tensor=True)
+                        scores = util.cos_sim(ans_emb, cand_embs).cpu().numpy().flatten()
+                        # Pick top 5 most similar but not identical
+                        top_indices = scores.argsort()[-5:][::-1]
+                        distractors = [other_candidates[i] for i in top_indices if other_candidates[i].lower() not in matched_concept.lower() and matched_concept.lower() not in other_candidates[i].lower()]
+                    except:
+                        distractors = random.sample(other_candidates, min(len(other_candidates), 3))
+                else:
+                    distractors = random.sample(other_candidates, min(len(other_candidates), 3))
+
+                if len(distractors) >= 2:
+                    options = distractors[:3]
                     options.append(matched_concept)
                     random.shuffle(options)
                     
@@ -60,7 +78,7 @@ class QuizGenerator:
                         "answer": matched_concept
                     })
         
-        return questions[:8]  # Reduce for comprehension questions
+        return questions[:8]
 
     def generate_true_false(self, text: str, concepts: List[str]) -> List[Dict]:
         """

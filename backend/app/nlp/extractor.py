@@ -78,8 +78,15 @@ class ConceptExtractor:
         # Rank by cosine similarity to the document context
         cos_scores = util.cos_sim(candidate_embeddings, doc_embedding).cpu().numpy().flatten()
         
-        # Combine with frequency/positional info if needed, but similarity is a good start
-        ranked_indices = np.argsort(cos_scores)[::-1]
+        # Quality filter: Only keep candidates with similarity > threshold
+        threshold = 0.3
+        valid_indices = [i for i, score in enumerate(cos_scores) if score > threshold]
+        
+        if not valid_indices:
+            # Fallback if everything is below threshold
+            ranked_indices = np.argsort(cos_scores)[::-1]
+        else:
+            ranked_indices = [i for i in np.argsort(cos_scores)[::-1] if i in valid_indices]
         
         return [candidate_list[i] for i in ranked_indices[:top_n]]
 

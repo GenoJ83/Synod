@@ -65,6 +65,23 @@ class Summarizer:
             summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=max_length, min_length=min_length, early_stopping=True)
             summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
             
+            # Post-processing: Redundancy filter
+            sentences = summary.split(". ")
+            if len(sentences) > 2:
+                # Basic redundancy check: remove sentences that are too similar or almost identical
+                filtered_sentences = [sentences[0]]
+                for i in range(1, len(sentences)):
+                    is_redundant = False
+                    for prev in filtered_sentences:
+                        # Simple overlap check for now; could be upgraded to embedding similarity
+                        s1, s2 = set(sentences[i].lower().split()), set(prev.lower().split())
+                        if len(s1 & s2) / max(len(s1), len(s2)) > 0.8:
+                            is_redundant = True
+                            break
+                    if not is_redundant:
+                        filtered_sentences.append(sentences[i])
+                summary = ". ".join(filtered_sentences)
+
             # Simple compression metric
             compression_ratio = len(summary.split()) / max(1, len(text.split()))
             
