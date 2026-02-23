@@ -96,7 +96,8 @@ class QuizGenerator:
         false_statements = []
         
         for sentence in sentences:
-            if len(sentence.split()) < 8:
+            sentence = sentence.strip()
+            if not self._is_sentence_specific(sentence, concepts):
                 continue
             
             # This is a true statement from the text
@@ -152,7 +153,7 @@ class QuizGenerator:
             
             # Check if sentence describes a cause-effect or relationship
             for keyword in process_keywords:
-                if keyword in sentence_lower and len(sentence.split()) > 8:
+                if keyword in sentence_lower and self._is_sentence_specific(sentence, concepts):
                     # Extract main concepts from sentence
                     sentence_concepts = [c for c in concepts if c.lower() in sentence_lower]
                     if sentence_concepts:
@@ -244,13 +245,21 @@ class QuizGenerator:
     def _is_sentence_specific(self, sentence: str, concepts: List[str]) -> bool:
         """
         Heuristic to determine if a sentence is high-quality enough for a quiz question.
-        Rejects sentences that start with vague pronouns or lack enough context.
+        Rejects sentences that start with vague pronouns, bullet points, or lack enough context.
         """
+        # Strip common slide bullet characters
+        bullets = "❑●•*-◦▪"
+        sentence = sentence.lstrip(bullets).strip()
+        
         words = sentence.split()
         if len(words) < 7:
             return False
             
-        # 1. Reject sentences starting with generic pronouns (likely lacking context)
+        # 1. Reject sentences ending with colons (likely headers)
+        if sentence.endswith(":"):
+            return False
+
+        # 2. Reject sentences starting with generic pronouns (likely lacking context)
         first_word = words[0].lower().strip(".,!?;:\"'")
         vague_pronouns = {"it", "they", "this", "these", "those", "that", "he", "she"}
         if first_word in vague_pronouns:
@@ -259,7 +268,18 @@ class QuizGenerator:
             if concept_count < 2:
                 return False
         
-        # 2. Reject very short sentences that are likely just bridge phrases
+        # 3. Reject objective headers and action-verb fragments (Bloom's Taxonomy)
+        # These are common in slides but poor for factual quiz questions
+        objective_patterns = ["should be able to", "learning outcomes", "lecture objectives", "learning objectives", "by the end of"]
+        if any(pat in sentence.lower() for pat in objective_patterns):
+            return False
+            
+        # Reject sentences starting with imperative/objective verbs
+        objective_verbs = {"understand", "learn", "know", "discuss", "explain", "describe", "identify", "analyze", "evaluate", "synthesize", "apply"}
+        if first_word in objective_verbs:
+            return False
+
+        # 4. Reject very short sentences that are likely just bridge phrases
         if len(words) < 10 and self._count_unique_concepts(sentence, concepts) < 1:
             return False
             
