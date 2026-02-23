@@ -121,6 +121,39 @@ class Summarizer:
             print(f"Summary error: {e}")
             return {"summary": text[:200] + "...", "metrics": {"compression_ratio": 0.0}}
 
+    def generate_takeaways(self, text: str, num_bullets: int = 5) -> List[str]:
+        """ Extracts specific, important takeaways as bullet points. """
+        if not self.has_transformers:
+            return ["Key point from the lecture (Mock)"]
+        
+        # Split text into segments and summarize each to get diverse points
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        if len(sentences) < 10:
+            return [s for s in sentences if len(s.split()) > 5][:num_bullets]
+        
+        # Group sentences into chunks
+        chunk_size = max(1, len(sentences) // num_bullets)
+        takeaways = []
+        
+        for i in range(0, len(sentences), chunk_size):
+            chunk = " ".join(sentences[i:i + chunk_size])
+            if len(chunk.split()) < 20: continue
+            
+            try:
+                inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+                # Generate very short summary for this chunk
+                ids = self.model.generate(inputs["input_ids"], max_length=40, min_length=10, num_beams=2)
+                point = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
+                if point and point not in takeaways:
+                    takeaways.append(point)
+            except:
+                continue
+            
+            if len(takeaways) >= num_bullets:
+                break
+                
+        return takeaways[:num_bullets]
+
 if __name__ == "__main__":
     # Quick test
     test_text = """
