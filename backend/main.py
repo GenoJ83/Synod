@@ -69,6 +69,7 @@ class ProcessResponse(BaseModel):
     concept_details: Optional[List[Dict]] = None
     quiz: Dict
     explanations: Optional[Dict] = None
+    takeaways: Optional[List[str]] = None
     metrics: Optional[Dict] = None
 
 def process_logic(text: str):
@@ -90,13 +91,17 @@ def process_logic(text: str):
     true_false = quiz_gen.generate_true_false(text, concepts)
     comprehension = quiz_gen.generate_comprehension(text, concepts)
 
-    # 4. Generate explanations for each concept
-    explanations = explanation_gen.generate_all_explanations(concepts, text)
+    # 4. Generate explanations for each concept (passing extractor for dynamic definitions)
+    explanations = explanation_gen.generate_all_explanations(concepts, text, extractor=extractor)
+
+    # 5. Generate structured takeaways
+    takeaways = summarizer.generate_takeaways(text)
 
     return {
         "summary": summary,
-        "concepts": concepts, # Still return simple list for legacy/compatibility
-        "concept_details": concept_data, # New detailed data
+        "concepts": concepts, 
+        "concept_details": concept_data, 
+        "takeaways": takeaways,
         "quiz": {
             "fill_in_the_blanks": fibs,
             "mcqs": mcqs,

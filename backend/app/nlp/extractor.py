@@ -60,13 +60,19 @@ class ConceptExtractor:
 
         doc = self.nlp(text)
         
-        # Candidate selection: Noun phrases and proper nouns
+        # Candidate selection: Noun phrases AND Named Entities
         candidates = set()
+        
+        # 1. Noun phrases
         for chunk in doc.noun_chunks:
-            # Clean and filter candidates
             clean_chunk = chunk.text.strip().lower()
             if len(clean_chunk) > 3 and not chunk.root.is_stop:
                 candidates.add(clean_chunk)
+        
+        # 2. Named Entities (specific technical/formal terms)
+        for ent in doc.ents:
+            if ent.label_ in ["PRODUCT", "ORG", "PERSON", "GPE", "WORK_OF_ART", "EVENT"]:
+                candidates.add(ent.text.strip().lower())
         
         if not candidates:
             return []

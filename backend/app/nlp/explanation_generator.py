@@ -1,5 +1,6 @@
 import re
 from typing import List, Dict
+from sentence_transformers import util
 
 class ExplanationGenerator:
     """
@@ -56,7 +57,8 @@ class ExplanationGenerator:
         # 1. Try to find the actual definition/context in the text using the extractor's embeddings
         specific_context = ""
         if extractor and hasattr(extractor, 'model'):
-            try:
+            import re
+try:
                 sentences = re.split(r'(?<=[.!?])\s+', text)
                 if len(sentences) > 3:
                     concept_emb = extractor.model.encode([concept], convert_to_tensor=True)
