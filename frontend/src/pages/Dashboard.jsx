@@ -264,12 +264,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-                        </div >
-                    </div >
-                </main >
-            </div >
-        </div >
-    );
-}
-
-export default Dashboard;

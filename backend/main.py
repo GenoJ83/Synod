@@ -74,8 +74,10 @@ def process_logic(text: str):
     if not text:
         raise HTTPException(status_code=400, detail="Text is required")
     
-    # 1. Summarization
-    summary = summarizer.summarize(text)
+    # 1. Summarization (now returns dict with summary and metrics)
+    sum_result = summarizer.summarize(text)
+    summary = sum_result["summary"]
+    metrics = sum_result.get("metrics", {})
 
     # 2. Concept extraction (ranked key phrases)
     concepts = extractor.extract_concepts(text)
@@ -99,7 +101,7 @@ def process_logic(text: str):
             "comprehension": comprehension,
         },
         "explanations": explanations,
-        "metrics": None,
+        "metrics": metrics,
     }
 
 @app.get("/")
