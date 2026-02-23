@@ -57,13 +57,11 @@ class ExplanationGenerator:
         # 1. Try to find the actual definition/context in the text using the extractor's embeddings
         specific_context = ""
         if extractor and hasattr(extractor, 'model'):
-            import re
-try:
+            try:
                 sentences = re.split(r'(?<=[.!?])\s+', text)
                 if len(sentences) > 3:
                     concept_emb = extractor.model.encode([concept], convert_to_tensor=True)
                     sent_embs = extractor.model.encode(sentences, convert_to_tensor=True)
-                    from sentence_transformers import util
                     scores = util.cos_sim(concept_emb, sent_embs).cpu().numpy().flatten()
                     top_idx = scores.argmax()
                     # If similarity is high enough, we assume it's a good descriptive sentence

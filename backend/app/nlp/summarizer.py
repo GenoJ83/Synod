@@ -1,3 +1,4 @@
+import re
 try:
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
     import torch
