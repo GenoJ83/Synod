@@ -106,7 +106,13 @@ def process_logic(text: str):
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to Synod API"}
+    return {
+        "message": "Welcome to Synod API",
+        "device_info": {
+            "summarizer": summarizer.device if hasattr(summarizer, "device") else "mock",
+            "extractor": extractor.device if hasattr(extractor, "device") else "mock"
+        }
+    }
 
 @app.post("/analyze", response_model=ProcessResponse)
 async def analyze_text(request: ProcessRequest):
