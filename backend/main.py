@@ -2,7 +2,9 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Optional
-import uvicorn
+import os
+import shutil
+from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 
