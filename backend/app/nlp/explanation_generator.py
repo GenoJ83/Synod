@@ -65,7 +65,7 @@ class ExplanationGenerator:
                     scores = util.cos_sim(concept_emb, sent_embs).cpu().numpy().flatten()
                     top_idx = scores.argmax()
                     # If similarity is high enough, we assume it's a good descriptive sentence
-                    if scores[top_idx] > 0.45:
+                    if scores[top_idx] > 0.35:
                         specific_context = sentences[top_idx].strip()
             except Exception as e:
                 print(f"Semantic context extraction failed: {e}")

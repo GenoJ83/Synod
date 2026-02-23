@@ -39,8 +39,8 @@ class Summarizer:
                     self.model = self.model.half() # Precision optimization for CUDA
                 elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
                     self.device = "mps"
-                    # Half precision (FP16) is highly efficient on MPS
-                    self.model = self.model.half()
+                    # Half precision disabled for stability
+                    # self.model = self.model.half()
                 else:
                     self.device = "cpu"
                     # Dynamic Quantization for CPU speedup
