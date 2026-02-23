@@ -29,6 +29,10 @@ class ConceptExtractor:
                 print(f"Loading embedding model: {model_name} on {self.device}...")
                 self.model = SentenceTransformer(model_name, device=self.device)
                 
+                # Precision optimization for Silicon/GPU
+                if self.device in ["cuda", "mps"]:
+                    self.model = self.model.half()
+                
                 try:
                     self.nlp = spacy.load("en_core_web_sm")
                 except OSError:
