@@ -5,6 +5,17 @@ try:
 except ImportError:
     HAS_TRANSFORMERS = False
 
+def calculate_coverage_score(summary: str, original: str) -> float:
+    """Calculates a simple n-gram overlap score (ROUGE-1 proxy)."""
+    if not summary or not original:
+        return 0.0
+    s_words = set(summary.lower().split())
+    o_words = set(original.lower().split())
+    if not o_words:
+        return 0.0
+    overlap = len(s_words & o_words)
+    return round(overlap / len(s_words), 3) if s_words else 0.0
+
 from typing import List, Optional
 
 class Summarizer:
@@ -84,11 +95,13 @@ class Summarizer:
 
             # Simple compression metric
             compression_ratio = len(summary.split()) / max(1, len(text.split()))
+            coverage_score = calculate_coverage_score(summary, text)
             
             result = {
                 "summary": summary,
                 "metrics": {
-                    "compression_ratio": round(compression_ratio, 3)
+                    "compression_ratio": round(compression_ratio, 3),
+                    "coverage_score": coverage_score
                 }
             }
             self.cache[text_hash] = result
