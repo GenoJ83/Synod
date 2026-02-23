@@ -14,8 +14,10 @@ class QuizGenerator:
         sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
         
         for sentence in sentences:
-            if len(sentence.split()) < 5:
+            sentence = sentence.strip()
+            if not self._is_sentence_specific(sentence, concepts):
                 continue
+            
             for concept in concepts:
                 pattern = re.compile(re.escape(concept), re.IGNORECASE)
                 match = pattern.search(sentence)
@@ -35,7 +37,8 @@ class QuizGenerator:
         sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
 
         for sentence in sentences:
-            if len(sentence.split()) < 5:
+            sentence = sentence.strip()
+            if not self._is_sentence_specific(sentence, concepts):
                 continue
                 
             matched_concepts = []
@@ -237,6 +240,39 @@ class QuizGenerator:
                 return sentence.replace(concept2, concept1, 1)
         
         return ""
+
+    def _is_sentence_specific(self, sentence: str, concepts: List[str]) -> bool:
+        """
+        Heuristic to determine if a sentence is high-quality enough for a quiz question.
+        Rejects sentences that start with vague pronouns or lack enough context.
+        """
+        words = sentence.split()
+        if len(words) < 7:
+            return False
+            
+        # 1. Reject sentences starting with generic pronouns (likely lacking context)
+        first_word = words[0].lower().strip(".,!?;:\"'")
+        vague_pronouns = {"it", "they", "this", "these", "those", "that", "he", "she"}
+        if first_word in vague_pronouns:
+            # Only allow if the sentence contains at least 2 other key concepts to provide context
+            concept_count = self._count_unique_concepts(sentence, concepts)
+            if concept_count < 2:
+                return False
+        
+        # 2. Reject very short sentences that are likely just bridge phrases
+        if len(words) < 10 and self._count_unique_concepts(sentence, concepts) < 1:
+            return False
+            
+        return True
+
+    def _count_unique_concepts(self, sentence: str, concepts: List[str]) -> int:
+        """Count how many unique concepts from the list appear in the sentence."""
+        sentence_lower = sentence.lower()
+        count = 0
+        for concept in concepts:
+            if concept.lower() in sentence_lower:
+                count += 1
+        return count
 
     def _statement_to_question(self, statement: str) -> str:
         """Convert a statement to a question format."""

@@ -22,11 +22,24 @@ class ExtractorService:
 
     @staticmethod
     def _sanitize_text(text: str) -> str:
-        """Basic sanitization: clean excessive whitespace and control characters."""
+        """Sanitize text by removing excessive whitespace and repetitive headers/footers."""
         if not text:
             return ""
+        
+        # Split into lines to identify repeating headers/footers
+        lines = text.splitlines()
+        if len(lines) > 20:
+            from collections import Counter
+            line_counts = Counter(lines)
+            # Remove any line that appears in more than 15% of the document (likely a header/footer)
+            threshold = max(2, len(lines) // 20) 
+            text = "\n".join([line for line in lines if line_counts[line] < threshold])
+        else:
+            text = "\n".join(lines)
+
         # Remove control characters and non-printable characters
         text = "".join(char for char in text if char.isprintable() or char in "\n\r\t")
+        
         # Normalize whitespace (replace multiple spaces/newlines with single ones)
         import re
         text = re.sub(r' +', ' ', text)
