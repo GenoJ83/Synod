@@ -115,10 +115,10 @@ class ConceptExtractor:
         # Compute document embedding as the mean of candidate embeddings (or of the whole text)
         doc_embedding = self.model.encode([text], convert_to_tensor=True)
         
-        # Rank by cosine similarity to the document context
-        cos_scores = util.cos_sim(candidate_embeddings, doc_embedding).cpu().numpy().flatten()
-        
         # Post-processing quality filters
+        threshold = 0.3
+        ranked_indices = np.argsort(cos_scores)[::-1]
+        
         concepts = []
         for i in ranked_indices:
             term = candidate_list[i]

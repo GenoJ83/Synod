@@ -147,13 +147,13 @@ class ModelTrainer:
         def preprocess_data(examples):
             inputs = tokenizer(
                 examples["text"],
-                max_length=1024,
+                max_length=256, # Reduced for memory
                 truncation=True,
                 padding="max_length"
             )
             labels = tokenizer(
                 examples["summary"],
-                max_length=128,
+                max_length=64, # Reduced for memory
                 truncation=True,
                 padding="max_length"
             )
@@ -332,11 +332,11 @@ class ModelTrainer:
         
         for result in results:
             report["models"][result.model_name] = {
-                "epochs": result.epochs,
-                "final_loss": round(result.final_loss, 4),
-                "accuracy": round(result.accuracy * 100, 2),
+                "epochs": int(result.epochs),
+                "final_loss": float(result.final_loss),
+                "accuracy": float(result.accuracy * 100),
                 "accuracy_percentage": f"{result.accuracy*100:.2f}%",
-                "training_time_seconds": round(result.training_time, 2),
+                "training_time_seconds": float(result.training_time),
                 "training_time_formatted": f"{result.training_time/60:.2f} minutes"
             }
         
