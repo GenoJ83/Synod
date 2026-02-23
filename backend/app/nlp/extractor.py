@@ -6,8 +6,38 @@ except ImportError:
     HAS_ML_DEPS = False
 
 import numpy as np
+import re
 from collections import Counter
-from typing import List, Tuple
+from typing import List, Tuple, Set
+
+# Comprehensive stopwords and generic phrases to filter from concepts
+CONCEPT_STOPWORDS = {
+    'a', 'an', 'the', 'this', 'that', 'these', 'those',
+    'is', 'are', 'was', 'were', 'be', 'been', 'being',
+    'have', 'has', 'had', 'do', 'does', 'did',
+    'will', 'would', 'could', 'should', 'may', 'might',
+    'can', 'shall', 'must', 'ought', 'it', 'its', 'itself',
+    'they', 'them', 'their', 'theirs', 'themselves',
+    'what', 'which', 'who', 'whom', 'whose', 'subset', 'type', 
+    'kind', 'sort', 'form', 'part', 'piece', 'portion', 'section', 
+    'segment', 'process', 'method', 'way', 'means', 'approach',
+    'example', 'instance', 'case', 'sample', 'thing', 'object', 
+    'item', 'element', 'component', 'aspect', 'feature', 
+    'characteristic', 'quality', 'fact', 'detail', 'point', 
+    'idea', 'concept', 'result', 'outcome', 'effect', 'consequence',
+    'purpose', 'goal', 'aim', 'objective', 'target', 'reason', 
+    'cause', 'factor', 'source', 'origin', 'use', 'usage', 
+    'application', 'function', 'role', 'importance', 'significance', 
+    'value', 'worth', 'problem', 'issue', 'matter', 'question', 
+    'topic', 'subject', 'theme', 'area', 'field', 'domain',
+    'context', 'background', 'setting', 'environment', 'condition', 
+    'situation', 'circumstance', 'state', 'change', 'variation', 
+    'difference', 'distinction', 'relationship', 'connection', 
+    'link', 'tie', 'bond', 'structure', 'organization', 
+    'arrangement', 'order', 'system', 'network', 'framework', 
+    'model', 'pattern', 'development', 'growth', 'progress', 
+    'advancement'
+}
 
 class ConceptExtractor:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
@@ -48,7 +78,7 @@ class ConceptExtractor:
             self.model = None
             self.nlp = None
 
-    def extract_concepts(self, text: str, top_n: int = 10) -> List[str]:
+    def extract_concepts(self, text: str, top_n: int = 10) -> List[dict]:
         """
         Extracts key concepts (noun phrases) and ranks them using centrality.
         """
@@ -88,17 +118,28 @@ class ConceptExtractor:
         # Rank by cosine similarity to the document context
         cos_scores = util.cos_sim(candidate_embeddings, doc_embedding).cpu().numpy().flatten()
         
-        # Quality filter: Only keep candidates with similarity > threshold
-        threshold = 0.3
-        valid_indices = [i for i, score in enumerate(cos_scores) if score > threshold]
-        
-        if not valid_indices:
-            # Fallback if everything is below threshold
-            ranked_indices = np.argsort(cos_scores)[::-1]
-        else:
-            ranked_indices = [i for i in np.argsort(cos_scores)[::-1] if i in valid_indices]
-        
-        return [{"term": candidate_list[i], "relevance": round(float(cos_scores[i]), 3)} for i in ranked_indices[:top_n]]
+        # Post-processing quality filters
+        concepts = []
+        for i in ranked_indices:
+            term = candidate_list[i]
+            relevance = float(cos_scores[i])
+            
+            # Filter by relevance threshold
+            if relevance < threshold and len(concepts) >= 5:
+                continue
+                
+            # Filter generic terms and short fragments
+            words = term.split()
+            if any(w in CONCEPT_STOPWORDS for w in words) and len(words) == 1:
+                continue
+            if len(term) < 3:
+                continue
+                
+            concepts.append({"term": term, "relevance": round(relevance, 3)})
+            if len(concepts) >= top_n:
+                break
+                
+        return concepts
 
     def extract_keywords(self, text: str, top_n: int = 5) -> List[str]:
         """

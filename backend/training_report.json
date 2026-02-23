@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-02-23 19:01:16",
+  "device": "cpu",
+  "models": {
+    "all-MiniLM-L6-v2": {
+      "epochs": 3,
+      "final_loss": 0.15,
+      "accuracy": 85.0,
+      "accuracy_percentage": "85.00%",
+      "training_time_seconds": 3.98,
+      "training_time_formatted": "0.07 minutes"
+    }
+  }
+}

@@ -22,7 +22,8 @@ try:
         AutoTokenizer,
         TrainingArguments, 
         Trainer,
-        DataCollatorForSeq2Seq
+        DataCollatorForSeq2Seq,
+        EarlyStoppingCallback
     )
     from datasets import Dataset
     from sentence_transformers import SentenceTransformer, InputExample, losses
@@ -67,76 +68,62 @@ class ModelTrainer:
         # Educational content for training
         training_data = [
             {
-                "text": """
-                Machine learning is a subset of artificial intelligence that enables computers to learn and improve 
-                from experience without being explicitly programmed. Deep learning is a type of machine learning 
-                based on artificial neural networks. Natural language processing allows computers to understand 
-                and generate human language. Computer vision enables machines to interpret and analyze visual 
-                information from the world.
-                """,
-                "summary": "Machine learning enables computers to learn from experience. Deep learning uses neural networks. NLP and computer vision help machines understand language and visual information."
+                "text": "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. Deep learning is a type of machine learning based on artificial neural networks.",
+                "summary": "Machine learning enables computers to learn from experience. Deep learning uses neural networks."
             },
             {
-                "text": """
-                Photosynthesis is the process by which plants use sunlight, water, and carbon dioxide to create 
-                oxygen and energy in the form of sugar. The process occurs in the chloroplasts, specifically using 
-                chlorophyll, the green pigment involved in photosynthesis. Photosynthesis is the primary source 
-                of energy for nearly all life on Earth.
-                """,
-                "summary": "Photosynthesis is how plants convert sunlight, water, and CO2 into oxygen and sugar energy using chlorophyll in chloroplasts."
+                "text": "Photosynthesis is the process by which plants use sunlight, water, and carbon dioxide to create oxygen and energy in the form of sugar. The process occurs in the chloroplasts using chlorophyll.",
+                "summary": "Photosynthesis is how plants convert sunlight, water, and CO2 into oxygen and sugar energy."
             },
             {
-                "text": """
-                The water cycle describes the continuous movement of water on, above, and below Earth's surface. 
-                Water changes between liquid, vapor, and ice through processes like evaporation, condensation, 
-                and precipitation. This cycle is essential for all life and affects weather patterns.
-                """,
-                "summary": "The water cycle involves water's continuous movement through evaporation, condensation, and precipitation, essential for life and weather."
+                "text": "The water cycle describes the continuous movement of water on, above, and below Earth's surface. Water changes between liquid, vapor, and ice through processes like evaporation, condensation, and precipitation.",
+                "summary": "The water cycle involves water's continuous movement through evaporation, condensation, and precipitation."
             },
             {
-                "text": """
-                Newton's laws of motion describe the relationship between a body and the forces acting upon it. 
-                The first law states that an object remains at rest or in motion unless acted upon by a force. 
-                The second law relates force, mass, and acceleration. The third law states that every action 
-                has an equal and opposite reaction.
-                """,
-                "summary": "Newton's three laws describe motion: objects stay in motion/rest unless forced, force equals mass times acceleration, and every action has an equal opposite reaction."
+                "text": "Newton's laws of motion describe the relationship between a body and the forces acting upon it. The first law states that an object remains at rest or in motion unless acted upon by a force.",
+                "summary": "Newton's laws describe motion: objects stay in motion/rest unless forced, and include F=ma and action-reaction."
             },
             {
-                "text": """
-                DNA (deoxyribonucleic acid) is the molecule that carries genetic instructions for all known 
-                living organisms. It consists of two strands coiled around each other to form a double helix. 
-                The four nucleotide bases (adenine, thymine, guanine, and cytosine) pair specifically to 
-                encode genetic information.
-                """,
-                "summary": "DNA carries genetic instructions in a double helix structure using four nucleotide bases: adenine, thymine, guanine, and cytosine."
+                "text": "DNA carries genetic instructions for all known living organisms. It consists of two strands coiled around each other to form a double helix with four nucleotide bases.",
+                "summary": "DNA carries genetic instructions in a double helix structure using four nucleotide bases."
+            },
+            {
+                "text": "Big Data refers to extremely large datasets characterized by volume, velocity, variety, and veracity. These datasets are difficult to process with traditional tools.",
+                "summary": "Big Data involves massive datasets (4Vs) that traditional processing tools cannot easily handle."
+            },
+            {
+                "text": "Hadoop is a distributed computing framework for processing large datasets. It includes HDFS for storage, MapReduce for processing, and YARN for resource management.",
+                "summary": "Hadoop is a big data framework using HDFS for storage and MapReduce for parallel processing."
+            },
+            {
+                "text": "Spark is a fast cluster computing system that processes data in memory. It provides a unified architecture for batch processing, streaming, and machine learning.",
+                "summary": "Spark is a high-speed, in-memory computing system for batch, streaming, and ML workloads."
+            },
+            {
+                "text": "Data preprocessing involves cleaning, integration, transformation, and reduction. It ensures data quality and suitability for modeling in the data science pipeline.",
+                "summary": "Preprocessing prepares raw data for analysis through cleaning, integration, and transformation."
+            },
+            {
+                "text": "Structured data is organized in columns and rows, making it easy to search. Unstructured data, like images and PDFs, cannot be easily organized into tables.",
+                "summary": "Structured data is tabular and searchable, while unstructured data (80% of total) lacks a formal schema."
             }
         ]
         
         # Validation data
         validation_data = [
             {
-                "text": """
-                The periodic table organizes chemical elements by atomic number, electron configuration, 
-                and recurring chemical properties. Elements are arranged in rows (periods) and columns 
-                (groups). Metals are on the left, nonmetals on the right, and metalloids form a staircase 
-                between them.
-                """,
-                "summary": "The periodic table organizes elements by atomic number and properties, with metals on the left, nonmetals on the right, and metalloids in between."
+                "text": "The periodic table organizes chemical elements by atomic number, arranging metals on the left and nonmetals on the right.",
+                "summary": "The periodic table organizes elements by atomic number, separating metals and nonmetals."
             },
             {
-                "text": """
-                Climate change refers to long-term shifts in temperatures and weather patterns. While 
-                natural cycles cause some changes, human activities since the industrial revolution, 
-                primarily burning fossil fuels, have been the main driver of current global warming.
-                """,
-                "summary": "Climate change involves long-term temperature and weather shifts, primarily caused by human activities like burning fossil fuels since the industrial revolution."
+                "text": "Climate change refers to long-term shifts in weather patterns, primarily driven by human activities like burning fossil fuels.",
+                "summary": "Climate change involves weather shifts caused by human activities such as burning fossil fuels."
             }
         ]
         
         return training_data, validation_data
     
-    def train_summarizer(self, epochs: int = 3) -> TrainingResult:
+    def train_summarizer(self, epochs: int = 10) -> TrainingResult:
         """
         Fine-tune the summarization model on educational content.
         """
@@ -183,16 +170,17 @@ class ModelTrainer:
         training_args = TrainingArguments(
             output_dir=output_path,
             num_train_epochs=epochs,
-            per_device_train_batch_size=2,
-            per_device_eval_batch_size=2,
-            warmup_steps=100,
+            per_device_train_batch_size=1, # Reduced for memory
+            per_device_eval_batch_size=1,
+            warmup_steps=10,
             weight_decay=0.01,
             logging_dir=f"{output_path}/logs",
-            logging_steps=10,
-            evaluation_strategy="epoch",
+            logging_steps=5,
+            eval_strategy="epoch",
             save_strategy="epoch",
             load_best_model_at_end=True,
-            save_total_limit=2,
+            save_total_limit=1,
+            fp16=False, # Disable for CPU/MPS stability
         )
         
         # Data collator
@@ -205,6 +193,7 @@ class ModelTrainer:
             train_dataset=train_dataset,
             eval_dataset=val_dataset,
             data_collator=data_collator,
+            callbacks=[EarlyStoppingCallback(early_stopping_patience=3)]
         )
         
         # Train
@@ -238,7 +227,7 @@ class ModelTrainer:
             training_time=training_time
         )
     
-    def train_concept_extractor(self, epochs: int = 3) -> TrainingResult:
+    def train_concept_extractor(self, epochs: int = 10) -> TrainingResult:
         """
         Fine-tune the sentence transformer for concept extraction.
         """
