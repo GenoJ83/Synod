@@ -3,9 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 import uvicorn
-import os
-import shutil
-from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 
 from app.nlp.summarizer import Summarizer
 from app.nlp.extractor import ConceptExtractor
@@ -23,13 +22,15 @@ app = FastAPI(title="Synod API")
 # Session middleware for OAuth (required by Authlib)
 from starlette.middleware.sessions import SessionMiddleware
 
-SESSION_SECRET = os.getenv("SESSION_SECRET", os.getenv("JWT_SECRET", "session_development_secret_key_123"))
+# Prioritize JWT_SECRET, fallback to SESSION_SECRET, then a dev default
+SESSION_SECRET = os.getenv("JWT_SECRET", os.getenv("SESSION_SECRET", "session_development_secret_key_123"))
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
 # Enable CORS for React development
 ALLOWED_ORIGINS = [
     os.getenv("FRONTEND_URL", "http://localhost:5173"),
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "http://localhost:5173"
 ]
 
 app.add_middleware(
