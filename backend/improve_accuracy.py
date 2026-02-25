@@ -20,19 +20,20 @@ def extract_summarization_pairs(text):
     """
     pairs = []
     # Split by topic-like headers or bulleted sections
-    sections = re.split(r'\n(?=[A-Z\s]{5,})', text)
+    # More flexible header detection: Capitalized lines or lines ending with ?
+    sections = re.split(r'\n(?=[A-Z][a-z]+(?:\s[A-Z][a-z]+)*[:\?]?\n)', text)
     
     for section in sections:
         lines = [l.strip() for l in section.split('\n') if l.strip()]
-        if len(lines) < 3:
+        if len(lines) < 2:
             continue
             
         header = lines[0]
         content = " ".join(lines[1:])
         
-        if len(content.split()) > 30:
-            # We treat the header + first sentence as a summary proxy for the rest
-            summary = f"{header}: {lines[1]}"
+        if len(content.split()) > 15:
+            # We treat the header as a summary proxy for the content
+            summary = header
             pairs.append({"text": content, "summary": summary})
             
     return pairs

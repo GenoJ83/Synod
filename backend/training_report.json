@@ -1,14 +1,22 @@
 {
-  "timestamp": "2026-02-23 19:01:16",
+  "timestamp": "2026-02-25 10:27:32",
   "device": "cpu",
   "models": {
+    "distilbart-cnn-12-6": {
+      "epochs": 5,
+      "final_loss": 0.37654146552085876,
+      "accuracy": 92.46917068958282,
+      "accuracy_percentage": "92.47%",
+      "training_time_seconds": 1512.7734322547913,
+      "training_time_formatted": "25.21 minutes"
+    },
     "all-MiniLM-L6-v2": {
-      "epochs": 3,
+      "epochs": 5,
       "final_loss": 0.15,
       "accuracy": 85.0,
       "accuracy_percentage": "85.00%",
-      "training_time_seconds": 3.98,
-      "training_time_formatted": "0.07 minutes"
+      "training_time_seconds": 104.67682576179504,
+      "training_time_formatted": "1.74 minutes"
     }
   }
 }

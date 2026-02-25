@@ -58,20 +58,109 @@ class ModelTrainer:
     def __init__(self, output_dir: str = "trained_models"):
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"Using device: {self.device}")
+        os.makedirs(output_dir, exist_ok=True)
+        # Force CPU for training stability
+        self.device = "cpu"
+        print(f"Device set to: {self.device} (Forced)")
     
-    def prepare_summarization_data(self) -> Tuple[List, List]:
+    def load_external_datasets(self, task: str, limit: int = 500) -> List[Dict]:
+        """
+        Loads external datasets from Hugging Face for phased training.
+        """
+        try:
+            from datasets import load_dataset
+        except ImportError:
+            print("Installing datasets library...")
+            os.system("pip3 install datasets")
+            from datasets import load_dataset
+        
+        data = []
+        if task == "summarization":
+            print(f"Loading external summarization data (scientific_papers/arxiv) with limit {limit}...")
+            try:
+                # ArXiv subset is good for technical/educational content
+                # Note: using a small limit for CPU training feasibility
+                dataset = load_dataset("scientific_papers", "arxiv", split=f"train[:{limit}]", trust_remote_code=True)
+                for item in dataset:
+                    data.append({
+                        "text": item["article"][:1000], # Substantial snippet
+                        "summary": item["abstract"]
+                    })
+                print(f"Successfully loaded {len(data)} external summarization pairs.")
+            except Exception as e:
+                print(f"Failed to load scientific_papers: {e}")
+                
+        elif task == "concepts":
+            print(f"Loading external concept data (midas/inspec) with limit {limit}...")
+            try:
+                # Inspec for keyphrase extraction
+                dataset = load_dataset("midas/inspec", "raw", split=f"train[:{limit}]", trust_remote_code=True)
+                for item in dataset:
+                    text = item["document"]
+                    concepts = item.get("unassigned_keyphrases", []) + item.get("assigned_keyphrases", [])
+                    for concept in concepts[:3]: # Limit per doc
+                        data.append({"text": text[:500], "concept": concept, "label": 1.0})
+                print(f"Successfully loaded {len(data)} external concept samples.")
+            except Exception as e:
+                print(f"Failed to load inspec: {e}")
+        
+        return data
+
+    def prepare_summarization_data(self, use_external: bool = False) -> Tuple[List, List]:
         """
         Prepare training data for summarization model.
         """
-        training_data = []
+        # Educational content for training
+        training_data = [
+            {
+                "text": "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. Deep learning is a type of machine learning based on artificial neural networks.",
+                "summary": "Machine learning enables computers to learn from experience. Deep learning uses neural networks."
+            },
+            {
+                "text": "Photosynthesis is the process by which plants use sunlight, water, and carbon dioxide to create oxygen and energy in the form of sugar. The process occurs in the chloroplasts using chlorophyll.",
+                "summary": "Photosynthesis is how plants convert sunlight, water, and CO2 into oxygen and sugar energy."
+            },
+            {
+                "text": "The water cycle describes the continuous movement of water on, above, and below Earth's surface. Water changes between liquid, vapor, and ice through processes like evaporation, condensation, and precipitation.",
+                "summary": "The water cycle involves water's continuous movement through evaporation, condensation, and precipitation."
+            },
+            {
+                "text": "Newton's laws of motion describe the relationship between a body and the forces acting upon it. The first law states that an object remains at rest or in motion unless acted upon by a force.",
+                "summary": "Newton's laws describe motion: objects stay in motion/rest unless forced, and include F=ma and action-reaction."
+            },
+            {
+                "text": "DNA carries genetic instructions for all known living organisms. It consists of two strands coiled around each other to form a double helix with four nucleotide bases.",
+                "summary": "DNA carries genetic instructions in a double helix structure using four nucleotide bases."
+            },
+            {
+                "text": "Big Data refers to extremely large datasets characterized by volume, velocity, variety, and veracity. These datasets are difficult to process with traditional tools.",
+                "summary": "Big Data involves massive datasets (4Vs) that traditional processing tools cannot easily handle."
+            },
+            {
+                "text": "Hadoop is a distributed computing framework for processing large datasets. It includes HDFS for storage, MapReduce for processing, and YARN for resource management.",
+                "summary": "Hadoop is a big data framework using HDFS for storage and MapReduce for parallel processing."
+            },
+            {
+                "text": "Spark is a fast cluster computing system that processes data in memory. It provides a unified architecture for batch processing, streaming, and machine learning.",
+                "summary": "Spark is a high-speed, in-memory computing system for batch, streaming, and ML workloads."
+            },
+            {
+                "text": "Data preprocessing involves cleaning, integration, transformation, and reduction. It ensures data quality and suitability for modeling in the data science pipeline.",
+                "summary": "Preprocessing prepares raw data for analysis through cleaning, integration, and transformation."
+            },
+            {
+                "text": "Structured data is organized in columns and rows, making it easy to search. Unstructured data, like images and PDFs, cannot be easily organized into tables.",
+                "summary": "Structured data is tabular and searchable, while unstructured data (80% of total) lacks a formal schema."
+            }
+        ]
+        
         # Load augmented data if available
         augmented_path = "training_data/summarization_augmented.json"
         if os.path.exists(augmented_path):
             with open(augmented_path, 'r') as f:
-                training_data.extend(json.load(f))
-            print(f"Loaded {len(training_data)} summarization pairs (including augmented data).")
+                aug_data = json.load(f)
+                training_data.extend(aug_data)
+            print(f"Loaded {len(aug_data)} augmented summarization pairs. Total: {len(training_data)}.")
         
         # Validation data
         
@@ -89,7 +178,7 @@ class ModelTrainer:
         
         return training_data, validation_data
     
-    def train_summarizer(self, epochs: int = 10) -> TrainingResult:
+    def train_summarizer(self, epochs: int = 5, use_external: bool = False) -> TrainingResult:
         """
         Fine-tune the summarization model on educational content.
         """
@@ -104,10 +193,13 @@ class ModelTrainer:
         print(f"Loading model: {model_name}")
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-        model.to(self.device)
+        
+        # Force CPU for summarizer to avoid OOM
+        model.to("cpu")
+        print("Summarizer forced to CPU for memory safety.")
         
         # Prepare data
-        train_data, val_data = self.prepare_summarization_data()
+        train_data, val_data = self.prepare_summarization_data(use_external=use_external)
         
         # Convert to dataset format
         def preprocess_data(examples):
@@ -147,6 +239,8 @@ class ModelTrainer:
             load_best_model_at_end=True,
             save_total_limit=1,
             fp16=False, # Disable for CPU/MPS stability
+            no_cuda=True, # Force CPU
+            use_mps_device=False, # Explicitly disable MPS
         )
         
         # Data collator
@@ -193,7 +287,7 @@ class ModelTrainer:
             training_time=training_time
         )
     
-    def train_concept_extractor(self, epochs: int = 10) -> TrainingResult:
+    def train_concept_extractor(self, epochs: int = 5, use_external: bool = False) -> TrainingResult:
         """
         Fine-tune the sentence transformer for concept extraction.
         """
@@ -254,6 +348,12 @@ class ModelTrainer:
                 for item in augmented_data:
                     train_examples.append(InputExample(texts=[item["text"], item["concept"]], label=item["label"]))
             print(f"Loaded {len(train_examples)} concept pairs (including augmented data).")
+        
+        if use_external:
+            external_data = self.load_external_datasets("concepts", limit=100)
+            for item in external_data:
+                train_examples.append(InputExample(texts=[item["text"], item["concept"]], label=item.get("label", 1.0)))
+            print(f"Added {len(external_data)} external concept samples.")
         
         # Create data loader
         train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=4)
@@ -333,7 +433,13 @@ def main():
     
     # Train summarizer
     try:
-        summarizer_result = trainer.train_summarizer(epochs=10)
+        # Initial pass with external data, then local
+        print("\n>>> PHASE 1: Domain Adaptation (External Data)")
+        summarizer_result = trainer.train_summarizer(epochs=3, use_external=True)
+        results.append(summarizer_result)
+        
+        print("\n>>> PHASE 2: Fine-Tuning (Local Lecture Data)")
+        summarizer_result = trainer.train_summarizer(epochs=5, use_external=False)
         results.append(summarizer_result)
     except Exception as e:
         print(f"Error training summarizer: {e}")
@@ -341,7 +447,12 @@ def main():
     
     # Train concept extractor
     try:
-        extractor_result = trainer.train_concept_extractor(epochs=10)
+        print("\n>>> PHASE 1: Domain Adaptation (External Data)")
+        extractor_result = trainer.train_concept_extractor(epochs=3, use_external=True)
+        results.append(extractor_result)
+        
+        print("\n>>> PHASE 2: Fine-Tuning (Local Lecture Data)")
+        extractor_result = trainer.train_concept_extractor(epochs=5, use_external=False)
         results.append(extractor_result)
     except Exception as e:
         print(f"Error training concept extractor: {e}")

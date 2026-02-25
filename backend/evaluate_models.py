@@ -42,8 +42,15 @@ class EvaluationResult:
 
 class ModelEvaluator:
     def __init__(self):
-        self.summarizer = Summarizer()
-        self.extractor = ConceptExtractor()
+        # Use fine-tuned models if they exist, otherwise fallback to defaults
+        summarizer_path = "trained_models/summarizer"
+        extractor_path = "trained_models/concept_extractor"
+        
+        sm_model = summarizer_path if os.path.exists(summarizer_path) else "sshleifer/distilbart-cnn-12-6"
+        ce_model = extractor_path if os.path.exists(extractor_path) else "all-MiniLM-L6-v2"
+        
+        self.summarizer = Summarizer(model_name=sm_model)
+        self.extractor = ConceptExtractor(model_name=ce_model)
         self.rouge_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
         
     def evaluate_summarizer(self, test_cases: List[Dict]) -> List[EvaluationResult]:
@@ -66,7 +73,9 @@ class ModelEvaluator:
             
             # Generate summary
             start_time = time.time()
-            generated_summary = self.summarizer.summarize(text)
+            summary_result = self.summarizer.summarize(text)
+            # The summarize method returns a dict: {"summary": text, "metrics": {...}}
+            generated_summary = summary_result.get("summary", "") if isinstance(summary_result, dict) else summary_result
             inference_time = time.time() - start_time
             inference_times.append(inference_time)
             
@@ -143,7 +152,8 @@ class ModelEvaluator:
             inference_time = time.time() - start_time
             inference_times.append(inference_time)
             
-            extracted_concepts = set([c.lower() for c in extracted_concepts])
+            # The extractor method returns a list of dicts: [{"term": ..., "relevance": ...}]
+            extracted_concepts = set([c.get("term", "").lower() if isinstance(c, dict) else c.lower() for c in extracted_concepts])
             
             # Calculate metrics
             true_positives = len(extracted_concepts & expected_concepts)

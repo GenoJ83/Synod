@@ -31,6 +31,7 @@ wheels/
 # ML Models cache
 .cache/
 models/
+trained_models/
 
 # Data
 data/uploads/
