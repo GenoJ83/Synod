@@ -80,7 +80,7 @@ class ModelTrainer:
             try:
                 # ArXiv subset is good for technical/educational content
                 # Note: using a small limit for CPU training feasibility
-                dataset = load_dataset("scientific_papers", "arxiv", split=f"train[:{limit}]", trust_remote_code=True)
+                dataset = load_dataset("ccdv/arxiv-summarization", split=f"train[:{limit}]", trust_remote_code=True)
                 for item in dataset:
                     data.append({
                         "text": item["article"][:1000], # Substantial snippet
@@ -153,6 +153,10 @@ class ModelTrainer:
                 "summary": "Structured data is tabular and searchable, while unstructured data (80% of total) lacks a formal schema."
             }
         ]
+        
+        if use_external:
+            external_data = self.load_external_datasets("summarization", limit=100)
+            training_data.extend(external_data)
         
         # Load augmented data if available
         augmented_path = "training_data/summarization_augmented.json"
@@ -350,10 +354,9 @@ class ModelTrainer:
             print(f"Loaded {len(train_examples)} concept pairs (including augmented data).")
         
         if use_external:
-            external_data = self.load_external_datasets("concepts", limit=100)
-            for item in external_data:
-                train_examples.append(InputExample(texts=[item["text"], item["concept"]], label=item.get("label", 1.0)))
-            print(f"Added {len(external_data)} external concept samples.")
+            print("Skipping external concept data (e.g., midas/inspec) as script-free Parquet versions are not available.")
+            print("Relying entirely on high-quality local augmented concept pairs.")
+            pass
         
         # Create data loader
         train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=4)
