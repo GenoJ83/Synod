@@ -65,6 +65,7 @@ class ModelTrainer:
         """
         Prepare training data for summarization model.
         """
+        training_data = []
         # Load augmented data if available
         augmented_path = "training_data/summarization_augmented.json"
         if os.path.exists(augmented_path):
