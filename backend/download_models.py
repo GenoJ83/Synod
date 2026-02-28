@@ -21,7 +21,14 @@ import subprocess
 MODELS = {
     "summarizer": "sshleifer/distilbart-cnn-12-6",
     "summarizer_test": "t5-small",
-    "embeddings": "sentence-transformers/all-MiniLM-L6-v2"
+    "embeddings": "sentence-transformers/all-MiniLM-L6-v2",
+}
+
+# Optional models for better academic paper summarization (see MODEL_OPTIONS.md)
+# Run: SUMMARY_MODEL=UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv uvicorn main:app
+OPTIONAL_MODELS = {
+    "summarizer_academic": "UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv",
+    "embeddings_alt": "sentence-transformers/all-mpnet-base-v2",
 }
 
 # Base directory for storing models
@@ -180,20 +187,29 @@ def create_offline_config():
     print(f"\n[OK] Config saved: {config_path}")
 
 def main():
-    """Download all required models."""
+    """Download all required models. Pass --academic to also download optional academic models."""
+    import sys
+    download_academic = "--academic" in sys.argv
+
     print("="*60)
-    print("Lecture Assistant - Model Downloader")
+    print("Synod - Model Downloader")
     print("="*60)
-    
+
     # Setup token
     has_token = setup_huggingface_token()
-    
+
     print(f"\nModels will be saved to: {MODEL_DIR}")
+    models_to_download = dict(MODELS)
+    if download_academic:
+        models_to_download.update(OPTIONAL_MODELS)
+        print("Including optional academic models.")
     print("\nDownloading models...")
-    
+
     # Create models directory
     os.makedirs(MODEL_DIR, exist_ok=True)
-    
+
+    MODELS.update(models_to_download)
+
     # Try huggingface_hub first, fall back to transformers
     success = download_model_with_hfhub()
     if not success:
