@@ -82,7 +82,8 @@ class Summarizer:
         Uses distilbart for a good balance of speed and quality.
         """
         self.has_transformers = HAS_TRANSFORMERS
-        self.cache = {} # Simple in-memory cache for speed
+        self.cache = {}
+        self.model_name = model_name  # For model-specific logic (e.g. Pegasus full-paper mode)
         if HAS_TRANSFORMERS:
             try:
                 print(f"Loading summarization model: {model_name}...")
@@ -133,6 +134,7 @@ class Summarizer:
                             except Exception:
                                 pass
                         self.model.to(self.device)
+                        self.model_name = fallback  # Use fallback logic going forward
                         print(f"Fallback model loaded on {self.device}.")
                     except Exception as e2:
                         print(f"Fallback failed: {e2}. Running in MOCK mode.")
@@ -168,46 +170,77 @@ class Summarizer:
         try:
             word_count = len(text.split())
             SUMMARY_WORD_CAP = 500  # Hard cap for conciseness (per Grok feedback)
-            
-            # Target 20-30% of doc, capped at SUMMARY_WORD_CAP
-            if max_length == 150:
-                target_max = min(SUMMARY_WORD_CAP, max(150, int(word_count * 0.25)))
-                target_min = min(100, max(50, int(word_count * 0.08)))
-            else:
-                target_max = max_length
-                target_min = min_length
+            is_pegasus = "pegasus" in self.model_name.lower() or "Pegasus" in self.model_name
 
-            # Clean up newlines for better split
-            clean_text = text.replace('\n', ' ')
-            sentences = re.split(r'(?<=[.!?])\s+', clean_text)
-            chunks = []
-            current_chunk = ""
-            current_len = 0
-            
-            # Use smaller chunks (400 words) so the model MUST describe more details per section
-            for sentence in sentences:
-                sentence_len = len(sentence.split())
-                if current_len + sentence_len < 400:
-                    current_chunk += " " + sentence
-                    current_len += sentence_len
-                else:
-                    if current_chunk:
-                        chunks.append(current_chunk.strip())
-                    current_chunk = sentence
-                    current_len = sentence_len
-            if current_chunk:
-                chunks.append(current_chunk.strip())
-
-            if len(chunks) <= 1:
-                # Single pass for short documents
-                inputs = self.tokenizer([clean_text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-                summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=target_max, min_length=target_min, early_stopping=True)
+            # Pegasus-X: trained on full papers -> abstract; use single-pass for docs that fit
+            PEGASUS_MAX_WORDS = 5500  # ~8K tokens, under 16K limit
+            if is_pegasus and word_count <= PEGASUS_MAX_WORDS:
+                clean_text = text.replace('\n', ' ')
+                # Model card: max_length=512, min_length=150, no_repeat_ngram_size=3
+                input_max = min(8192, word_count * 2)  # tokens
+                inputs = self.tokenizer(
+                    [clean_text],
+                    max_length=input_max,
+                    return_tensors="pt",
+                    truncation=True,
+                    padding=True,
+                ).to(self.device)
+                gen_kwargs = {
+                    "max_length": 512,
+                    "min_length": 150,
+                    "num_beams": 4,
+                    "length_penalty": 1.0,
+                    "early_stopping": True,
+                }
+                if hasattr(self.model, "generate"):
+                    gen_kwargs["no_repeat_ngram_size"] = 3
+                summary_ids = self.model.generate(
+                    inputs["input_ids"],
+                    attention_mask=inputs.get("attention_mask"),
+                    **gen_kwargs,
+                )
                 summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
             else:
-                # Process chunks separately; use stricter per-chunk limits for conciseness
-                chunk_summaries: List[str] = []
-                per_chunk_max = max(80, min(120, target_max // len(chunks)))  # ~100 words per chunk
-                per_chunk_min = max(30, min(50, target_min // len(chunks)))
+                # Target 20-30% of doc, capped at SUMMARY_WORD_CAP
+                if max_length == 150:
+                    target_max = min(SUMMARY_WORD_CAP, max(150, int(word_count * 0.25)))
+                    target_min = min(100, max(50, int(word_count * 0.08)))
+                else:
+                    target_max = max_length
+                    target_min = min_length
+
+                # Clean up newlines for better split
+                clean_text = text.replace('\n', ' ')
+                sentences = re.split(r'(?<=[.!?])\s+', clean_text)
+                chunks = []
+                current_chunk = ""
+                current_len = 0
+
+                chunk_size = 600 if is_pegasus else 400  # Pegasus prefers longer chunks
+                for sentence in sentences:
+                    sentence_len = len(sentence.split())
+                    if current_len + sentence_len < chunk_size:
+                        current_chunk += " " + sentence
+                        current_len += sentence_len
+                    else:
+                        if current_chunk:
+                            chunks.append(current_chunk.strip())
+                        current_chunk = sentence
+                        current_len = sentence_len
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+
+                if len(chunks) <= 1:
+                    # Single pass for short documents
+                    inputs = self.tokenizer([clean_text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+                    summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=target_max, min_length=target_min, early_stopping=True)
+                    summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
+                else:
+                    # Process chunks; Pegasus needs higher output limits when chunking
+                    chunk_summaries: List[str] = []
+                    base_max, base_min = (200, 80) if is_pegasus else (120, 30)
+                    per_chunk_max = max(base_min, min(base_max, target_max // len(chunks)))
+                    per_chunk_min = max(base_min // 2, min(base_min, target_min // len(chunks)))
 
                 for chunk in chunks:
                     chunk_wc = len(chunk.split())
