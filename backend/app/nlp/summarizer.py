@@ -247,10 +247,11 @@ class Summarizer:
                     if chunk_wc < 40:
                         continue
 
-                    actual_c_max = min(per_chunk_max, int(chunk_wc * 0.5))
-                    actual_c_min = min(per_chunk_min, int(chunk_wc * 0.15))
+                    actual_c_max = min(per_chunk_max, int(chunk_wc * 0.6))
+                    actual_c_min = min(per_chunk_min, int(chunk_wc * 0.25))
 
-                    inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+                    input_max = 2048 if is_pegasus else 1024
+                    inputs = self.tokenizer([chunk], max_length=input_max, return_tensors="pt", truncation=True).to(self.device)
                     ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=actual_c_max, min_length=actual_c_min, early_stopping=True)
                     chunk_summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
 
