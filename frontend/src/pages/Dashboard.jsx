@@ -8,6 +8,9 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { cn } from '../utils/cn';
 
 import AnalysisInput from '../components/dashboard/AnalysisInput';
