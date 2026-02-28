@@ -126,20 +126,20 @@ class Summarizer:
 
             
             # Post-processing: Redundancy filter
-            sentences = summary.split(". ")
-            if len(sentences) > 2:
+            summary_sentences = summary.split(". ")
+            if len(summary_sentences) > 2:
                 # Basic redundancy check: remove sentences that are too similar or almost identical
-                filtered_sentences = [sentences[0]]
-                for i in range(1, len(sentences)):
+                filtered_sentences = [summary_sentences[0]]
+                for i in range(1, len(summary_sentences)):
                     is_redundant = False
                     for prev in filtered_sentences:
                         # Simple overlap check for now; could be upgraded to embedding similarity
-                        s1, s2 = set(sentences[i].lower().split()), set(prev.lower().split())
+                        s1, s2 = set(summary_sentences[i].lower().split()), set(prev.lower().split())
                         if len(s1 & s2) / max(len(s1), len(s2)) > 0.8:
                             is_redundant = True
                             break
                     if not is_redundant:
-                        filtered_sentences.append(sentences[i])
+                        filtered_sentences.append(summary_sentences[i])
                 summary = ". ".join(filtered_sentences)
 
             # Simple compression metric
