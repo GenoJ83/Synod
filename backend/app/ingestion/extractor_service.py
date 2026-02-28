@@ -1,6 +1,31 @@
 import fitz  # PyMuPDF
 from pptx import Presentation
 import os
+import re
+
+# Patterns for academic paper noise (appendices, figure OCR, citations)
+_ARXIV_PATTERN = re.compile(
+    r"arXiv:\d+\.\d+(?:v\d+)?\s*\[[\w.]+\]\s*\d+\s+\w+\s+\d{4}",
+    re.IGNORECASE
+)
+# Common QA/prompt template leakage from paper appendices
+_QA_PROMPT_PATTERNS = [
+    re.compile(r"You have access to memories from[^.]+\.", re.IGNORECASE | re.DOTALL),
+    re.compile(r"The answer should be (?:less than|at most) \d+[-–]?\d*\s*words?", re.IGNORECASE),
+    re.compile(r"Answer the following question based on[^.]+\.", re.IGNORECASE),
+    re.compile(r"\.\s*You have \d+ memories[^.]+\.", re.IGNORECASE | re.DOTALL),
+]
+# Reference-like lines (author et al., year - common in references section)
+_REF_LINE = re.compile(
+    r"^[\w\s,.-]+\set\s+al\.\s*[,.]?\s*\d{4}",
+    re.IGNORECASE
+)
+# Figure/Table caption noise (short lines that are likely OCR from figures)
+_CAPTION_NOISE = re.compile(
+    r"^(?:Figure|Table|Fig\.|Tab\.)\s*\d*[.:]?\s*$",
+    re.IGNORECASE
+)
+
 
 class ExtractorService:
     @staticmethod
@@ -16,9 +41,49 @@ class ExtractorService:
             else:
                 raise ValueError(f"Unsupported file extension: {ext}")
             
-            return ExtractorService._sanitize_text(text)
+            text = ExtractorService._sanitize_text(text)
+            # Extra cleanup for PDFs: strip academic paper noise (figures, appendices, refs)
+            if ext == '.pdf':
+                text = ExtractorService._clean_academic_noise(text)
+            return text
         except Exception as e:
             raise RuntimeError(f"Failed to extract text from {file_path}: {str(e)}")
+
+    @staticmethod
+    def _clean_academic_noise(text: str) -> str:
+        """Remove common academic paper noise: arXiv IDs, QA prompts, figure OCR, reference blocks."""
+        if not text or len(text.strip()) < 100:
+            return text
+
+        # Remove arXiv-style citation lines
+        text = _ARXIV_PATTERN.sub("", text)
+
+        # Remove QA prompt template leakage
+        for pat in _QA_PROMPT_PATTERNS:
+            text = pat.sub("", text)
+
+        # Split into paragraphs and filter
+        paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+        filtered = []
+        for p in paragraphs:
+            words = p.split()
+            # Skip very short fragments (likely figure captions, labels)
+            if len(words) < 12 and (_CAPTION_NOISE.match(p) or any(
+                x in p.lower() for x in ("figure", "table", "fig.", "tab.")
+            )):
+                continue
+            # Skip very short lines that look like reference entries (avoid body text)
+            if len(words) < 12 and _REF_LINE.match(p):
+                continue
+            filtered.append(p)
+
+        text = "\n\n".join(filtered)
+
+        # Remove stray URLs
+        text = re.sub(r"https?://\S+", "", text)
+        # Collapse excessive newlines
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        return text.strip()
 
     @staticmethod
     def _sanitize_text(text: str) -> str:
@@ -39,9 +104,8 @@ class ExtractorService:
 
         # Remove control characters and non-printable characters
         text = "".join(char for char in text if char.isprintable() or char in "\n\r\t")
-        
+
         # Normalize whitespace (replace multiple spaces/newlines with single ones)
-        import re
         text = re.sub(r' +', ' ', text)
         text = re.sub(r'\n+', '\n', text)
         return text.strip()

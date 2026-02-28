@@ -1,10 +1,67 @@
 import re
+import hashlib
+from typing import List, Optional
+
 try:
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
     import torch
     HAS_TRANSFORMERS = True
 except ImportError:
     HAS_TRANSFORMERS = False
+
+# Known tokenization artifacts from BART/distilBART on academic text
+_ARTIFACT_FIXES = {
+    "pro-ishlypose": "propose", "pro-ishlyposes": "proposes", "pro-ishlyposed": "proposed",
+    "an-ogleswering": "answering", "an-swering": "answering",
+    "fol-gling": "following", "fol-lowing": "following",
+    "pronening": "spanning", "spannen": "spanning",
+    "com-pare": "compare", "QRRker": "QRRanker", "QRRanker": "QRRanker",
+    "trans-former": "transformer", "trans-formers": "transformers",
+    "re-ranking": "reranking", "re-rank": "rerank",
+    "list-wise": "listwise", "pair-wise": "pairwise",
+    "in-ference": "inference", "com-pression": "compression",
+}
+
+# Generic: hyphenated word fragments that look like one word (e.g. "pro-pose" -> "propose")
+_HYPHEN_ARTIFACT = re.compile(r"\b(\w{2,5})-[\w]{1,4}(\w{2,8})\b")
+
+
+def _fix_tokenization_artifacts(text: str) -> str:
+    """Fix common garbled words and hyphenation artifacts from seq2seq models."""
+    if not text:
+        return text
+    for bad, good in _ARTIFACT_FIXES.items():
+        text = re.sub(re.escape(bad), good, text, flags=re.IGNORECASE)
+    # Merge obvious hyphenated fragments: "pro-pose" -> "propose" when parts concatenate sensibly
+    def _merge(m):
+        a, b = m.group(1), m.group(2)
+        if a.lower() + b.lower() in {"propose", "compare", "following", "answering", "reranking"}:
+            return a + b
+        return m.group(0)
+    text = _HYPHEN_ARTIFACT.sub(_merge, text)
+    return text
+
+
+def _filter_redundant_sentences(sentences: List[str], overlap_threshold: float = 0.65) -> List[str]:
+    """Remove sentences that overlap too much with previously kept ones."""
+    if not sentences:
+        return []
+    kept = [sentences[0]]
+    for sent in sentences[1:]:
+        s1 = set(sent.lower().split())
+        if not s1:
+            continue
+        is_redundant = False
+        for prev in kept:
+            s2 = set(prev.lower().split())
+            overlap = len(s1 & s2) / max(len(s1), len(s2), 1)
+            if overlap >= overlap_threshold:
+                is_redundant = True
+                break
+        if not is_redundant:
+            kept.append(sent)
+    return kept
+
 
 def calculate_coverage_score(summary: str, original: str) -> float:
     """Calculates a simple n-gram overlap score (ROUGE-1 proxy)."""
@@ -17,7 +74,6 @@ def calculate_coverage_score(summary: str, original: str) -> float:
     overlap = len(s_words & o_words)
     return round(overlap / len(s_words), 3) if s_words else 0.0
 
-from typing import List, Optional
 
 class Summarizer:
     def __init__(self, model_name: str = "sshleifer/distilbart-cnn-12-6"):
@@ -67,8 +123,8 @@ class Summarizer:
         if not text or len(text.strip()) < 50:
             return {"summary": text, "metrics": {"compression_ratio": 1.0}}
         
-        # Cache check
-        text_hash = hash(text)
+        # Cache check (use stable hash)
+        text_hash = hashlib.sha256(text.encode()).hexdigest()
         if text_hash in self.cache:
             return self.cache[text_hash]
         
@@ -85,11 +141,12 @@ class Summarizer:
 
         try:
             word_count = len(text.split())
+            SUMMARY_WORD_CAP = 500  # Hard cap for conciseness (per Grok feedback)
             
-            # Dynamic length: target ~20-30% of document size, up to a massive 1500 words for deep context
-            if max_length == 150: # If using the default short limit, override it dynamically
-                target_max = min(1500, max(250, int(word_count * 0.3)))
-                target_min = min(500, max(80, int(word_count * 0.1)))
+            # Target 20-30% of doc, capped at SUMMARY_WORD_CAP
+            if max_length == 150:
+                target_max = min(SUMMARY_WORD_CAP, max(150, int(word_count * 0.25)))
+                target_min = min(100, max(50, int(word_count * 0.08)))
             else:
                 target_max = max_length
                 target_min = min_length
@@ -119,44 +176,49 @@ class Summarizer:
                 # Single pass for short documents
                 inputs = self.tokenizer([clean_text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
                 summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=target_max, min_length=target_min, early_stopping=True)
-                summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+                summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
             else:
-                # Process chunks separately to capture full document context
+                # Process chunks separately; use stricter per-chunk limits for conciseness
                 chunk_summaries: List[str] = []
-                c_max = min(180, max(80, target_max // len(chunks)))
-                c_min = min(70, max(40, target_min // len(chunks)))
-                
+                per_chunk_max = max(80, min(120, target_max // len(chunks)))  # ~100 words per chunk
+                per_chunk_min = max(30, min(50, target_min // len(chunks)))
+
                 for chunk in chunks:
                     chunk_wc = len(chunk.split())
-                    if chunk_wc < 40: 
-                        continue # Skip tiny straggling chunks at the end
-                    
-                    actual_c_max = min(c_max, int(chunk_wc * 0.8))
-                    actual_c_min = min(c_min, int(chunk_wc * 0.3))
-                    
+                    if chunk_wc < 40:
+                        continue
+
+                    actual_c_max = min(per_chunk_max, int(chunk_wc * 0.5))
+                    actual_c_min = min(per_chunk_min, int(chunk_wc * 0.15))
+
                     inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
                     ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=actual_c_max, min_length=actual_c_min, early_stopping=True)
                     chunk_summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
-                    
-                    # Redundancy filter per chunk (prevents repeating sentences within the chunk)
+
+                    # Per-chunk redundancy filter
                     c_sentences = re.split(r'(?<=[.!?])\s+', chunk_summary)
                     if len(c_sentences) > 1:
-                        filtered: List[str] = [c_sentences[0]]
-                        for i in range(1, len(c_sentences)):
-                            is_redundant = False
-                            for prev in filtered:
-                                s1, s2 = set(c_sentences[i].lower().split()), set(prev.lower().split())
-                                if len(s1 & s2) / max(1, len(s1), len(s2)) > 0.7:
-                                    is_redundant = True
-                                    break
-                            if not is_redundant:
-                                filtered.append(c_sentences[i])
+                        filtered = _filter_redundant_sentences(c_sentences, overlap_threshold=0.7)
                         chunk_summary = " ".join(filtered)
-                        
                     chunk_summaries.append(chunk_summary)
-                
-                # Combine chunks into distinct readable paragraphs
-                summary = "\n\n".join(chunk_summaries)
+
+                # Cross-chunk redundancy: dedupe across all chunk summaries
+                all_sentences = []
+                for cs in chunk_summaries:
+                    all_sentences.extend(re.split(r'(?<=[.!?])\s+', cs))
+                all_sentences = [s.strip() for s in all_sentences if len(s.strip()) > 10]
+                deduped = _filter_redundant_sentences(all_sentences, overlap_threshold=0.6)
+                summary = "\n\n".join(deduped)
+
+            # Post-process: fix artifacts, apply length cap
+            summary = _fix_tokenization_artifacts(summary)
+            words = summary.split()
+            if len(words) > SUMMARY_WORD_CAP:
+                summary = " ".join(words[:SUMMARY_WORD_CAP])
+                # End at sentence boundary if possible
+                last_period = summary.rfind(". ")
+                if last_period > 200:
+                    summary = summary[: last_period + 1]
 
             # Simple compression metric
             compression_ratio = len(summary.split()) / max(1, len(text.split()))
