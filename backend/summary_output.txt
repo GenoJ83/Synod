@@ -1,4 +1,12 @@
 Input Words: 1884
-Summary Words: 172
+Summary Words: 225
 SUMMARY:
-Daphne Nyachaki Bitalo: Fundamentals of Big Data; Big Data Mining and Analytics: Data Mining Techniques; Analytics: data mining, data mining and machine learning . The DSC3108 course will focus on the characteristics, challenges, and opportunities of big data . All pieces of data that are collected have a feature or characteristic known as a data type that helps to identify the data . Structured data makes up about 10-20% of generated data and has clearly defined data types and patterns that make them easily stored and organized into columns and rows . Unstructured data is usually stored in a non-relational database also known as NoSQL Database . Hadoop is a distributed computing framework for processing large datasets . Spark processes data in memory, which can significantly improve performance compared to disk-based processing . Big Data pre-processing is a crucial step in the data science pipeline . Data pre-processing using python is the key to predictive analysis . The University of Uganda's Computing & Technology will use python to pre-process the data .
+DSC3108: Big Data Mining and Analytics Lecture 01 (BSCS_3:1) Fri 6th Sept 2024 . Topic: Fundamentals of Big Data . Big Data refers to extremely large datasets that are difficult to process .
+
+The sheer amount of data generated is massive . Data comes in various formats, including structured and unstructured data . Big Data Analytics: data mining, visualisation and machine learning . Analytics: Big Data Theory, Privacy & Security issues  on Analytics . Big data science: 4th Paradigm – Analytics for Science and Engineering .
+
+Structured data makes up about 10%-20% of generated data and has clearly defined data types and patterns that make it easy to search and analyze . Unstructured data is usually stored in  relational databases such as Structured Query Language (SQL) databases or in spreadsheets such as Microsoft Excel . Human-generated unstructured  data includes images, PDFs, sensor data,  and social media posts .
+
+Semi-structured data is not defined with a table definition in a database management system  (DBMS) The challenges of storing massive amounts of data requires efficient and scalable storage solutions . Big Data architectures include Hadoop, MapReduce, Spark and YARN .
+
+Data preprocessing involves various techniques to prepare raw data for analysis . It involves Cleaning, Integration, Transformation, and Reduction . Use Cases: ● Real-time data processing ● Machine learning and artificial intelligence ● Interactive data analysis .
