@@ -8,16 +8,9 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import QuizSection from '../components/QuizSection';
-import FileUploader from '../components/FileUploader';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
 import { cn } from '../utils/cn';
 
 import AnalysisInput from '../components/dashboard/AnalysisInput';
-import ResultsDisplay from '../components/dashboard/ResultsDisplay';
-import ConceptExplorer from '../components/dashboard/ConceptExplorer';
 
 import { API_BASE_URL } from '../config';
 
@@ -38,14 +31,7 @@ function Dashboard() {
     const { theme, toggleTheme } = useTheme();
     const { user, logout } = useAuth();
 
-    // Check for passed state from History (revisit feature)
-    useEffect(() => {
-        if (location.state?.result) {
-            setResult(location.state.result);
-            // Clear the state to prevent reloading old data on refresh
-            navigate(location.pathname, { replace: true });
-        }
-    }, [location, navigate]);
+
 
     const handleAnalyze = async (manualText) => {
         const textToAnalyze = manualText || text;
@@ -68,6 +54,7 @@ function Dashboard() {
                 ...data
             };
             localStorage.setItem('synod_history', JSON.stringify([newEntry, ...history].slice(0, 50)));
+            navigate('/analysis', { state: { result: newEntry } });
 
         } catch (err) {
             console.error(err);
@@ -87,6 +74,7 @@ function Dashboard() {
             ...data
         };
         localStorage.setItem('synod_history', JSON.stringify([newEntry, ...history].slice(0, 50)));
+        navigate('/analysis', { state: { result: newEntry } });
     };
 
     const startQuiz = () => {
@@ -193,16 +181,10 @@ function Dashboard() {
                     <div className="max-w-[1400px] mx-auto px-8 py-12">
 
                         {/* Split View Container */}
-                        <div className={cn(
-                            "flex flex-col xl:flex-row gap-12 transition-all duration-500",
-                            result ? "items-start" : "items-center justify-center min-h-[70vh]"
-                        )}>
+                        <div className="flex flex-col items-center justify-center min-h-[70vh] gap-12 transition-all duration-500">
 
                             {/* Input Section */}
-                            <div className={cn(
-                                "transition-all duration-500 w-full",
-                                result ? "xl:w-1/2 sticky top-8" : "max-w-4xl"
-                            )}>
+                            <div className="transition-all duration-500 w-full max-w-4xl">
                                 <div className="mb-10 text-left">
                                     <h1 className="text-4xl font-bold tracking-tight mb-4">Lecture Analysis</h1>
                                     <p className="text-zinc-500 text-lg">Input your course materials to extract intelligence.</p>
@@ -221,40 +203,6 @@ function Dashboard() {
                                 />
                             </div>
 
-                            {/* Results View */}
-                            {result && (
-                                <div className="w-full xl:w-1/2 space-y-8 animate-fade-in pb-20">
-                                    <ResultsDisplay
-                                        result={result}
-                                        startQuiz={startQuiz}
-                                    />
-
-                                    <div className="grid sm:grid-cols-1 gap-8">
-                                        <ConceptExplorer
-                                            result={result}
-                                            selectedConcept={selectedConcept}
-                                            setSelectedConcept={setSelectedConcept}
-                                            viewedConcepts={viewedConcepts}
-                                            setViewedConcepts={setViewedConcepts}
-                                            setShowQuiz={setShowQuiz}
-                                            quizRef={quizRef}
-                                        />
-                                    </div>
-
-                                    {showQuiz && (
-                                        <div ref={quizRef} className="pt-8">
-                                            <QuizSection
-                                                quiz={result.quiz}
-                                                onReset={() => {
-                                                    setResult(null);
-                                                    setShowQuiz(false);
-                                                    setText('');
-                                                }}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                         </div>
                     </div>
                 </main>

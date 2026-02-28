@@ -1,0 +1,125 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Search, Sun, Moon, LogOut } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import ResultsDisplay from '../components/dashboard/ResultsDisplay';
+import ConceptExplorer from '../components/dashboard/ConceptExplorer';
+import QuizSection from '../components/QuizSection';
+
+function AnalysisResults() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
+    const { user, logout } = useAuth();
+
+    // Extract result from navigation state
+    const result = location.state?.result;
+
+    const [showQuiz, setShowQuiz] = useState(false);
+    const [selectedConcept, setSelectedConcept] = useState(null);
+    const [viewedConcepts, setViewedConcepts] = useState([]);
+    const quizRef = useRef(null);
+
+    // Redirect to dashboard if no result is found in state
+    useEffect(() => {
+        if (!result) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [result, navigate]);
+
+    const startQuiz = () => {
+        setShowQuiz(true);
+        setTimeout(() => {
+            quizRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+    };
+
+    if (!result) return null; // Prevent rendering during redirect
+
+    return (
+        <div className="flex h-screen bg-app-bg text-app-fg overflow-hidden font-sans transition-colors duration-300">
+            <div className="flex-1 flex flex-col overflow-hidden relative">
+                {/* Header */}
+                <header className="h-16 border-b border-app-border bg-app-bg/80 backdrop-blur-md sticky top-0 z-50 shrink-0">
+                    <div className="max-w-[1600px] mx-auto px-8 h-full flex items-center justify-between">
+                        <div className="flex items-center gap-6">
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className="p-2 -ml-2 text-app-muted hover:text-app-fg hover:bg-app-card rounded-lg transition-colors flex items-center gap-2"
+                            >
+                                <ArrowLeft className="w-5 h-5" />
+                                <span className="text-sm font-bold uppercase tracking-widest hidden sm:block">Back to Dashboard</span>
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={toggleTheme}
+                                className="p-2 text-app-muted hover:text-app-fg rounded-lg transition-colors border border-app-border bg-app-card"
+                                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                            >
+                                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            </button>
+                            <div className="h-8 w-[1px] bg-app-border" />
+                            <div className="flex items-center gap-2 px-2 py-1 bg-app-card border border-app-border rounded-lg group">
+                                <div className="w-6 h-6 rounded-full bg-app-fg text-app-bg flex items-center justify-center text-[10px] font-bold">
+                                    {user?.name?.split(' ').map(n => n[0]).join('') || 'JD'}
+                                </div>
+                                <button
+                                    onClick={logout}
+                                    className="text-[10px] font-bold uppercase tracking-widest text-app-muted hover:text-red-500 transition-colors flex items-center gap-1"
+                                >
+                                    <LogOut className="w-3 h-3" />
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Main Content Area */}
+                <main className="flex-1 overflow-y-auto bg-app-bg scroll-smooth">
+                    <div className="max-w-[1400px] mx-auto px-8 py-12">
+                        <div className="mb-10 text-center">
+                            <h1 className="text-4xl font-bold tracking-tight mb-4">Analysis Results</h1>
+                            <p className="text-zinc-500 text-lg">Review your generated summary, explore concepts, and test your knowledge.</p>
+                        </div>
+
+                        <div className="flex flex-col items-center">
+                            <ResultsDisplay
+                                result={result}
+                                startQuiz={startQuiz}
+                            />
+
+                            <div className="w-full xl:w-2/3 max-w-4xl mx-auto grid sm:grid-cols-1 gap-8 mt-8">
+                                <ConceptExplorer
+                                    result={result}
+                                    selectedConcept={selectedConcept}
+                                    setSelectedConcept={setSelectedConcept}
+                                    viewedConcepts={viewedConcepts}
+                                    setViewedConcepts={setViewedConcepts}
+                                    setShowQuiz={setShowQuiz}
+                                    quizRef={quizRef}
+                                />
+                            </div>
+
+                            {showQuiz && (
+                                <div ref={quizRef} className="w-full xl:w-2/3 max-w-4xl mx-auto pt-16 pb-20">
+                                    <QuizSection
+                                        quiz={result.quiz}
+                                        onReset={() => {
+                                            setShowQuiz(false);
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    );
+}
+
+export default AnalysisResults;

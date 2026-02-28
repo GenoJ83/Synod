@@ -156,7 +156,7 @@ const History = () => {
                                                 {(item.concepts || []).length > 2 && <span className="text-[10px] text-app-muted font-bold self-center">+{(item.concepts || []).length - 2}</span>}
                                             </div>
                                             <button
-                                                onClick={() => navigate('/dashboard', { state: { result: item } })}
+                                                onClick={() => navigate('/analysis', { state: { result: item } })}
                                                 className="flex items-center gap-1 text-xs font-bold text-app-fg hover:gap-2 transition-all"
                                             >
                                                 Revisit <ChevronRight className="w-3 h-3" />

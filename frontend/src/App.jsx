@@ -12,6 +12,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import AuthCallback from './pages/AuthCallback';
 import HowItWorks from './pages/HowItWorks';
 import Documentation from './pages/Documentation';
+import AnalysisResults from './pages/AnalysisResults';
 
 function App() {
   return (
@@ -35,6 +36,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <History />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analysis"
+              element={
+                <ProtectedRoute>
+                  <AnalysisResults />
                 </ProtectedRoute>
               }
             />
