@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Brain } from 'lucide-react';
+import { CheckCircle2, Brain, BookOpen, Lightbulb } from 'lucide-react';
 
 function ResultsDisplay({ result, startQuiz }) {
     if (!result) return null;
@@ -10,53 +10,66 @@ function ResultsDisplay({ result, startQuiz }) {
         (result.quiz?.comprehension?.length || 0);
 
     return (
-        <div className="w-full xl:w-1/2 space-y-8 animate-fade-in pb-20">
-            <div className="pro-card p-8">
+        <div className="w-full xl:w-2/3 max-w-4xl mx-auto space-y-8 animate-fade-in pb-20">
+            {/* Executive Summary Section */}
+            <div className="pro-card p-8 shadow-sm">
                 <div className="flex items-center gap-3 mb-6 text-emerald-500">
-                    <CheckCircle2 className="w-5 h-5" />
-                    <h3 className="text-sm font-bold uppercase tracking-widest">Executive Summary</h3>
+                    <CheckCircle2 className="w-6 h-6" />
+                    <h3 className="text-sm font-bold uppercase tracking-widest">Comprehensive Summary</h3>
                 </div>
-                <p className="text-app-fg text-lg leading-relaxed font-medium">
-                    {result.summary}
-                </p>
+                <div className="space-y-4">
+                    {result.summary.split('\n\n').map((paragraph, index) => (
+                        <p key={index} className="text-app-fg text-lg leading-relaxed font-medium">
+                            {paragraph}
+                        </p>
+                    ))}
+                </div>
+
                 {result.metrics?.compression_ratio && (
-                    <div className="mt-4 pt-4 border-t border-app-border/30 flex flex-col gap-3">
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-app-muted uppercase tracking-widest min-w-[80px]">Efficiency:</span>
-                            <div className="flex-1 h-1 bg-app-card rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-emerald-500"
-                                    style={{ width: `${Math.min(100, result.metrics.compression_ratio * 100)}%` }}
-                                />
-                            </div>
-                            <span className="text-[10px] font-bold text-emerald-500">{(result.metrics.compression_ratio * 100).toFixed(1)}%</span>
-                        </div>
-                        {result.metrics?.coverage_score !== undefined && (
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-app-muted uppercase tracking-widest min-w-[80px]">Precision:</span>
-                                <div className="flex-1 h-1 bg-app-card rounded-full overflow-hidden">
+                    <div className="mt-8 pt-6 border-t border-app-border/30 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="flex flex-col gap-2">
+                            <span className="text-[10px] font-bold text-app-muted uppercase tracking-widest">Efficiency</span>
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1 h-1.5 bg-app-card rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-blue-500"
-                                        style={{ width: `${Math.min(100, result.metrics.coverage_score * 100)}%` }}
+                                        className="h-full bg-emerald-500 rounded-full"
+                                        style={{ width: `${Math.min(100, result.metrics.compression_ratio * 100)}%` }}
                                     />
                                 </div>
-                                <span className="text-[10px] font-bold text-blue-500">{(result.metrics.coverage_score * 100).toFixed(1)}%</span>
+                                <span className="text-xs font-bold text-emerald-500">{(result.metrics.compression_ratio * 100).toFixed(1)}%</span>
+                            </div>
+                        </div>
+                        {result.metrics?.coverage_score !== undefined && (
+                            <div className="flex flex-col gap-2">
+                                <span className="text-[10px] font-bold text-app-muted uppercase tracking-widest">Precision Range</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1 h-1.5 bg-app-card rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-blue-500 rounded-full"
+                                            style={{ width: `${Math.min(100, result.metrics.coverage_score * 100)}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-xs font-bold text-blue-500">{(result.metrics.coverage_score * 100).toFixed(1)}%</span>
+                                </div>
                             </div>
                         )}
                     </div>
                 )}
             </div>
 
+            {/* Key Takeaways Section */}
             {result.takeaways && result.takeaways.length > 0 && (
-                <div className="pro-card p-8">
+                <div className="pro-card p-8 shadow-sm">
                     <div className="flex items-center gap-3 mb-6 text-blue-500">
-                        <Brain className="w-5 h-5" />
+                        <Lightbulb className="w-6 h-6" />
                         <h3 className="text-sm font-bold uppercase tracking-widest">Key Takeaways</h3>
                     </div>
                     <ul className="space-y-4">
                         {result.takeaways.map((takeaway, idx) => (
-                            <li key={idx} className="flex gap-4 group">
-                                <span className="text-blue-500 font-bold shrink-0">{idx + 1}.</span>
+                            <li key={idx} className="flex gap-4 group items-start">
+                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center text-xs font-bold mt-0.5">
+                                    {idx + 1}
+                                </span>
                                 <p className="text-app-fg text-base font-medium leading-relaxed group-hover:text-blue-500 transition-colors">
                                     {takeaway}
                                 </p>
@@ -66,17 +79,40 @@ function ResultsDisplay({ result, startQuiz }) {
                 </div>
             )}
 
-            <div className="bg-app-fg text-app-bg rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-xl">
-                <Brain className="w-10 h-10 mb-4 opacity-80" />
-                <h3 className="text-xl font-bold mb-2">Knowledge Check</h3>
-                <p className="text-app-bg/70 text-sm mb-6 font-medium">
-                    Generated {totalQuestions} questions for this session.
+            {/* Fundamental Concepts Section */}
+            {result.explanations && Object.keys(result.explanations).length > 0 && (
+                <div className="pro-card p-8 shadow-sm">
+                    <div className="flex items-center gap-3 mb-6 text-purple-500">
+                        <BookOpen className="w-6 h-6" />
+                        <h3 className="text-sm font-bold uppercase tracking-widest">Fundamental Concepts</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Object.entries(result.explanations).map(([concept, definition], idx) => (
+                            <div key={idx} className="bg-app-bg/50 border border-app-border/50 rounded-lg p-5 hover:border-purple-500/30 transition-colors">
+                                <h4 className="text-purple-400 font-bold capitalize mb-2">{concept}</h4>
+                                <p className="text-app-muted text-sm leading-relaxed">{definition}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Knowledge Check CTA */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-app-fg to-zinc-400 text-app-bg rounded-2xl p-10 flex flex-col items-center justify-center text-center shadow-xl group">
+                {/* Decorative background elements */}
+                <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/20 rounded-full blur-3xl group-hover:bg-white/30 transition-all duration-500"></div>
+                <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-all duration-500"></div>
+
+                <Brain className="w-12 h-12 mb-4 opacity-90 drop-shadow-md z-10" />
+                <h3 className="text-2xl font-black mb-3 z-10 tracking-tight">Ready to test your knowledge?</h3>
+                <p className="text-app-bg/80 text-base mb-8 font-semibold max-w-sm z-10">
+                    We've generated {totalQuestions} interactive questions based on the concepts extracted from your document.
                 </p>
                 <button
                     onClick={startQuiz}
-                    className="w-full bg-app-bg text-app-fg py-3 rounded-lg font-bold hover:opacity-90 transition-opacity shadow-lg"
+                    className="z-10 bg-app-bg text-app-fg px-10 py-4 rounded-xl font-bold text-lg hover:bg-zinc-800 transition-all hover:scale-105 active:scale-95 shadow-lg border border-app-bg"
                 >
-                    Start Quiz
+                    Start Knowledge Check
                 </button>
             </div>
         </div>
