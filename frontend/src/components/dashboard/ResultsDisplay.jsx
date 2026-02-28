@@ -80,17 +80,22 @@ function ResultsDisplay({ result, startQuiz }) {
             )}
 
             {/* Fundamental Concepts Section */}
-            {result.explanations && Object.keys(result.explanations).length > 0 && (
+            {result.explanations?.concepts && result.explanations.concepts.length > 0 && (
                 <div className="pro-card p-8 shadow-sm">
                     <div className="flex items-center gap-3 mb-6 text-purple-500">
                         <BookOpen className="w-6 h-6" />
                         <h3 className="text-sm font-bold uppercase tracking-widest">Fundamental Concepts</h3>
                     </div>
+                    {result.explanations.global && (
+                        <p className="text-app-muted italic text-sm mb-6 pb-6 border-b border-app-border/30">
+                            {result.explanations.global}
+                        </p>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {Object.entries(result.explanations).map(([concept, definition], idx) => (
+                        {result.explanations.concepts.map((conceptObj, idx) => (
                             <div key={idx} className="bg-app-bg/50 border border-app-border/50 rounded-lg p-5 hover:border-purple-500/30 transition-colors">
-                                <h4 className="text-purple-400 font-bold capitalize mb-2">{concept}</h4>
-                                <p className="text-app-muted text-sm leading-relaxed">{definition}</p>
+                                <h4 className="text-purple-400 font-bold capitalize mb-2">{conceptObj.term}</h4>
+                                <p className="text-app-muted text-sm leading-relaxed">{conceptObj.reason}</p>
                             </div>
                         ))}
                     </div>
