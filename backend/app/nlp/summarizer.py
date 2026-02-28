@@ -84,16 +84,27 @@ class Summarizer:
             }
 
         try:
-            # Chunking strategy for large documents (> 1024 tokens)
-            sentences = re.split(r'(?<=[.!?])\s+', text)
+            word_count = len(text.split())
+            
+            # Dynamic length: target ~20-30% of document size, up to a massive 1500 words for deep context
+            if max_length == 150: # If using the default short limit, override it dynamically
+                target_max = min(1500, max(250, int(word_count * 0.3)))
+                target_min = min(500, max(80, int(word_count * 0.1)))
+            else:
+                target_max = max_length
+                target_min = min_length
+
+            # Clean up newlines for better split
+            clean_text = text.replace('\n', ' ')
+            sentences = re.split(r'(?<=[.!?])\s+', clean_text)
             chunks = []
             current_chunk = ""
             current_len = 0
             
-            # ~600 words safely translates to < 900 tokens for most tokenizers
+            # Use smaller chunks (400 words) so the model MUST describe more details per section
             for sentence in sentences:
                 sentence_len = len(sentence.split())
-                if current_len + sentence_len < 600:
+                if current_len + sentence_len < 400:
                     current_chunk += " " + sentence
                     current_len += sentence_len
                 else:
@@ -106,41 +117,46 @@ class Summarizer:
 
             if len(chunks) <= 1:
                 # Single pass for short documents
-                inputs = self.tokenizer([text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-                summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=max_length, min_length=min_length, early_stopping=True)
+                inputs = self.tokenizer([clean_text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+                summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=target_max, min_length=target_min, early_stopping=True)
                 summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
             else:
                 # Process chunks separately to capture full document context
                 chunk_summaries = []
-                c_max = max(60, max_length) # ensure chunks have decent length
-                c_min = min(30, c_max // 2)
+                c_max = min(180, max(80, target_max // len(chunks)))
+                c_min = min(70, max(40, target_min // len(chunks)))
                 
                 for chunk in chunks:
-                    if len(chunk.split()) < 30: 
+                    chunk_wc = len(chunk.split())
+                    if chunk_wc < 40: 
                         continue # Skip tiny straggling chunks at the end
+                    
+                    actual_c_max = min(c_max, int(chunk_wc * 0.8))
+                    actual_c_min = min(c_min, int(chunk_wc * 0.3))
+                    
                     inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-                    ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=c_max, min_length=c_min, early_stopping=True)
-                    chunk_summaries.append(self.tokenizer.decode(ids[0], skip_special_tokens=True).strip())
+                    ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=actual_c_max, min_length=actual_c_min, early_stopping=True)
+                    chunk_summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
+                    
+                    # Redundancy filter per chunk (prevents repeating sentences within the chunk)
+                    c_sentences = re.split(r'(?<=[.!?])\s+', chunk_summary)
+                    if len(c_sentences) > 1:
+                        filtered = [c_sentences[0]]
+                        for i in range(1, len(c_sentences)):
+                            is_redundant = False
+                            for prev in filtered:
+                                s1, s2 = set(c_sentences[i].lower().split()), set(prev.lower().split())
+                                if len(s1 & s2) / max(1, len(s1), len(s2)) > 0.7:
+                                    is_redundant = True
+                                    break
+                            if not is_redundant:
+                                filtered.append(c_sentences[i])
+                        chunk_summary = " ".join(filtered)
+                        
+                    chunk_summaries.append(chunk_summary)
                 
-                summary = " ".join(chunk_summaries)
-
-            
-            # Post-processing: Redundancy filter
-            summary_sentences = summary.split(". ")
-            if len(summary_sentences) > 2:
-                # Basic redundancy check: remove sentences that are too similar or almost identical
-                filtered_sentences = [summary_sentences[0]]
-                for i in range(1, len(summary_sentences)):
-                    is_redundant = False
-                    for prev in filtered_sentences:
-                        # Simple overlap check for now; could be upgraded to embedding similarity
-                        s1, s2 = set(summary_sentences[i].lower().split()), set(prev.lower().split())
-                        if len(s1 & s2) / max(len(s1), len(s2)) > 0.8:
-                            is_redundant = True
-                            break
-                    if not is_redundant:
-                        filtered_sentences.append(summary_sentences[i])
-                summary = ". ".join(filtered_sentences)
+                # Combine chunks into distinct readable paragraphs
+                summary = "\n\n".join(chunk_summaries)
 
             # Simple compression metric
             compression_ratio = len(summary.split()) / max(1, len(text.split()))
