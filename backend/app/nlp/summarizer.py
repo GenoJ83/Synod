@@ -84,9 +84,46 @@ class Summarizer:
             }
 
         try:
-            inputs = self.tokenizer([text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-            summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=max_length, min_length=min_length, early_stopping=True)
-            summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+            # Chunking strategy for large documents (> 1024 tokens)
+            sentences = re.split(r'(?<=[.!?])\s+', text)
+            chunks = []
+            current_chunk = ""
+            current_len = 0
+            
+            # ~600 words safely translates to < 900 tokens for most tokenizers
+            for sentence in sentences:
+                sentence_len = len(sentence.split())
+                if current_len + sentence_len < 600:
+                    current_chunk += " " + sentence
+                    current_len += sentence_len
+                else:
+                    if current_chunk:
+                        chunks.append(current_chunk.strip())
+                    current_chunk = sentence
+                    current_len = sentence_len
+            if current_chunk:
+                chunks.append(current_chunk.strip())
+
+            if len(chunks) <= 1:
+                # Single pass for short documents
+                inputs = self.tokenizer([text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+                summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=max_length, min_length=min_length, early_stopping=True)
+                summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+            else:
+                # Process chunks separately to capture full document context
+                chunk_summaries = []
+                c_max = max(60, max_length) # ensure chunks have decent length
+                c_min = min(30, c_max // 2)
+                
+                for chunk in chunks:
+                    if len(chunk.split()) < 30: 
+                        continue # Skip tiny straggling chunks at the end
+                    inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+                    ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=c_max, min_length=c_min, early_stopping=True)
+                    chunk_summaries.append(self.tokenizer.decode(ids[0], skip_special_tokens=True).strip())
+                
+                summary = " ".join(chunk_summaries)
+
             
             # Post-processing: Redundancy filter
             sentences = summary.split(". ")
