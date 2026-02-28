@@ -122,7 +122,7 @@ class Summarizer:
                 summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
             else:
                 # Process chunks separately to capture full document context
-                chunk_summaries = []
+                chunk_summaries: List[str] = []
                 c_max = min(180, max(80, target_max // len(chunks)))
                 c_min = min(70, max(40, target_min // len(chunks)))
                 
@@ -141,7 +141,7 @@ class Summarizer:
                     # Redundancy filter per chunk (prevents repeating sentences within the chunk)
                     c_sentences = re.split(r'(?<=[.!?])\s+', chunk_summary)
                     if len(c_sentences) > 1:
-                        filtered = [c_sentences[0]]
+                        filtered: List[str] = [c_sentences[0]]
                         for i in range(1, len(c_sentences)):
                             is_redundant = False
                             for prev in filtered:
