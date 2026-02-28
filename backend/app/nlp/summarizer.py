@@ -111,8 +111,34 @@ class Summarizer:
                 self.model.to(self.device)
                 print(f"Model loaded on {self.device} with optimized precision.")
             except Exception as e:
-                print(f"Error loading model: {e}. Falling back to MOCK mode.")
-                self.has_transformers = False
+                print(f"Error loading model {model_name}: {e}")
+                # Fallback to DistilBART if Pegasus/academic model fails (e.g. not yet downloaded)
+                fallback = "sshleifer/distilbart-cnn-12-6"
+                if model_name != fallback:
+                    print(f"Attempting fallback to {fallback}...")
+                    try:
+                        self.tokenizer = AutoTokenizer.from_pretrained(fallback)
+                        self.model = AutoModelForSeq2SeqLM.from_pretrained(fallback)
+                        if torch.cuda.is_available():
+                            self.device = "cuda"
+                            self.model = self.model.half()
+                        elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                            self.device = "mps"
+                        else:
+                            self.device = "cpu"
+                            try:
+                                self.model = torch.quantization.quantize_dynamic(
+                                    self.model, {torch.nn.Linear}, dtype=torch.qint8
+                                )
+                            except Exception:
+                                pass
+                        self.model.to(self.device)
+                        print(f"Fallback model loaded on {self.device}.")
+                    except Exception as e2:
+                        print(f"Fallback failed: {e2}. Running in MOCK mode.")
+                        self.has_transformers = False
+                else:
+                    self.has_transformers = False
         else:
             print("Transformers not found. Running in MOCK mode.")
     

@@ -17,17 +17,15 @@ import os
 import sys
 import subprocess
 
-# Define models to download
+# Define models to download (Pegasus-X ArXiv = default for academic paper summarization)
 MODELS = {
-    "summarizer": "sshleifer/distilbart-cnn-12-6",
-    "summarizer_test": "t5-small",
+    "summarizer": "UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv",
     "embeddings": "sentence-transformers/all-MiniLM-L6-v2",
 }
 
-# Optional models for better academic paper summarization (see MODEL_OPTIONS.md)
-# Run: SUMMARY_MODEL=UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv uvicorn main:app
+# Optional models (see MODEL_OPTIONS.md)
 OPTIONAL_MODELS = {
-    "summarizer_academic": "UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv",
+    "summarizer_fast": "sshleifer/distilbart-cnn-12-6",  # Lighter, faster fallback
     "embeddings_alt": "sentence-transformers/all-mpnet-base-v2",
 }
 
@@ -124,8 +122,8 @@ def download_with_transformers():
     
     results = {}
     
-    # Download summarizer models
-    for model_name in [MODELS["summarizer"], MODELS["summarizer_test"]]:
+    # Download summarizer model
+    for model_name in [MODELS["summarizer"]]:
         print(f"\nDownloading: {model_name}")
         try:
             cache_dir = os.path.join(MODEL_DIR, "transformers", model_name.replace("/", "_"))

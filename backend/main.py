@@ -50,13 +50,14 @@ The heavy model objects are instantiated once at startup and reused.
 Each component has an internal MOCK/fallback mode when dependencies are missing.
 """
 # Prefer trained models if available (set SUMMARY_MODEL/EMBEDDING_MODEL to override)
+# Default: Pegasus-X ArXiv (trained on 200K+ papers) - best for academic content
 def _get_summarizer_model():
     if os.getenv("SUMMARY_MODEL"):
         return os.getenv("SUMMARY_MODEL")
     trained = Path("trained_models/summarizer")
     if trained.exists() and (trained / "config.json").exists():
         return str(trained.resolve())
-    return "sshleifer/distilbart-cnn-12-6"
+    return "UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv"
 
 def _get_extractor_model():
     if os.getenv("EMBEDDING_MODEL"):

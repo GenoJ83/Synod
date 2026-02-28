@@ -6,9 +6,11 @@ This document describes the NLP models used by Synod and how to switch or improv
 
 | Component | Model | Use Case |
 |-----------|-------|----------|
-| **Summarization** | `sshleifer/distilbart-cnn-12-6` | General lecture notes, fast inference |
+| **Summarization** | `UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv` | Academic papers, 200K+ arXiv trained |
 | **Concept Extraction** | `all-MiniLM-L6-v2` | Key phrase extraction, semantic similarity |
 | **spaCy** | `en_core_web_sm` | POS tagging, NER (used by extractor) |
+
+> **Note:** If the Pegasus model fails to load (e.g. not yet downloaded), the summarizer automatically falls back to `sshleifer/distilbart-cnn-12-6`.
 
 ---
 
@@ -16,16 +18,16 @@ This document describes the NLP models used by Synod and how to switch or improv
 
 DistilBART is tuned for news-style text. For **academic papers and research documents**, use a model trained on scientific content:
 
-### Recommended: Pegasus-X ArXiv (Best for Papers)
+### Default: Pegasus-X ArXiv (Best for Papers)
+
+This is now the **default** summarizer. Download it once:
 
 ```bash
-# 1. Download the model (one-time)
-python download_models.py --academic
-
-# 2. Use it via environment variable
-export SUMMARY_MODEL=UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv
-uvicorn main:app --reload
+cd backend
+python download_models.py
 ```
+
+Then start the API—no extra config needed.
 
 **Model:** `UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv`
 - Fine-tuned on 200,000+ arXiv papers
@@ -122,8 +124,8 @@ This will:
 
 | Goal | Action |
 |------|--------|
-| **Better academic paper summaries** | `SUMMARY_MODEL=UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv` |
-| **Faster inference** | Keep DistilBART (default) |
+| **Better academic paper summaries** | Default (Pegasus-X ArXiv) |
+| **Faster inference** | `SUMMARY_MODEL=sshleifer/distilbart-cnn-12-6` |
 | **Domain adaptation** | Run `python train_models.py` |
 | **Better concept precision** | `EMBEDDING_MODEL=sentence-transformers/all-mpnet-base-v2` |
-| **Download optional models** | `python download_models.py --academic` |
+| **Download optional models** | `python download_models.py --academic` (adds DistilBART, MPNet) |
