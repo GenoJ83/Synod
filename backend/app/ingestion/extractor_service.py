@@ -42,7 +42,10 @@ class ExtractorService:
                 raise ValueError(f"Unsupported file extension: {ext}")
             
             text = ExtractorService._sanitize_text(text)
-            # Extra cleanup for PDFs: strip academic paper noise (figures, appendices, refs)
+            # Strip headers for all academic/lecture content
+            text = ExtractorService._strip_headers(text)
+            
+            # Extra cleanup specifically for PDFs (e.g. arXiv tags, OCR noise)
             if ext == '.pdf':
                 text = ExtractorService._clean_academic_noise(text)
             return text
@@ -50,13 +53,11 @@ class ExtractorService:
             raise RuntimeError(f"Failed to extract text from {file_path}: {str(e)}")
 
     @staticmethod
-    def _clean_academic_noise(text: str) -> str:
-        """Remove common academic paper noise: arXiv IDs, QA prompts, figure OCR, reference blocks."""
+    def _strip_headers(text: str) -> str:
+        """Strip Title, Authors, Emails, Affiliations from the beginning of a document."""
         if not text or len(text.strip()) < 100:
             return text
 
-        # 1. Aggressive Header Stripping (Title, Authors, Emails, Affiliations)
-        # Usually these are the first 10-20 lines of a paper
         lines = text.splitlines()
         content_start_idx = 0
         header_patterns = [
@@ -64,10 +65,10 @@ class ExtractorService:
             re.compile(r"(?:University|Institute|Department|Laboratory|School|College|Academy|Faculty of)", re.IGNORECASE), # Affiliations
             re.compile(r"^\d+(?:st|nd|rd|th)?\s+(?:Author|Writer|Contributor)$", re.IGNORECASE),
             re.compile(r"^\*?\s*Corresponding\s+author", re.IGNORECASE),
-            re.compile(r"DSC\d{4}:?", re.IGNORECASE), # Course codes like DSC3108
+            re.compile(r"DSC\d{4}:?", re.IGNORECASE), # Course codes
             re.compile(r"Lecture\s+\d+", re.IGNORECASE),
             re.compile(r"Topic:\s+", re.IGNORECASE), # Topic headers
-            re.compile(r"Simon\s+Fred", re.IGNORECASE), # Specific author names seen in user data
+            re.compile(r"Simon\s+Fred", re.IGNORECASE), # Specific author names
             re.compile(r"Department\s+of", re.IGNORECASE)
         ]
         
@@ -76,8 +77,7 @@ class ExtractorService:
             line = line.strip()
             if not line: continue
             # If we see an Abstract or Introduction, the header definitely ended
-            if re.match(r"^(?:Abstract|1\.?\s*Introduction|Introduction|Lecture\s+Objectives)", line, re.IGNORECASE):
-                # But keep the "Lecture Objectives" line if it's the start of content
+            if re.match(r"^(?:Abstract|1\.?\s*Introduction|Introduction|Lecture\s+Objectives|Lecture\s+Overview)", line, re.IGNORECASE):
                 content_start_idx = i
                 break
             # If line is highly likely metadata, keep looking
@@ -86,9 +86,16 @@ class ExtractorService:
         
         # Strip the identified header if it's not the whole document
         if content_start_idx > 0 and content_start_idx < len(lines) - 5:
-            text = "\n".join(lines[content_start_idx:])
+            return "\n".join(lines[content_start_idx:])
+        return text
 
-        # 2. Remove arXiv-style citation lines
+    @staticmethod
+    def _clean_academic_noise(text: str) -> str:
+        """Remove common academic paper noise: arXiv IDs, QA prompts, figure OCR, reference blocks."""
+        if not text or len(text.strip()) < 100:
+            return text
+
+        # 1. Remove arXiv-style citation lines
         text = _ARXIV_PATTERN.sub("", text)
 
         # 3. Remove QA prompt template leakage
