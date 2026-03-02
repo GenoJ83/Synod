@@ -75,12 +75,14 @@ class ExplanationGenerator:
         general_explanation = self._get_general_explanation(concept_lower, no_def_msg)
         
         if specific_context:
-            # Header heuristic: if it's very short or all uppercase, it's likely a slide header, not a definition
+            # Header heuristic: if it's very short, all uppercase, or starts with metadata prefixes
             is_header = (
                 len(specific_context.split()) < 6 or 
                 specific_context.isupper() or 
-                re.search(r"Slide\s+\d+", specific_context, re.IGNORECASE) or
-                re.search(r"Lecture\s+\d+", specific_context, re.IGNORECASE)
+                any(re.search(p, specific_context, re.IGNORECASE) for p in [
+                    r"Slide\s+\d+", r"Lecture\s+\d+", r"Topic:", r"Faculty of", 
+                    r"Department of", r"Simon Fred", r"Lubambo"
+                ])
             )
             
             if is_header and general_explanation != no_def_msg:
