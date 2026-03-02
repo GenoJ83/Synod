@@ -217,42 +217,48 @@ class Summarizer:
                 summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=target_max, min_length=target_min, early_stopping=True)
                 summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
             else:
-                # Process chunks separately to capture full document context
+                # 1. First Pass: Process chunks separately
                 chunk_summaries: List[str] = []
-                c_max = min(180, max(80, target_max // len(chunks)))
-                c_min = min(70, max(40, target_min // len(chunks)))
+                # Use higher length per chunk to ensure we have enough "fuel" for a 300-word synthesis
+                c_max = min(250, max(120, (target_max * 2) // len(chunks)))
+                c_min = min(100, max(60, (target_min * 2) // len(chunks)))
                 
                 for chunk in chunks:
                     chunk_wc = len(chunk.split())
-                    if chunk_wc < 40: 
-                        continue # Skip tiny straggling chunks at the end
-                    
-                    actual_c_max = min(c_max, int(chunk_wc * 0.8))
-                    actual_c_min = min(c_min, int(chunk_wc * 0.3))
+                    if chunk_wc < 40: continue
                     
                     inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-                    ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=actual_c_max, min_length=actual_c_min, early_stopping=True)
+                    ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=c_max, min_length=c_min, early_stopping=True)
                     chunk_summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
-                    
-                    # Redundancy filter per chunk (prevents repeating sentences within the chunk)
-                    c_sentences = re.split(r'(?<=[.!?])\s+', chunk_summary)
-                    if len(c_sentences) > 1:
-                        filtered: List[str] = [c_sentences[0]]
-                        for i in range(1, len(c_sentences)):
-                            is_redundant = False
-                            for prev in filtered:
-                                s1, s2 = set(c_sentences[i].lower().split()), set(prev.lower().split())
-                                if len(s1 & s2) / max(1, len(s1), len(s2)) > 0.7:
-                                    is_redundant = True
-                                    break
-                            if not is_redundant:
-                                filtered.append(c_sentences[i])
-                        chunk_summary = " ".join(filtered)
-                        
                     chunk_summaries.append(chunk_summary)
                 
-                # Combine chunks into distinct readable paragraphs
-                summary = "\n\n".join(chunk_summaries)
+                # 2. Second Pass: Synthesis (Recursive Summarization)
+                # Combine sectional summaries into a single synthesis input
+                synthesis_input = " ".join(chunk_summaries)
+                
+                # If we need a 300-word executive summary, we summarize the summaries
+                # This ensures global coherence instead of just chopped paragraphs
+                try:
+                    # User requirement: At least 300 words for the final summary if document is large
+                    # Words to tokens ratio is ~1.4 for BART. So 300 words => ~420 tokens.
+                    final_min = 450 if word_count > 1000 else int(target_min * 1.5)
+                    final_max = max(final_min + 200, target_max)
+                    
+                    # Synthesis requires more "creativity" and flow
+                    inputs = self.tokenizer([synthesis_input], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+                    # Higher length_penalty favors longer, more detailed summaries
+                    ids = self.model.generate(
+                        inputs["input_ids"], 
+                        num_beams=6, 
+                        max_length=final_max, 
+                        min_length=final_min, 
+                        length_penalty=2.5,
+                        early_stopping=True
+                    )
+                    summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
+                except Exception as e:
+                    print(f"Synthesis pass failed: {e}. Falling back to combined chunks.")
+                    summary = "\n\n".join(chunk_summaries)
 
             # Post-process: fix artifacts, apply length cap
             summary = _fix_tokenization_artifacts(summary)

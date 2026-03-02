@@ -43,6 +43,16 @@ class ExplanationGenerator:
         "underfitting": "When a model is too simple to capture patterns in data.",
         "hyperparameter": "A parameter set before training that controls the learning process.",
         "gradient descent": "An optimization algorithm used to minimize functions by iteratively moving in the steepest descent direction.",
+        
+        # Software Engineering (Clean Code)
+        "clean code": "Code that is easy to read, understand, and maintain. It follows principles like naming clarity, small functions, and minimal technical debt.",
+        "technical debt": "The long-term cost of choosing an easy, quick solution now instead of a better approach that takes longer, eventually making the code harder to change.",
+        "maintainability": "The ease with which software can be modified to correct faults, improve performance, or adapt to a changed environment.",
+        "refactoring": "The process of restructuring existing computer code without changing its external behavior to improve non-functional attributes.",
+        "single responsibility principle": "A computer-programming principle that states that every module, class or function should have responsibility over a single part of the functionality.",
+        "dry principle": "Don't Repeat Yourself - a principle of software development aimed at reducing repetition of information of all kinds.",
+        "kiss principle": "Keep It Simple, Stupid - a design principle which states that most systems work best if they are kept simple rather than made complicated.",
+        "software construction": "The detailed creation of working, meaningful software through a combination of coding, verification, unit testing, and debugging.",
     }
     
     def __init__(self):
@@ -96,24 +106,27 @@ class ExplanationGenerator:
         return general_explanation
     
     def _get_general_explanation(self, concept: str, default_msg: str) -> str:
-        """Get general explanation from knowledge base with precision."""
+        """Get general explanation from knowledge base with precision and fuzzy normalization."""
+        # Normalize: lower, strip
         concept_clean = concept.lower().strip()
         
         # 1. Try exact match first
         if concept_clean in self.CONCEPT_CATEGORIES:
             return self.CONCEPT_CATEGORIES[concept_clean]
             
-        # 2. Try partial matches, preferring the longest key that is in the concept
-        # (e.g. if concept is "advanced machine learning", match "machine learning")
-        matches = []
-        for key, explanation in self.CONCEPT_CATEGORIES.items():
-            if key in concept_clean:
-                matches.append((len(key), explanation))
-        
-        if matches:
-            # Sort by length of key descending to get the most specific match
-            matches.sort(key=lambda x: x[0], reverse=True)
-            return matches[0][1]
+        # 2. Try prefix/stem matches (e.g. "clean coding" matches "clean code")
+        # Sort keys by length descending to get the most specific match
+        sorted_keys = sorted(self.CONCEPT_CATEGORIES.keys(), key=len, reverse=True)
+        for key in sorted_keys:
+            # If the concept starts with the key or the key starts with the concept
+            # (e.g. key="machine learning", concept="machine learning basics")
+            if concept_clean.startswith(key) or key.startswith(concept_clean):
+                return self.CONCEPT_CATEGORIES[key]
+            
+            # Stemming-lite: check if first 5 chars match for longer words
+            if len(key) > 5 and len(concept_clean) > 5:
+                if key[:5] == concept_clean[:5]:
+                    return self.CONCEPT_CATEGORIES[key]
         
         return default_msg
     
@@ -163,7 +176,8 @@ class ExplanationGenerator:
                         if sent in used_contexts: continue
                         
                         # Heuristic check for "good" explanation sentence
-                        if len(sent.split()) > 6 and not sent.isupper():
+                        # Relaxed from 6 to 3 words for short punchy definitions/segments
+                        if len(sent.split()) >= 3 and not sent.isupper():
                             best_sent = sent
                             used_contexts.add(sent)
                             break
@@ -171,15 +185,17 @@ class ExplanationGenerator:
                     pass
             
             if best_sent:
-                explanation = best_sent
+                # If we found context, we still want a general definition if possible
+                definition = self._get_general_explanation(concept, "Key term from the lecture.")
+                contextual_use = best_sent
             else:
-                # Fallback to general explanation
-                no_def_msg = "Key term identified based on semantic centrality."
-                explanation = self._get_general_explanation(concept, no_def_msg)
+                definition = self._get_general_explanation(concept, "Key term identified based on semantic centrality.")
+                contextual_use = ""
             
             explanations["concepts"].append({
                 "term": concept,
-                "reason": explanation
+                "definition": definition,
+                "context": contextual_use
             })
         
         return explanations
@@ -202,4 +218,6 @@ if __name__ == "__main__":
     print("Explanations:")
     for c in explanations["concepts"]:
         print(f"\n{c['term']}:")
-        print(f"  {c['reason'][:150]}...")
+        print(f"  Definition: {c['definition'][:150]}...")
+        if c['context']:
+            print(f"  Context: {c['context']}")

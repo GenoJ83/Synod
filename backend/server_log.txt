@@ -26,3 +26,14 @@ INFO:     127.0.0.1:60398 - "OPTIONS /auth/verify HTTP/1.1" 200 OK
 INFO:     127.0.0.1:60399 - "OPTIONS /auth/verify HTTP/1.1" 200 OK
 INFO:     127.0.0.1:60398 - "POST /auth/verify HTTP/1.1" 200 OK
 INFO:     127.0.0.1:60402 - "POST /auth/verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60969 - "POST /auth/verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60971 - "POST /auth/verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61761 - "POST /analyze-file HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61804 - "POST /analyze-file HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62483 - "OPTIONS /auth/verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62485 - "OPTIONS /auth/verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62483 - "POST /auth/verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62485 - "POST /auth/verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62487 - "POST /analyze-file HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62706 - "POST /analyze-file HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62842 - "POST /analyze-file HTTP/1.1" 200 OK
