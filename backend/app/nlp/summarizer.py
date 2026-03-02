@@ -42,18 +42,20 @@ def _fix_tokenization_artifacts(text: str) -> str:
     return text
 
 
-def _filter_redundant_sentences(sentences: List[str], overlap_threshold: float = 0.65) -> List[str]:
+def _filter_redundant_sentences(sentences: List[str], overlap_threshold: float = 0.6) -> List[str]:
     """Remove sentences that overlap too much with previously kept ones."""
     if not sentences:
         return []
-    kept = [sentences[0]]
+    kept = [str(sentences[0])]
     for sent in sentences[1:]:
+        sent = str(sent)
         s1 = set(sent.lower().split())
-        if not s1:
+        if not s1 or len(s1) < 4: # Ignore very short boilerplate
             continue
         is_redundant = False
         for prev in kept:
-            s2 = set(prev.lower().split())
+            s2 = set(str(prev).lower().split())
+            if not s2: continue
             overlap = len(s1 & s2) / max(len(s1), len(s2), 1)
             if overlap >= overlap_threshold:
                 is_redundant = True
@@ -220,8 +222,13 @@ class Summarizer:
                 current_chunk = ""
                 current_len = 0
 
-                chunk_size = 600 if is_pegasus else 400  # Pegasus prefers longer chunks
+                # Adjust chunk size based on document density
+                is_sparse = (len(clean_text.split()) / max(1, len(sentences))) < 15
+                chunk_size = 800 if is_pegasus else (600 if is_sparse else 400)
+                
                 for sentence in sentences:
+                    sentence = str(sentence).strip()
+                    if not sentence: continue
                     sentence_len = len(sentence.split())
                     if current_len + sentence_len < chunk_size:
                         current_chunk += " " + sentence
@@ -233,6 +240,11 @@ class Summarizer:
                         current_len = sentence_len
                 if current_chunk:
                     chunks.append(current_chunk.strip())
+                
+                # Merge very small trailing chunks (common in slides)
+                if len(chunks) > 1 and len(chunks[-1].split()) < 50:
+                    small = chunks.pop()
+                    chunks[-1] += " " + small
 
                 if len(chunks) <= 1:
                     # Single pass for short documents

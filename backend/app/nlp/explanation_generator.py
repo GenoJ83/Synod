@@ -71,24 +71,36 @@ class ExplanationGenerator:
                 print(f"Semantic context extraction failed: {e}")
 
         # 2. Get general dictionary-style explanation
-        general_explanation = self._get_general_explanation(concept_lower)
+        no_def_msg = "Not explicitly defined in the context, but identified as a key term based on its semantic centrality."
+        general_explanation = self._get_general_explanation(concept_lower, no_def_msg)
         
         if specific_context:
-            # If the sentence is short, try to combine it. Otherwise, use it as the primary definition.
-            if len(specific_context.split()) < 10 and general_explanation != "No definition available.":
-                return f"{general_explanation} In this lecture: '{specific_context}'"
+            # Header heuristic: if it's very short or all uppercase, it's likely a slide header, not a definition
+            is_header = (
+                len(specific_context.split()) < 6 or 
+                specific_context.isupper() or 
+                re.search(r"Slide\s+\d+", specific_context, re.IGNORECASE) or
+                re.search(r"Lecture\s+\d+", specific_context, re.IGNORECASE)
+            )
+            
+            if is_header and general_explanation != no_def_msg:
+                return general_explanation
+                
+            # If the sentence is short but not a header, try to combine it.
+            if len(specific_context.split()) < 12 and general_explanation != no_def_msg:
+                return f"{general_explanation} In this context: '{specific_context}'"
             return specific_context
         
         return general_explanation
     
-    def _get_general_explanation(self, concept: str) -> str:
+    def _get_general_explanation(self, concept: str, default_msg: str) -> str:
         """Get general explanation from knowledge base."""
         # Check for partial matches
         for key, explanation in self.CONCEPT_CATEGORIES.items():
             if key in concept or concept in key:
                 return explanation
         
-        return "Not explicitly defined in the general dictionary, but identified as a key term based on its semantic centrality in this lecture."
+        return default_msg
     
     def _extract_context(self, text: str, concept: str, max_sentences: int = 2) -> str:
         """Extract relevant context sentences from text."""

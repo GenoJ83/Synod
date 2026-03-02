@@ -61,9 +61,11 @@ class ExtractorService:
         content_start_idx = 0
         header_patterns = [
             re.compile(r"\{?[\w.-]+@[\w.-]+\}?"), # Emails
-            re.compile(r"(?:University|Institute|Department|Laboratory|School|College|Academy)", re.IGNORECASE), # Affiliations
+            re.compile(r"(?:University|Institute|Department|Laboratory|School|College|Academy|Faculty of)", re.IGNORECASE), # Affiliations
             re.compile(r"^\d+(?:st|nd|rd|th)?\s+(?:Author|Writer|Contributor)$", re.IGNORECASE),
-            re.compile(r"^\*?\s*Corresponding\s+author", re.IGNORECASE)
+            re.compile(r"^\*?\s*Corresponding\s+author", re.IGNORECASE),
+            re.compile(r"DSC\d{4}:?", re.IGNORECASE), # Course codes like DSC3108
+            re.compile(r"Lecture\s+\d+", re.IGNORECASE)
         ]
         
         # Look at the first 30 lines
@@ -145,12 +147,38 @@ class ExtractorService:
 
         # 5. Split into lines to identify repeating headers/footers
         lines = text.splitlines()
-        if len(lines) > 20:
+        if len(lines) > 10:
             from collections import Counter
-            line_counts = Counter(lines)
-            # Remove any line that appears in more than 15% of the document (likely a header/footer)
-            threshold = max(2, len(lines) // 20) 
-            text = "\n".join([line for line in lines if line_counts[line] < threshold])
+            # Normalize for comparison: lowercase, strip, remove slide/page numbers
+            def normalize_line(l):
+                l = l.strip().lower()
+                l = re.sub(r'slide\s+\d+\s+of\s+\d+', '', l)
+                l = re.sub(r'page\s+\d+(\s+of\s+\d+)?', '', l)
+                l = re.sub(r'^\d+$', '', l) # Just a number
+                return re.sub(r'\s+', ' ', l).strip()
+            
+            normalized_lines = [normalize_line(l) for l in lines]
+            line_counts = Counter(normalized_lines)
+            
+            # Identify lines that appear frequently (more than 10% of pages OR at least 3 times in 20+ lines)
+            # Threshold: if a normalized line repeats, it's likely a header/footer
+            filtered_lines = []
+            for i, line in enumerate(lines):
+                norm = normalized_lines[i]
+                if not norm: # Keep empty lines for structure, or skip if they were just numbers
+                    if line.strip(): # It was just a number or slide ref
+                        continue
+                    filtered_lines.append(line)
+                    continue
+                    
+                count = line_counts[norm]
+                # High frequency threshold for slides: if it appears > 15% of the time, or >= 3 times in a decent doc
+                if count >= 3 and count > (len(lines) // 50): 
+                    # Potential header. But don't remove if it's very long (likely actual content that happens to repeat?)
+                    # Actually, long repeating lines are even MORE likely to be headers (e.g. "Faculty of Engineering...")
+                    continue
+                filtered_lines.append(line)
+            text = "\n".join(filtered_lines)
         else:
             text = "\n".join(lines)
 
