@@ -41,11 +41,13 @@ class ExtractorService:
             else:
                 raise ValueError(f"Unsupported file extension: {ext}")
             
-            text = ExtractorService._sanitize_text(text)
-            # Strip headers for all academic/lecture content
+            # 1. Strip headers first before ANY sanitization to ensure patterns match accurately
             text = ExtractorService._strip_headers(text)
             
-            # Extra cleanup specifically for PDFs (e.g. arXiv tags, OCR noise)
+            # 2. Basic sanitization
+            text = ExtractorService._sanitize_text(text)
+            
+            # 3. Extra cleanup specifically for PDFs (e.g. arXiv tags, OCR noise)
             if ext == '.pdf':
                 text = ExtractorService._clean_academic_noise(text)
             return text
