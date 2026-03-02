@@ -192,13 +192,11 @@ class Summarizer:
                     "length_penalty": 1.0,
                     "early_stopping": True,
                 }
-                if hasattr(self.model, "generate"):
-                    gen_kwargs["no_repeat_ngram_size"] = 3
-                summary_ids = self.model.generate(
-                    inputs["input_ids"],
-                    attention_mask=inputs.get("attention_mask"),
-                    **gen_kwargs,
-                )
+                gen_kwargs["no_repeat_ngram_size"] = 3  # Reduces repetition (Pegasus model card)
+                gen_inputs = {"input_ids": inputs["input_ids"]}
+                if "attention_mask" in inputs and inputs["attention_mask"] is not None:
+                    gen_inputs["attention_mask"] = inputs["attention_mask"]
+                summary_ids = self.model.generate(**gen_inputs, **gen_kwargs)
                 summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
             else:
                 # Target 20-30% of doc, capped at SUMMARY_WORD_CAP

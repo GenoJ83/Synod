@@ -87,11 +87,35 @@ class ExtractorService:
 
     @staticmethod
     def _sanitize_text(text: str) -> str:
-        """Sanitize text by removing excessive whitespace and repetitive headers/footers."""
+        """Sanitize text by removing excessive whitespace, merging hyphens, and truncating references."""
         if not text:
             return ""
         
-        # Split into lines to identify repeating headers/footers
+        # 1. Truncate at References/Bibliography (common in academic papers)
+        # Avoid truncating if "References" is at the start or mid-sentence
+        ref_markers = [
+            r'\n\s*References\s*\n', 
+            r'\n\s*BIBLIOGRAPHY\s*\n', 
+            r'\n\s*Works Cited\s*\n'
+        ]
+        for marker in ref_markers:
+            match = re.search(marker, text, re.IGNORECASE)
+            if match:
+                text = text[:match.start()]
+                break
+
+        # 2. Fix hyphenated line-breaks: "syn-\nthesized" -> "synthesized"
+        # This is the #1 cause of "garbled" words in PDF parsing
+        text = re.sub(r'(\w+)-\n(\w+)', r'\1\2', text)
+
+        # 3. Strip URLs to reduce noise (models often hallucinate on long URLs)
+        text = re.sub(r'https?://\S+|www\.\S+', '', text)
+        
+        # 4. Remove excessive citation parentheticals e.g. (Author et al., 2023)
+        # Often these clutter the context window for small models
+        # text = re.sub(r'\(\w+ et al\., \d{4}\)', '', text) # Keeping it simple for now
+
+        # 5. Split into lines to identify repeating headers/footers
         lines = text.splitlines()
         if len(lines) > 20:
             from collections import Counter
@@ -102,10 +126,10 @@ class ExtractorService:
         else:
             text = "\n".join(lines)
 
-        # Remove control characters and non-printable characters
+        # 6. Remove control characters and non-printable characters
         text = "".join(char for char in text if char.isprintable() or char in "\n\r\t")
-
-        # Normalize whitespace (replace multiple spaces/newlines with single ones)
+        
+        # 7. Normalize whitespace
         text = re.sub(r' +', ' ', text)
         text = re.sub(r'\n+', '\n', text)
         return text.strip()

@@ -11,6 +11,8 @@ This document describes the NLP models used by Synod and how to switch or improv
 | **spaCy** | `en_core_web_sm` | POS tagging, NER (used by extractor) |
 
 > **Note:** If the Pegasus model fails to load (e.g. not yet downloaded), the summarizer automatically falls back to `sshleifer/distilbart-cnn-12-6`.
+>
+> **Pegasus mode:** For documents ≤5,500 words, Pegasus uses **full-paper** single-pass summarization (as it was trained). Longer documents use chunked summarization with Pegasus-specific parameters.
 
 ---
 
