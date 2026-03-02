@@ -161,7 +161,7 @@ class Summarizer:
         else:
             print("Transformers not found. Running in MOCK mode.")
     
-    def summarize(self, text: str, max_length: int = 150, min_length: int = 40) -> dict:
+    def summarize(self, text: str, max_length: int = 300, min_length: int = 100) -> dict:
         """
         Summarizes the input text.
         """
@@ -217,13 +217,14 @@ class Summarizer:
                 summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
             else:
                 # Set length constraints based on user request for more detail
-                # Increased target_min/max for more robust and informative output
-                if max_length and min_length:
-                    target_min = min_length
-                    target_max = max_length
-                else:
-                    target_min = 100
+                # Default to 100-300 range for robust summaries
+                target_min = min_length
+                target_max = max_length
+                
+                # If specifically requested small, we honor it, but default is now larger
+                if max_length == 150: # Old default, if still passed explicitly
                     target_max = 250
+                    target_min = 100
 
                 # 1. Clean and split text
                 clean_text = _sanitize_input(text)
@@ -235,7 +236,8 @@ class Summarizer:
 
                 # Adjust chunk size based on document density
                 is_sparse = (len(clean_text.split()) / max(1, len(sentences))) < 15
-                chunk_size = 800 if is_pegasus else (600 if is_sparse else 400)
+                # Smaller chunk size (300) forces more detail capture when merging
+                chunk_size = 800 if is_pegasus else (400 if is_sparse else 300)
                 
                 for sentence in sentences:
                     sentence = str(sentence).strip()

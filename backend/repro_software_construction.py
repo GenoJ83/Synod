@@ -88,12 +88,19 @@ Consequences of Poor Construction
             
         print("\n--- 2. Testing Summarizer (Robustness) ---")
         summarizer = Summarizer()
-        summary_data = summarizer.summarize(cleaned_text)
+        # Explicitly request a larger summary to test robustness
+        summary_data = summarizer.summarize(cleaned_text, max_length=300, min_length=150)
         
-        print(f"Summary Length: {len(summary_data['summary'].split())} words")
+        # Call takeaways separately
+        takeaways = summarizer.generate_takeaways(cleaned_text)
+        
+        print(f"Summary Word Count: {len(summary_data['summary'].split())} words")
         print(f"Summary: {summary_data['summary']}")
-        print(f"Takeaways: {summary_data['takeaways']}")
-        print(f"Metrics: {summary_data['metrics']}")
+        print(f"\nTakeaways ({len(takeaways)} points):")
+        for i, pt in enumerate(takeaways, 1):
+            print(f"{i}. {pt}")
+            
+        print(f"\nMetrics: {summary_data['metrics']}")
         
         print("\n--- 3. Testing Concept Extraction (Robustness) ---")
         from app.nlp.extractor import ConceptExtractor
