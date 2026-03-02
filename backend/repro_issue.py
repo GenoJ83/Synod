@@ -36,7 +36,7 @@ def repro():
         print("\n--- Metrics ---")
         print(result["metrics"])
     except Exception as e:
-        print(f"\nCaught exception: {e}")
+        print(f"\nCaught exception in main: {e}")
         import traceback
         traceback.print_exc()
 
