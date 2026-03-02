@@ -25,8 +25,8 @@ def repro():
     # Pad to meet min_length requirements for testing
     text = text * 20 
 
-    print("Initializing Summarizer with default model...")
-    s = Summarizer()
+    print("Initializing Summarizer with Pegasus model...")
+    s = Summarizer(model_name="UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv")
     
     print("\nAttempting to summarize...")
     try:
