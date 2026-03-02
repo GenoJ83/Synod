@@ -49,8 +49,10 @@ def _fix_tokenization_artifacts(text: str) -> str:
     return text
 
 
-def _filter_redundant_sentences(sentences: List[str], overlap_threshold: float = 0.6) -> List[str]:
-    """Remove sentences that overlap too much with previously kept ones."""
+def _filter_redundant_sentences(sentences: List[str], overlap_threshold: float = 0.5) -> List[str]:
+    """Remove sentences that overlap too much with previously kept ones.
+    Lowered threshold (0.5) to keep more distinct information for robust summaries.
+    """
     if not sentences:
         return []
     kept = [str(sentences[0])]
@@ -214,13 +216,14 @@ class Summarizer:
                 summary_ids = self.model.generate(**gen_inputs, **gen_kwargs)
                 summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
             else:
-                # Target 20-30% of doc, capped at SUMMARY_WORD_CAP
-                if max_length == 150:
-                    target_max = min(SUMMARY_WORD_CAP, max(150, int(word_count * 0.25)))
-                    target_min = min(100, max(50, int(word_count * 0.08)))
-                else:
-                    target_max = max_length
+                # Set length constraints based on user request for more detail
+                # Increased target_min/max for more robust and informative output
+                if max_length and min_length:
                     target_min = min_length
+                    target_max = max_length
+                else:
+                    target_min = 100
+                    target_max = 250
 
                 # 1. Clean and split text
                 clean_text = _sanitize_input(text)
@@ -257,14 +260,14 @@ class Summarizer:
                 if len(chunks) <= 1:
                     # Single pass for short documents
                     inputs = self.tokenizer([clean_text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-                    # Explicitly set length_penalty to avoid NoneType error in some transformer versions
+                    # Explicitly set length_penalty and num_beams for higher quality detail
                     summary_ids = self.model.generate(
                         inputs["input_ids"], 
-                        num_beams=4, 
+                        num_beams=5, 
                         max_length=target_max, 
                         min_length=target_min, 
                         early_stopping=True,
-                        length_penalty=2.0
+                        length_penalty=2.0 # Higher penalty to encourage longer, more descriptive output
                     )
                     summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
                 else:
@@ -371,32 +374,60 @@ class Summarizer:
         
         # Group sentences into chunks
         chunk_size = max(1, len(sentences) // num_bullets)
-        takeaways: List[str] = []
         
-        for i in range(0, len(sentences), chunk_size):
-            chunk = " ".join(sentences[i:i + chunk_size])
-            if len(chunk.split()) < 20: continue
-            
+        # Extract more key points for robustness
+        top_points = []
+        max_points = 5 # Increased from 3
+        
+        # Use chunks if document was long, else extract from whole text
+        clean_text = _sanitize_input(text)
+        sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+|\n+', clean_text) if s.strip()]
+        chunks = []
+        current_chunk = ""
+        current_len = 0
+        
+        # Re-chunking logic similar to summarize, but for takeaways
+        # Use a smaller chunk size to get more granular points
+        takeaway_chunk_size = 300 # words
+        for sentence in sentences:
+            sentence = str(sentence).strip()
+            if not sentence: continue
+            sentence_len = len(sentence.split())
+            if current_len + sentence_len < takeaway_chunk_size:
+                current_chunk += " " + sentence
+                current_len += sentence_len
+            else:
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+                current_chunk = sentence
+                current_len = sentence_len
+        if current_chunk:
+            chunks.append(current_chunk.strip())
+
+        source_for_points = chunks if chunks else [clean_text]
+        for chunk in source_for_points:
+            if len(chunk.split()) < 20: # Skip very short chunks
+                continue
             try:
-                inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-                # Generate very short summary for this chunk
+                inputs = self.tokenizer([chunk], return_tensors="pt", max_length=1024, truncation=True).to(self.device)
+                
                 ids = self.model.generate(
                     inputs["input_ids"], 
-                    max_length=40, 
-                    min_length=10, 
-                    num_beams=2,
-                    length_penalty=1.0 # Smaller penalty for short takeaways
+                    max_length=50, 
+                    min_length=15, 
+                    num_beams=4,
+                    length_penalty=1.5 # Increased for more descriptive points
                 )
                 point = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
-                if point and point not in takeaways:
-                    takeaways.append(point)
-            except:
+                if len(point) > 20 and point not in top_points:
+                    top_points.append(point)
+                if len(top_points) >= max_points:
+                    break
+            except Exception as e:
+                print(f"Error generating takeaway from chunk: {e}")
                 continue
-            
-            if len(takeaways) >= num_bullets:
-                break
                 
-        return takeaways[:num_bullets]
+        return top_points[:num_bullets]
 
 if __name__ == "__main__":
     # Quick test
