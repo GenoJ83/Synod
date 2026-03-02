@@ -237,7 +237,15 @@ class Summarizer:
                 if len(chunks) <= 1:
                     # Single pass for short documents
                     inputs = self.tokenizer([clean_text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-                    summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=target_max, min_length=target_min, early_stopping=True)
+                    # Explicitly set length_penalty to avoid NoneType error in some transformer versions
+                    summary_ids = self.model.generate(
+                        inputs["input_ids"], 
+                        num_beams=4, 
+                        max_length=target_max, 
+                        min_length=target_min, 
+                        early_stopping=True,
+                        length_penalty=2.0
+                    )
                     summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
                 else:
                     # Process chunks; Pegasus needs higher output limits when chunking
@@ -257,7 +265,14 @@ class Summarizer:
 
                         input_max = 2048 if is_pegasus else 1024
                         inputs = self.tokenizer([chunk], max_length=input_max, return_tensors="pt", truncation=True).to(self.device)
-                        ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=actual_c_max, min_length=actual_c_min, early_stopping=True)
+                        ids = self.model.generate(
+                            inputs["input_ids"], 
+                            num_beams=4, 
+                            max_length=actual_c_max, 
+                            min_length=actual_c_min, 
+                            early_stopping=True,
+                            length_penalty=2.0
+                        )
                         chunk_summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
 
                         # Per-chunk redundancy filter
@@ -345,7 +360,13 @@ class Summarizer:
             try:
                 inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
                 # Generate very short summary for this chunk
-                ids = self.model.generate(inputs["input_ids"], max_length=40, min_length=10, num_beams=2)
+                ids = self.model.generate(
+                    inputs["input_ids"], 
+                    max_length=40, 
+                    min_length=10, 
+                    num_beams=2,
+                    length_penalty=1.0 # Smaller penalty for short takeaways
+                )
                 point = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
                 if point and point not in takeaways:
                     takeaways.append(point)
