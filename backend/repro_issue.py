@@ -22,8 +22,11 @@ def repro():
     In this paper, we propose QRRanker, a Query-focused and Memory-aware Reranker that efficiently processes long context by...
     """
     
-    # Pad to meet min_length requirements for testing
-    text = text * 20 
+    # Force a failure to test fallback logic
+    s.has_transformers = True
+    def dummy_summarize(*args, **kwargs):
+        raise RuntimeError("Simulated OOM or model error")
+    s.model.generate = dummy_summarize
 
     print("Initializing Summarizer with Pegasus model...")
     s = Summarizer(model_name="UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv")
