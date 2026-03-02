@@ -55,14 +55,41 @@ class ExtractorService:
         if not text or len(text.strip()) < 100:
             return text
 
-        # Remove arXiv-style citation lines
+        # 1. Aggressive Header Stripping (Title, Authors, Emails, Affiliations)
+        # Usually these are the first 10-20 lines of a paper
+        lines = text.splitlines()
+        content_start_idx = 0
+        header_patterns = [
+            re.compile(r"\{?[\w.-]+@[\w.-]+\}?"), # Emails
+            re.compile(r"(?:University|Institute|Department|Laboratory|School|College|Academy)", re.IGNORECASE), # Affiliations
+            re.compile(r"^\d+(?:st|nd|rd|th)?\s+(?:Author|Writer|Contributor)$", re.IGNORECASE),
+            re.compile(r"^\*?\s*Corresponding\s+author", re.IGNORECASE)
+        ]
+        
+        # Look at the first 30 lines
+        for i, line in enumerate(lines[:30]):
+            line = line.strip()
+            if not line: continue
+            # If we see an Abstract or Introduction, the header definitely ended
+            if re.match(r"^(?:Abstract|1\.?\s*Introduction|Introduction)", line, re.IGNORECASE):
+                content_start_idx = i
+                break
+            # If line is highly likely metadata (email or affiliation), keep looking
+            if any(p.search(line) for p in header_patterns):
+                content_start_idx = i + 1
+        
+        # Strip the identified header if it's not the whole document
+        if content_start_idx > 0 and content_start_idx < len(lines) - 5:
+            text = "\n".join(lines[content_start_idx:])
+
+        # 2. Remove arXiv-style citation lines
         text = _ARXIV_PATTERN.sub("", text)
 
-        # Remove QA prompt template leakage
+        # 3. Remove QA prompt template leakage
         for pat in _QA_PROMPT_PATTERNS:
             text = pat.sub("", text)
 
-        # Split into paragraphs and filter
+        # 4. Split into paragraphs and filter
         paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
         filtered = []
         for p in paragraphs:
@@ -79,7 +106,7 @@ class ExtractorService:
 
         text = "\n\n".join(filtered)
 
-        # Remove stray URLs
+        # 5. Remove stray URLs
         text = re.sub(r"https?://\S+", "", text)
         # Collapse excessive newlines
         text = re.sub(r"\n{3,}", "\n\n", text)

@@ -229,39 +229,39 @@ class Summarizer:
                     summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
                 else:
                     # Process chunks; Pegasus needs higher output limits when chunking
-                chunk_summaries: List[str] = []
-                base_max, base_min = (200, 80) if is_pegasus else (120, 30)
-                n_chunks = max(1, len(chunks))
-                per_chunk_max = max(base_min, min(base_max, target_max // n_chunks))
-                per_chunk_min = max(base_min // 2, min(base_min, target_min // n_chunks))
+                    chunk_summaries: List[str] = []
+                    base_max, base_min = (200, 80) if is_pegasus else (120, 30)
+                    n_chunks = max(1, len(chunks))
+                    per_chunk_max = max(base_min, min(base_max, target_max // n_chunks))
+                    per_chunk_min = max(base_min // 2, min(base_min, target_min // n_chunks))
 
-                for chunk in chunks:
-                    chunk_wc = len(str(chunk).split())
-                    if chunk_wc < 40:
-                        continue
+                    for chunk in chunks:
+                        chunk_wc = len(str(chunk).split())
+                        if chunk_wc < 40:
+                            continue
 
-                    actual_c_max = min(per_chunk_max, int(chunk_wc * 0.6))
-                    actual_c_min = min(per_chunk_min, int(chunk_wc * 0.25))
+                        actual_c_max = min(per_chunk_max, int(chunk_wc * 0.6))
+                        actual_c_min = min(per_chunk_min, int(chunk_wc * 0.25))
 
-                    input_max = 2048 if is_pegasus else 1024
-                    inputs = self.tokenizer([chunk], max_length=input_max, return_tensors="pt", truncation=True).to(self.device)
-                    ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=actual_c_max, min_length=actual_c_min, early_stopping=True)
-                    chunk_summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
+                        input_max = 2048 if is_pegasus else 1024
+                        inputs = self.tokenizer([chunk], max_length=input_max, return_tensors="pt", truncation=True).to(self.device)
+                        ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=actual_c_max, min_length=actual_c_min, early_stopping=True)
+                        chunk_summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
 
-                    # Per-chunk redundancy filter
-                    c_sentences = re.split(r'(?<=[.!?])\s+', chunk_summary)
-                    if len(c_sentences) > 1:
-                        filtered = _filter_redundant_sentences(c_sentences, overlap_threshold=0.7)
-                        chunk_summary = " ".join(filtered)
-                    chunk_summaries.append(chunk_summary)
+                        # Per-chunk redundancy filter
+                        c_sentences = re.split(r'(?<=[.!?])\s+', chunk_summary)
+                        if len(c_sentences) > 1:
+                            filtered = _filter_redundant_sentences(c_sentences, overlap_threshold=0.7)
+                            chunk_summary = " ".join(filtered)
+                        chunk_summaries.append(chunk_summary)
 
-                # Cross-chunk redundancy: dedupe across all chunk summaries
-                all_sentences = []
-                for cs in chunk_summaries:
-                    all_sentences.extend(re.split(r'(?<=[.!?])\s+', cs))
-                all_sentences = [str(s).strip() for s in all_sentences if len(str(s).strip()) > 10]
-                deduped = _filter_redundant_sentences(all_sentences, overlap_threshold=0.6)
-                summary = " ".join(deduped).replace("\n", " ").strip()
+                    # Cross-chunk redundancy: dedupe across all chunk summaries
+                    all_sentences = []
+                    for cs in chunk_summaries:
+                        all_sentences.extend(re.split(r'(?<=[.!?])\s+', cs))
+                    all_sentences = [str(s).strip() for s in all_sentences if len(str(s).strip()) > 10]
+                    deduped = _filter_redundant_sentences(all_sentences, overlap_threshold=0.6)
+                    summary = " ".join(deduped).replace("\n", " ").strip()
 
             # Post-process: fix artifacts, apply length cap
             summary = _fix_tokenization_artifacts(summary)
@@ -275,7 +275,7 @@ class Summarizer:
 
             # Better compression metric
             t_len = max(1, len(text.split()))
-                s_len = len(summary.split())
+            s_len = len(summary.split())
             compression_ratio = round(float(s_len) / t_len, 3)
             coverage_score = calculate_coverage_score(summary, text)
             
