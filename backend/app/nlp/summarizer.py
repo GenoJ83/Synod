@@ -108,9 +108,21 @@ class Summarizer:
                         self.model = self.model.half()
                     except: pass
                 elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                    self.device = "mps"
+                    # Check memory - 8GB Macs struggle with MPS for large models
+                    try:
+                        import psutil
+                        total_ram = psutil.virtual_memory().total / (1024**3)
+                        if total_ram < 12:
+                            print(f"[NOTE] Low memory detected ({total_ram:.1f}GB). Using CPU instead of MPS for stability.")
+                            self.device = "cpu"
+                        else:
+                            self.device = "mps"
+                    except:
+                        self.device = "mps"
                 else:
                     self.device = "cpu"
+                
+                if self.device == "cpu":
                     try:
                         self.model = torch.quantization.quantize_dynamic(
                             self.model, {torch.nn.Linear}, dtype=torch.qint8
@@ -292,10 +304,13 @@ class Summarizer:
             print(f"Summary error: {e}")
             # Identify first few sentences instead of raw slice (less noisy)
             sentences = re.split(r'(?<=[.!?])\s+', text)
-            fallback = " ".join(sentences[:2]) if len(sentences) > 0 else text[:200]
-            if len(fallback) > 300: fallback = fallback[:300] + "..."
+            fallback = " ".join(sentences[:3]) if len(sentences) > 0 else text[:300]
+            if len(fallback) > 500: fallback = fallback[:500] + "..."
+            
+            # More descriptive error
+            error_type = "Hardware limit" if "MPS" in str(e) or "memory" in str(e).lower() else "Processing error"
             return {
-                "summary": f"[Processing limited] {fallback}", 
+                "summary": f"[{error_type}] {fallback}", 
                 "metrics": {"compression_ratio": 0.0, "error": str(e)}
             }
 
