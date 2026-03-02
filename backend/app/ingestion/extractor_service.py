@@ -65,7 +65,10 @@ class ExtractorService:
             re.compile(r"^\d+(?:st|nd|rd|th)?\s+(?:Author|Writer|Contributor)$", re.IGNORECASE),
             re.compile(r"^\*?\s*Corresponding\s+author", re.IGNORECASE),
             re.compile(r"DSC\d{4}:?", re.IGNORECASE), # Course codes like DSC3108
-            re.compile(r"Lecture\s+\d+", re.IGNORECASE)
+            re.compile(r"Lecture\s+\d+", re.IGNORECASE),
+            re.compile(r"Topic:\s+", re.IGNORECASE), # Topic headers
+            re.compile(r"Simon\s+Fred", re.IGNORECASE), # Specific author names seen in user data
+            re.compile(r"Department\s+of", re.IGNORECASE)
         ]
         
         # Look at the first 30 lines
@@ -73,10 +76,11 @@ class ExtractorService:
             line = line.strip()
             if not line: continue
             # If we see an Abstract or Introduction, the header definitely ended
-            if re.match(r"^(?:Abstract|1\.?\s*Introduction|Introduction)", line, re.IGNORECASE):
+            if re.match(r"^(?:Abstract|1\.?\s*Introduction|Introduction|Lecture\s+Objectives)", line, re.IGNORECASE):
+                # But keep the "Lecture Objectives" line if it's the start of content
                 content_start_idx = i
                 break
-            # If line is highly likely metadata (email or affiliation), keep looking
+            # If line is highly likely metadata, keep looking
             if any(p.search(line) for p in header_patterns):
                 content_start_idx = i + 1
         
