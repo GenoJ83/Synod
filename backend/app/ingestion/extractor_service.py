@@ -25,6 +25,14 @@ _CAPTION_NOISE = re.compile(
     r"^(?:Figure|Table|Fig\.|Tab\.)\s*\d*[.:]?\s*$",
     re.IGNORECASE
 )
+# Additional junk tags seen in noisy extractions
+_JUNK_PATTERNS = [
+    re.compile(r"Back to (?:the page|Mail Online|top)", re.IGNORECASE),
+    re.compile(r"Slide \d+ of \d+", re.IGNORECASE),
+    re.compile(r"Page \d+ of \d+", re.IGNORECASE),
+    re.compile(r"\[\d+\]", re.IGNORECASE), # Footnote citations as junk when standalone
+    re.compile(r"^\s*[\W_]+\s*$", re.IGNORECASE), # Purely non-alphanumeric lines
+]
 
 class ExtractorService:
     @staticmethod
@@ -133,7 +141,6 @@ class ExtractorService:
             return ""
         
         # 1. Truncate at References/Bibliography (common in academic papers)
-        # Avoid truncating if "References" is at the start or mid-sentence
         ref_markers = [
             r'\n\s*References\s*\n', 
             r'\n\s*BIBLIOGRAPHY\s*\n', 
@@ -148,26 +155,34 @@ class ExtractorService:
         # 2. Fix hyphenated line-breaks: "syn-\nthesized" -> "synthesized"
         text = re.sub(r'(\w+)-\n\s*(\w+)', r'\1\2', text)
 
-        # 3. Strip URLs to reduce noise
+        # 3. Apply junk patterns
+        for pattern in _JUNK_PATTERNS:
+            text = pattern.sub("", text)
+
+        # 4. Strip URLs
         text = re.sub(r'https?://\S+|www\.\S+', '', text)
         
-        # 4. Split into lines to identify repeating headers/footers
+        # 5. Split into lines to identify repeating headers/footers
         lines = text.splitlines()
+        # Filter purely decorative lines or common noisy fragments
+        lines = [l.strip() for l in lines if len(l.strip()) > 2 or l.strip().isalnum()]
+        
         if len(lines) > 20:
             from collections import Counter
             line_counts = Counter(lines)
-            # Remove any line that appears in more than 15% of the document (likely a header/footer)
-            threshold = max(2, len(lines) // 20) 
+            # Remove any line that appears in more than 10% of the document (likely a header/footer)
+            # Tightened from 15% to 10%
+            threshold = max(2, len(lines) // 10) 
             text = "\n".join([line for line in lines if line_counts[line] < threshold])
         else:
             text = "\n".join(lines)
 
-        # Remove control characters and non-printable characters
+        # Remove control characters
         text = "".join(char for char in text if char.isprintable() or char in "\n\r\t")
         
-        # Normalize whitespace (replace multiple spaces/newlines with single ones)
+        # Normalize whitespace 
         text = re.sub(r' +', ' ', text)
-        text = re.sub(r'\n+', '\n', text)
+        text = re.sub(r'\n{3,}', '\n\n', text) # Allow double newlines but not triple+
         return text.strip()
 
     @staticmethod
