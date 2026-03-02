@@ -101,13 +101,29 @@ class ConceptExtractor:
         
         # 2. Named Entities (specific technical/formal terms)
         for ent in doc.ents:
-            if ent.label_ in ["PRODUCT", "ORG", "PERSON", "GPE", "WORK_OF_ART", "EVENT"]:
+            # Skip PERSON - lectures are usually about topics, not the professor's name
+            if ent.label_ in ["PRODUCT", "ORG", "WORK_OF_ART", "EVENT"]:
                 candidates.add(ent.text.strip().lower())
         
-        if not candidates:
+        # 3. Metadata Filter: remove anything that looks like university/department/author metadata
+        metadata_patterns = [
+            re.compile(r"(?:University|Institute|Department|Laboratory|School|College|Academy|Faculty of)", re.IGNORECASE),
+            re.compile(r"DSC\d{4}:?", re.IGNORECASE),
+            re.compile(r"Lecture\s+\d+", re.IGNORECASE),
+            re.compile(r"Topic:\s+", re.IGNORECASE),
+            re.compile(r"Simon\s+Fred", re.IGNORECASE)
+        ]
+        
+        filtered_candidates = set()
+        for cand in candidates:
+            if any(p.search(cand) for p in metadata_patterns):
+                continue
+            filtered_candidates.append(cand) if isinstance(filtered_candidates, list) else filtered_candidates.add(cand)
+        
+        if not filtered_candidates:
             return []
 
-        candidate_list = list(candidates)
+        candidate_list = list(filtered_candidates)
         
         # Compute embeddings for candidates
         candidate_embeddings = self.model.encode(candidate_list, convert_to_tensor=True)

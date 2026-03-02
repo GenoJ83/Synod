@@ -26,6 +26,13 @@ _ARTIFACT_FIXES = {
 _HYPHEN_ARTIFACT = re.compile(r"\b(\w{2,5})-[\w]{1,4}(\w{2,8})\b")
 
 
+def _sanitize_input(text: str) -> str:
+    """Normalize spaces but preserve newlines for slide structure."""
+    text = re.sub(r'[ \t]+', ' ', text)
+    text = re.sub(r'\n+', '\n', text)
+    return text.strip()
+
+
 def _fix_tokenization_artifacts(text: str) -> str:
     """Fix common garbled words and hyphenation artifacts from seq2seq models."""
     if not text:
@@ -215,9 +222,10 @@ class Summarizer:
                     target_max = max_length
                     target_min = min_length
 
-                # Clean up newlines for better split
-                clean_text = text.replace('\n', ' ')
-                sentences = re.split(r'(?<=[.!?])\s+', clean_text)
+                # 1. Clean and split text
+                clean_text = _sanitize_input(text)
+                # Split on sentence boundaries OR newlines (important for slides)
+                sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+|\n+', clean_text) if s.strip()]
                 chunks = []
                 current_chunk = ""
                 current_len = 0
