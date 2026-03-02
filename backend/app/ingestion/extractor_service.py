@@ -106,7 +106,8 @@ class ExtractorService:
 
         # 2. Fix hyphenated line-breaks: "syn-\nthesized" -> "synthesized"
         # This is the #1 cause of "garbled" words in PDF parsing
-        text = re.sub(r'(\w+)-\n(\w+)', r'\1\2', text)
+        # Handles optional spaces after the newline which often occur in indented text
+        text = re.sub(r'(\w+)-\n\s*(\w+)', r'\1\2', text)
 
         # 3. Strip URLs to reduce noise (models often hallucinate on long URLs)
         text = re.sub(r'https?://\S+|www\.\S+', '', text)
