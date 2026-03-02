@@ -301,17 +301,27 @@ class Summarizer:
             self.cache[text_hash] = result
             return result
         except Exception as e:
-            print(f"Summary error: {e}")
+            import traceback
+            print(f"!!! Summary Error: {type(e).__name__}: {e}")
+            traceback.print_exc()
+            
             # Identify first few sentences instead of raw slice (less noisy)
             sentences = re.split(r'(?<=[.!?])\s+', text)
-            fallback = " ".join(sentences[:3]) if len(sentences) > 0 else text[:300]
-            if len(fallback) > 500: fallback = fallback[:500] + "..."
+            fallback = " ".join(sentences[:5]) if len(sentences) > 0 else text[:400]
+            if len(fallback) > 800: fallback = fallback[:800] + "..."
             
             # More descriptive error
-            error_type = "Hardware limit" if "MPS" in str(e) or "memory" in str(e).lower() else "Processing error"
+            e_str = str(e).lower()
+            if "mps" in e_str or "memory" in e_str or "oom" in e_str:
+                error_type = "Hardware limit"
+            elif "task" in e_str or "keyerror" in e_str:
+                error_type = "Model task error"
+            else:
+                error_type = "General error"
+                
             return {
                 "summary": f"[{error_type}] {fallback}", 
-                "metrics": {"compression_ratio": 0.0, "error": str(e)}
+                "metrics": {"compression_ratio": 0.0, "error": f"{type(e).__name__}: {str(e)}"}
             }
 
     def generate_takeaways(self, text: str, num_bullets: int = 5) -> List[str]:
