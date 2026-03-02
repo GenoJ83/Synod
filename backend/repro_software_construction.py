@@ -88,16 +88,10 @@ Consequences of Poor Construction
             
         print("\n--- 2. Testing Summarizer (Robustness) ---")
         summarizer = Summarizer()
-        # Explicitly request a larger summary to test robustness
-        summary_data = summarizer.summarize(cleaned_text, max_length=300, min_length=150)
-        
-        # Call takeaways separately
-        takeaways = summarizer.generate_takeaways(cleaned_text)
-        
         print(f"Summary Word Count: {len(summary_data['summary'].split())} words")
         print(f"Summary: {summary_data['summary']}")
-        print(f"\nTakeaways ({len(takeaways)} points):")
-        for i, pt in enumerate(takeaways, 1):
+        print(f"\nTakeaways ({len(summary_data['takeaways'])} points):")
+        for i, pt in enumerate(summary_data['takeaways'], 1):
             print(f"{i}. {pt}")
             
         print(f"\nMetrics: {summary_data['metrics']}")

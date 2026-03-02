@@ -331,8 +331,12 @@ class Summarizer:
             compression_ratio = round(float(s_len) / t_len, 3)
             coverage_score = calculate_coverage_score(summary, text)
             
+            # Generate takeaways automatically for a complete result
+            takeaways = self.generate_takeaways(text)
+            
             result = {
                 "summary": summary,
+                "takeaways": takeaways,
                 "metrics": {
                     "compression_ratio": compression_ratio,
                     "coverage_score": coverage_score
