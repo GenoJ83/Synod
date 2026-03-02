@@ -126,6 +126,10 @@ The following post-processing and stabilization features have been successfully 
 3. **Logic Deduplication**:
    - **Concept Merging**: Fuzzy deduplication of similar concepts (e.g., merging "clean code" and "clean code practices").
    - **Unique Explanations**: Ensuring each concept receives a unique contextual definition.
+4. **Global Context & Interactive Concepts**:
+   - **Recursive Summarization**: High-context executive summaries (>= 300 words) achieved via global synthesis pass.
+   - **Interactive Mapping**: Dual-structure explanations (`{definition, context}`) for rich frontend interaction.
+   - **Fuzzy Normalization**: Improved matching for linguistic variations in concept definitions.
 
 ---
 
@@ -147,6 +151,8 @@ The following post-processing and stabilization features have been successfully 
 **Current State:**
 - **Robustness**: High. System handles noisy academic text, metadata leaks, and repetitive artifacts.
 - **Deduplication**: Successfully implemented for both concepts and individual explanations.
+- **Context Synthesis**: **High**. Recursive summarization provides coherent, 300+ word global context.
+- **Interactivity**: **High**. Structured `{definition, context}` data ready for interactive mapping.
 - **Performance**: Optimized for MPS/CUDA with prioritized local model loading.
 
 **Overall Status:** ✅ **Production Ready**

@@ -45,8 +45,8 @@ class ExplanationGenerator:
         "gradient descent": "An optimization algorithm used to minimize functions by iteratively moving in the steepest descent direction.",
         
         # Software Engineering (Clean Code)
-        "clean code": "Code that is easy to read, understand, and maintain. It follows principles like naming clarity, small functions, and minimal technical debt.",
-        "technical debt": "The long-term cost of choosing an easy, quick solution now instead of a better approach that takes longer, eventually making the code harder to change.",
+        "clean code": "Clean code is code that is easy to read, understand, and maintain. It follows principles like naming clarity, small functions, and minimal technical debt.",
+        "technical debt": "Technical debt is the long-term cost of choosing an easy, quick solution now instead of a better approach that takes longer, eventually making the code harder to change.",
         "maintainability": "The ease with which software can be modified to correct faults, improve performance, or adapt to a changed environment.",
         "refactoring": "The process of restructuring existing computer code without changing its external behavior to improve non-functional attributes.",
         "single responsibility principle": "A computer-programming principle that states that every module, class or function should have responsibility over a single part of the functionality.",
