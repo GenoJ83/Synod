@@ -275,7 +275,8 @@ class Summarizer:
                 else:
                     # Process chunks; Pegasus needs higher output limits when chunking
                     chunk_summaries: List[str] = []
-                    base_max, base_min = (200, 80) if is_pegasus else (120, 30)
+                    # Increased base limits to ensure robust sub-summaries
+                    base_max, base_min = (250, 100) if is_pegasus else (180, 60)
                     n_chunks = max(1, len(chunks))
                     per_chunk_max = max(base_min, min(base_max, target_max // n_chunks))
                     per_chunk_min = max(base_min // 2, min(base_min, target_min // n_chunks))
@@ -312,7 +313,8 @@ class Summarizer:
                     for cs in chunk_summaries:
                         all_sentences.extend(re.split(r'(?<=[.!?])\s+', cs))
                     all_sentences = [str(s).strip() for s in all_sentences if len(str(s).strip()) > 10]
-                    deduped = _filter_redundant_sentences(all_sentences, overlap_threshold=0.6)
+                    # Lower threshold (0.5) to keep more detail across chunks
+                    deduped = _filter_redundant_sentences(all_sentences, overlap_threshold=0.5)
                     summary = " ".join(deduped).replace("\n", " ").strip()
 
             # Post-process: fix artifacts, apply length cap
@@ -393,8 +395,8 @@ class Summarizer:
         current_len = 0
         
         # Re-chunking logic similar to summarize, but for takeaways
-        # Use a smaller chunk size to get more granular points
-        takeaway_chunk_size = 300 # words
+        # Smaller takeaway_chunk_size (150) allows more diverse points to be extracted
+        takeaway_chunk_size = 150 # words
         for sentence in sentences:
             sentence = str(sentence).strip()
             if not sentence: continue
