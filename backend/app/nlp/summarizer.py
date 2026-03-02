@@ -79,11 +79,22 @@ class Summarizer:
     def __init__(self, model_name: str = "sshleifer/distilbart-cnn-12-6"):
         """
         Initializes the summarization model and tokenizer.
-        Uses distilbart for a good balance of speed and quality.
         """
         self.has_transformers = HAS_TRANSFORMERS
         self.cache = {}
-        self.model_name = model_name  # For model-specific logic (e.g. Pegasus full-paper mode)
+        
+        # Memory-aware model selection (especially for 8GB Macs)
+        try:
+            import psutil
+            total_ram = psutil.virtual_memory().total / (1024**3) # GB
+            if total_ram < 12 and "pegasus" in model_name.lower():
+                print(f"[WARNING] High-memory model '{model_name}' requested on low-RAM system ({total_ram:.1f}GB).")
+                print("Defaulting to DistilBART to prevent system crashes.")
+                model_name = "sshleifer/distilbart-cnn-12-6"
+        except ImportError:
+            pass
+            
+        self.model_name = model_name
         if HAS_TRANSFORMERS:
             try:
                 print(f"Loading summarization model: {model_name}...")
@@ -93,51 +104,34 @@ class Summarizer:
                 # Device detection: CUDA -> MPS -> CPU
                 if torch.cuda.is_available():
                     self.device = "cuda"
-                    self.model = self.model.half() # Precision optimization for CUDA
+                    try:
+                        self.model = self.model.half()
+                    except: pass
                 elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
                     self.device = "mps"
-                    # Half precision disabled for stability
-                    # self.model = self.model.half()
                 else:
                     self.device = "cpu"
-                    # Dynamic Quantization for CPU speedup
                     try:
-                        print("Applying Dynamic Quantization for CPU...")
                         self.model = torch.quantization.quantize_dynamic(
                             self.model, {torch.nn.Linear}, dtype=torch.qint8
                         )
-                    except Exception as qe:
-                        print(f"Quantization failed: {qe}")
+                    except: pass
                 
                 self.model.to(self.device)
                 print(f"Model loaded on {self.device} with optimized precision.")
             except Exception as e:
                 print(f"Error loading model {model_name}: {e}")
-                # Fallback to DistilBART if Pegasus/academic model fails (e.g. not yet downloaded)
                 fallback = "sshleifer/distilbart-cnn-12-6"
                 if model_name != fallback:
                     print(f"Attempting fallback to {fallback}...")
                     try:
                         self.tokenizer = AutoTokenizer.from_pretrained(fallback)
                         self.model = AutoModelForSeq2SeqLM.from_pretrained(fallback)
-                        if torch.cuda.is_available():
-                            self.device = "cuda"
-                            self.model = self.model.half()
-                        elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                            self.device = "mps"
-                        else:
-                            self.device = "cpu"
-                            try:
-                                self.model = torch.quantization.quantize_dynamic(
-                                    self.model, {torch.nn.Linear}, dtype=torch.qint8
-                                )
-                            except Exception:
-                                pass
+                        self.device = "cpu" # Safest fallback
                         self.model.to(self.device)
-                        self.model_name = fallback  # Use fallback logic going forward
-                        print(f"Fallback model loaded on {self.device}.")
-                    except Exception as e2:
-                        print(f"Fallback failed: {e2}. Running in MOCK mode.")
+                        self.model_name = fallback
+                        print("Fallback model loaded on CPU.")
+                    except: 
                         self.has_transformers = False
                 else:
                     self.has_transformers = False
@@ -235,13 +229,14 @@ class Summarizer:
                     summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
                 else:
                     # Process chunks; Pegasus needs higher output limits when chunking
-                    chunk_summaries: List[str] = []
-                    base_max, base_min = (200, 80) if is_pegasus else (120, 30)
-                    per_chunk_max = max(base_min, min(base_max, target_max // len(chunks)))
-                    per_chunk_min = max(base_min // 2, min(base_min, target_min // len(chunks)))
+                chunk_summaries: List[str] = []
+                base_max, base_min = (200, 80) if is_pegasus else (120, 30)
+                n_chunks = max(1, len(chunks))
+                per_chunk_max = max(base_min, min(base_max, target_max // n_chunks))
+                per_chunk_min = max(base_min // 2, min(base_min, target_min // n_chunks))
 
                 for chunk in chunks:
-                    chunk_wc = len(chunk.split())
+                    chunk_wc = len(str(chunk).split())
                     if chunk_wc < 40:
                         continue
 
@@ -264,9 +259,9 @@ class Summarizer:
                 all_sentences = []
                 for cs in chunk_summaries:
                     all_sentences.extend(re.split(r'(?<=[.!?])\s+', cs))
-                all_sentences = [s.strip() for s in all_sentences if len(s.strip()) > 10]
+                all_sentences = [str(s).strip() for s in all_sentences if len(str(s).strip()) > 10]
                 deduped = _filter_redundant_sentences(all_sentences, overlap_threshold=0.6)
-                summary = "\n\n".join(deduped)
+                summary = " ".join(deduped).replace("\n", " ").strip()
 
             # Post-process: fix artifacts, apply length cap
             summary = _fix_tokenization_artifacts(summary)
@@ -274,18 +269,20 @@ class Summarizer:
             if len(words) > SUMMARY_WORD_CAP:
                 summary = " ".join(words[:SUMMARY_WORD_CAP])
                 # End at sentence boundary if possible
-                last_period = summary.rfind(". ")
+                last_period = str(summary).rfind(". ")
                 if last_period > 200:
-                    summary = summary[: last_period + 1]
+                    summary = str(summary)[: last_period + 1]
 
-            # Simple compression metric
-            compression_ratio = len(summary.split()) / max(1, len(text.split()))
+            # Better compression metric
+            t_len = max(1, len(text.split()))
+                s_len = len(summary.split())
+            compression_ratio = round(float(s_len) / t_len, 3)
             coverage_score = calculate_coverage_score(summary, text)
             
             result = {
                 "summary": summary,
                 "metrics": {
-                    "compression_ratio": round(compression_ratio, 3),
+                    "compression_ratio": compression_ratio,
                     "coverage_score": coverage_score
                 }
             }
@@ -293,7 +290,14 @@ class Summarizer:
             return result
         except Exception as e:
             print(f"Summary error: {e}")
-            return {"summary": text[:200] + "...", "metrics": {"compression_ratio": 0.0}}
+            # Identify first few sentences instead of raw slice (less noisy)
+            sentences = re.split(r'(?<=[.!?])\s+', text)
+            fallback = " ".join(sentences[:2]) if len(sentences) > 0 else text[:200]
+            if len(fallback) > 300: fallback = fallback[:300] + "..."
+            return {
+                "summary": f"[Processing limited] {fallback}", 
+                "metrics": {"compression_ratio": 0.0, "error": str(e)}
+            }
 
     def generate_takeaways(self, text: str, num_bullets: int = 5) -> List[str]:
         """ Extracts specific, important takeaways as bullet points. """
