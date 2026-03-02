@@ -26,7 +26,6 @@ _CAPTION_NOISE = re.compile(
     re.IGNORECASE
 )
 
-
 class ExtractorService:
     @staticmethod
     def extract_text(file_path: str) -> str:
@@ -83,11 +82,15 @@ class ExtractorService:
                 content_start_idx = i
                 break
             # If line is highly likely metadata, keep looking
-            if any(p.search(line) for p in header_patterns):
-                content_start_idx = i + 1
+            found_match = False
+            for p in header_patterns:
+                if p.search(line):
+                    content_start_idx = i + 1
+                    found_match = True
+                    break
         
         # Strip the identified header if it's not the whole document
-        if content_start_idx > 0 and content_start_idx < len(lines) - 5:
+        if content_start_idx > 0 and content_start_idx < len(lines) - 2:
             return "\n".join(lines[content_start_idx:])
         return text
 
@@ -100,11 +103,7 @@ class ExtractorService:
         # 1. Remove arXiv-style citation lines
         text = _ARXIV_PATTERN.sub("", text)
 
-        # 3. Remove QA prompt template leakage
-        for pat in _QA_PROMPT_PATTERNS:
-            text = pat.sub("", text)
-
-        # 4. Split into paragraphs and filter
+        # 2. Split into paragraphs and filter
         paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
         filtered = []
         for p in paragraphs:
@@ -121,7 +120,7 @@ class ExtractorService:
 
         text = "\n\n".join(filtered)
 
-        # 5. Remove stray URLs
+        # 3. Remove stray URLs
         text = re.sub(r"https?://\S+", "", text)
         # Collapse excessive newlines
         text = re.sub(r"\n{3,}", "\n\n", text)
@@ -147,58 +146,26 @@ class ExtractorService:
                 break
 
         # 2. Fix hyphenated line-breaks: "syn-\nthesized" -> "synthesized"
-        # This is the #1 cause of "garbled" words in PDF parsing
-        # Handles optional spaces after the newline which often occur in indented text
         text = re.sub(r'(\w+)-\n\s*(\w+)', r'\1\2', text)
 
-        # 3. Strip URLs to reduce noise (models often hallucinate on long URLs)
+        # 3. Strip URLs to reduce noise
         text = re.sub(r'https?://\S+|www\.\S+', '', text)
         
-        # 4. Remove excessive citation parentheticals e.g. (Author et al., 2023)
-        # Often these clutter the context window for small models
-        # text = re.sub(r'\(\w+ et al\., \d{4}\)', '', text) # Keeping it simple for now
-
-        # 5. Split into lines to identify repeating headers/footers
+        # 4. Split into lines to identify repeating headers/footers
         lines = text.splitlines()
-        if len(lines) > 10:
+        if len(lines) > 20:
             from collections import Counter
-            # Normalize for comparison: lowercase, strip, remove slide/page numbers
-            def normalize_line(l):
-                l = l.strip().lower()
-                l = re.sub(r'slide\s+\d+\s+of\s+\d+', '', l)
-                l = re.sub(r'page\s+\d+(\s+of\s+\d+)?', '', l)
-                l = re.sub(r'^\d+$', '', l) # Just a number
-                return re.sub(r'\s+', ' ', l).strip()
-            
-            normalized_lines = [normalize_line(l) for l in lines]
-            line_counts = Counter(normalized_lines)
-            
-            # Identify lines that appear frequently (more than 10% of pages OR at least 3 times in 20+ lines)
-            # Threshold: if a normalized line repeats, it's likely a header/footer
-            filtered_lines = []
-            for i, line in enumerate(lines):
-                norm = normalized_lines[i]
-                if not norm: # Keep empty lines for structure, or skip if they were just numbers
-                    if line.strip(): # It was just a number or slide ref
-                        continue
-                    filtered_lines.append(line)
-                    continue
-                    
-                count = line_counts[norm]
-                # High frequency threshold for slides: if it appears > 15% of the time, or >= 3 times in a decent doc
-                if count >= 3 and count > (len(lines) // 50): 
-                    # Potential header. But don't remove if it's very long (likely actual content that happens to repeat?)
-                    # Actually, long repeating lines are even MORE likely to be headers (e.g. "Faculty of Engineering...")
-                    continue
-                filtered_lines.append(line)
-            text = "\n".join(filtered_lines)
+            line_counts = Counter(lines)
+            # Remove any line that appears in more than 15% of the document (likely a header/footer)
+            threshold = max(2, len(lines) // 20) 
+            text = "\n".join([line for line in lines if line_counts[line] < threshold])
         else:
             text = "\n".join(lines)
 
-        # 6. Remove control characters and non-printable characters
+        # Remove control characters and non-printable characters
         text = "".join(char for char in text if char.isprintable() or char in "\n\r\t")
         
-        # 7. Normalize whitespace
+        # Normalize whitespace (replace multiple spaces/newlines with single ones)
         text = re.sub(r' +', ' ', text)
         text = re.sub(r'\n+', '\n', text)
         return text.strip()

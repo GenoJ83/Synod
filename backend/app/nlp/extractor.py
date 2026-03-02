@@ -153,8 +153,23 @@ class ConceptExtractor:
                 continue
             if len(term) < 3:
                 continue
+            
+            # --- Concept Merging Logic ---
+            # If a very similar term already exists, only keep the more relevant one
+            is_duplicate = False
+            if concepts:
+                # Compare new candidate with existing kept concepts
+                current_emb = candidate_embeddings[i].reshape(1, -1)
+                existing_terms = [c["term"] for c in concepts]
+                existing_embs = self.model.encode(existing_terms, convert_to_tensor=True)
                 
-            concepts.append({"term": term, "relevance": round(relevance, 3)})
+                sims = util.cos_sim(current_emb, existing_embs).cpu().numpy().flatten()
+                if np.max(sims) > 0.85:
+                    is_duplicate = True
+            
+            if not is_duplicate:
+                concepts.append({"term": term, "relevance": round(relevance, 3)})
+            
             if len(concepts) >= top_n:
                 break
                 

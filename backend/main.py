@@ -49,26 +49,8 @@ Lightweight NLP pipeline wiring.
 The heavy model objects are instantiated once at startup and reused.
 Each component has an internal MOCK/fallback mode when dependencies are missing.
 """
-# Prefer trained models if available (set SUMMARY_MODEL/EMBEDDING_MODEL to override)
-# Default: Pegasus-X ArXiv (trained on 200K+ papers) - best for academic content
-def _get_summarizer_model():
-    if os.getenv("SUMMARY_MODEL"):
-        return os.getenv("SUMMARY_MODEL")
-    trained = Path("trained_models/summarizer")
-    if trained.exists() and (trained / "config.json").exists():
-        return str(trained.resolve())
-    return "UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv"
-
-def _get_extractor_model():
-    if os.getenv("EMBEDDING_MODEL"):
-        return os.getenv("EMBEDDING_MODEL")
-    trained = Path("trained_models/concept_extractor")
-    if trained.exists() and (trained / "config.json").exists():
-        return str(trained.resolve())
-    return "all-MiniLM-L6-v2"
-
-summarizer = Summarizer(model_name=_get_summarizer_model())
-extractor = ConceptExtractor(model_name=_get_extractor_model())
+summarizer = Summarizer(model_name=os.getenv("SUMMARY_MODEL", "sshleifer/distilbart-cnn-12-6"))
+extractor = ConceptExtractor(model_name=os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"))
 quiz_gen = QuizGenerator()
 explanation_gen = ExplanationGenerator()
 file_extractor = ExtractorService()
@@ -95,9 +77,10 @@ def process_logic(text: str):
     if not text:
         raise HTTPException(status_code=400, detail="Text is required")
     
-    # 1. Summarization (now returns dict with summary and metrics)
+    # 1. Summarization (now returns dict with summary, takeaways, and metrics)
     sum_result = summarizer.summarize(text)
     summary = sum_result["summary"]
+    takeaways = sum_result.get("takeaways", [])
     metrics = sum_result.get("metrics", {})
 
     # 2. Concept extraction (returns list of dicts with term and relevance)
@@ -112,9 +95,6 @@ def process_logic(text: str):
 
     # 4. Generate explanations for each concept (passing extractor for dynamic definitions)
     explanations = explanation_gen.generate_all_explanations(concepts, text, extractor=extractor)
-
-    # 5. Generate structured takeaways
-    takeaways = summarizer.generate_takeaways(text)
 
     return {
         "summary": summary,

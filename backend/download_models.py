@@ -17,16 +17,11 @@ import os
 import sys
 import subprocess
 
-# Define models to download (Pegasus-X ArXiv = default for academic paper summarization)
+# Define models to download
 MODELS = {
-    "summarizer": "UNIST-Eunchan/Research-Paper-Summarization-Pegasus-x-ArXiv",
-    "embeddings": "sentence-transformers/all-MiniLM-L6-v2",
-}
-
-# Optional models (see MODEL_OPTIONS.md)
-OPTIONAL_MODELS = {
-    "summarizer_fast": "sshleifer/distilbart-cnn-12-6",  # Lighter, faster fallback
-    "embeddings_alt": "sentence-transformers/all-mpnet-base-v2",
+    "summarizer": "sshleifer/distilbart-cnn-12-6",
+    "summarizer_test": "t5-small",
+    "embeddings": "sentence-transformers/all-MiniLM-L6-v2"
 }
 
 # Base directory for storing models
@@ -122,8 +117,8 @@ def download_with_transformers():
     
     results = {}
     
-    # Download summarizer model
-    for model_name in [MODELS["summarizer"]]:
+    # Download summarizer models
+    for model_name in [MODELS["summarizer"], MODELS["summarizer_test"]]:
         print(f"\nDownloading: {model_name}")
         try:
             cache_dir = os.path.join(MODEL_DIR, "transformers", model_name.replace("/", "_"))
@@ -185,29 +180,20 @@ def create_offline_config():
     print(f"\n[OK] Config saved: {config_path}")
 
 def main():
-    """Download all required models. Pass --academic to also download optional academic models."""
-    import sys
-    download_academic = "--academic" in sys.argv
-
+    """Download all required models."""
     print("="*60)
-    print("Synod - Model Downloader")
+    print("Lecture Assistant - Model Downloader")
     print("="*60)
-
+    
     # Setup token
     has_token = setup_huggingface_token()
-
+    
     print(f"\nModels will be saved to: {MODEL_DIR}")
-    models_to_download = dict(MODELS)
-    if download_academic:
-        models_to_download.update(OPTIONAL_MODELS)
-        print("Including optional academic models.")
     print("\nDownloading models...")
-
+    
     # Create models directory
     os.makedirs(MODEL_DIR, exist_ok=True)
-
-    MODELS.update(models_to_download)
-
+    
     # Try huggingface_hub first, fall back to transformers
     success = download_model_with_hfhub()
     if not success:

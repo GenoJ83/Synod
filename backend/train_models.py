@@ -18,32 +18,27 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 try:
     from transformers import (
-        AutoModelForSeq2SeqLM,
+        AutoModelForSeq2SeqLM, 
         AutoTokenizer,
-        TrainingArguments,
+        TrainingArguments, 
         Trainer,
         DataCollatorForSeq2Seq,
+        EarlyStoppingCallback
     )
-    try:
-        from transformers import EarlyStoppingCallback
-        HAS_EARLY_STOPPING = True
-    except ImportError:
-        HAS_EARLY_STOPPING = False
     from datasets import Dataset
     from sentence_transformers import SentenceTransformer, InputExample, losses
     from torch.utils.data import DataLoader
     HAS_TRAINING_DEPS = True
 except ImportError:
     HAS_TRAINING_DEPS = False
-    HAS_EARLY_STOPPING = False
     print("Installing training dependencies...")
     os.system("pip3 install datasets")
     from transformers import (
-        AutoModelForSeq2SeqLM,
+        AutoModelForSeq2SeqLM, 
         AutoTokenizer,
-        TrainingArguments,
+        TrainingArguments, 
         Trainer,
-        DataCollatorForSeq2Seq,
+        DataCollatorForSeq2Seq
     )
     from datasets import Dataset
     from sentence_transformers import SentenceTransformer, InputExample, losses
@@ -81,17 +76,19 @@ class ModelTrainer:
         
         data = []
         if task == "summarization":
-            print(f"Loading external summarization data (ccdv/arxiv-summarization) with limit {limit}...")
+            print(f"Loading external summarization data (scientific_papers/arxiv) with limit {limit}...")
             try:
+                # ArXiv subset is good for technical/educational content
+                # Note: using a small limit for CPU training feasibility
                 dataset = load_dataset("ccdv/arxiv-summarization", split=f"train[:{limit}]", trust_remote_code=True)
                 for item in dataset:
                     data.append({
-                        "text": item["article"][:2000],  # Longer snippets for academic context
+                        "text": item["article"][:1000], # Substantial snippet
                         "summary": item["abstract"]
                     })
                 print(f"Successfully loaded {len(data)} external summarization pairs.")
             except Exception as e:
-                print(f"Failed to load arxiv-summarization: {e}")
+                print(f"Failed to load scientific_papers: {e}")
                 
         elif task == "concepts":
             print(f"Loading external concept data (midas/inspec) with limit {limit}...")
@@ -158,27 +155,15 @@ class ModelTrainer:
         ]
         
         if use_external:
-            external_data = self.load_external_datasets("summarization", limit=300)
-            # Filter for quality: summary should be substantive
-            external_data = [
-                d for d in external_data
-                if len(d.get("summary", "").split()) >= 10 and len(d.get("text", "").split()) >= 50
-            ]
+            external_data = self.load_external_datasets("summarization", limit=100)
             training_data.extend(external_data)
         
-        # Load augmented data if available (filter low-quality pairs)
+        # Load augmented data if available
         augmented_path = "training_data/summarization_augmented.json"
         if os.path.exists(augmented_path):
             with open(augmented_path, 'r') as f:
                 aug_data = json.load(f)
-            # Filter: summary should be meaningful (not single words like "Moodle")
-            aug_data = [
-                d for d in aug_data
-                if len(d.get("summary", "").split()) >= 2
-                and len(d.get("text", "").split()) >= 20
-                and len(d.get("summary", "")) > 10
-            ]
-            training_data.extend(aug_data)
+                training_data.extend(aug_data)
             print(f"Loaded {len(aug_data)} augmented summarization pairs. Total: {len(training_data)}.")
         
         # Validation data
@@ -266,16 +251,13 @@ class ModelTrainer:
         data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
         
         # Initialize trainer
-        callbacks = []
-        if HAS_EARLY_STOPPING:
-            callbacks.append(EarlyStoppingCallback(early_stopping_patience=3))
         trainer = Trainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=val_dataset,
             data_collator=data_collator,
-            callbacks=callbacks,
+            callbacks=[EarlyStoppingCallback(early_stopping_patience=3)]
         )
         
         # Train

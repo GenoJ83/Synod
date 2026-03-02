@@ -96,11 +96,24 @@ class ExplanationGenerator:
         return general_explanation
     
     def _get_general_explanation(self, concept: str, default_msg: str) -> str:
-        """Get general explanation from knowledge base."""
-        # Check for partial matches
+        """Get general explanation from knowledge base with precision."""
+        concept_clean = concept.lower().strip()
+        
+        # 1. Try exact match first
+        if concept_clean in self.CONCEPT_CATEGORIES:
+            return self.CONCEPT_CATEGORIES[concept_clean]
+            
+        # 2. Try partial matches, preferring the longest key that is in the concept
+        # (e.g. if concept is "advanced machine learning", match "machine learning")
+        matches = []
         for key, explanation in self.CONCEPT_CATEGORIES.items():
-            if key in concept or concept in key:
-                return explanation
+            if key in concept_clean:
+                matches.append((len(key), explanation))
+        
+        if matches:
+            # Sort by length of key descending to get the most specific match
+            matches.sort(key=lambda x: x[0], reverse=True)
+            return matches[0][1]
         
         return default_msg
     
@@ -121,14 +134,49 @@ class ExplanationGenerator:
         return ""
     
     def generate_all_explanations(self, concepts: List[str], text: str, extractor=None) -> Dict:
-        """Generate explanations for all concepts."""
+        """Generate explanations for all concepts, ensuring contextual uniqueness."""
         explanations = {
             "global": "These foundational concepts are key to understanding the lecture material.",
             "concepts": []
         }
         
+        used_contexts = set()
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        
         for concept in concepts:
-            explanation = self.generate_explanation(concept, text, extractor=extractor)
+            # Custom logic to find a UNIQUE context for this concept
+            explanation = ""
+            best_sent = ""
+            
+            if extractor and hasattr(extractor, 'model'):
+                try:
+                    concept_emb = extractor.model.encode([concept], convert_to_tensor=True)
+                    sent_embs = extractor.model.encode(sentences, convert_to_tensor=True)
+                    scores = util.cos_sim(concept_emb, sent_embs).cpu().numpy().flatten()
+                    
+                    # Sort sentences by relevance
+                    ranked_indices = scores.argsort()[::-1]
+                    
+                    for idx in ranked_indices:
+                        sent = sentences[idx].strip()
+                        if scores[idx] < 0.3: break # Threshold
+                        if sent in used_contexts: continue
+                        
+                        # Heuristic check for "good" explanation sentence
+                        if len(sent.split()) > 6 and not sent.isupper():
+                            best_sent = sent
+                            used_contexts.add(sent)
+                            break
+                except:
+                    pass
+            
+            if best_sent:
+                explanation = best_sent
+            else:
+                # Fallback to general explanation
+                no_def_msg = "Key term identified based on semantic centrality."
+                explanation = self._get_general_explanation(concept, no_def_msg)
+            
             explanations["concepts"].append({
                 "term": concept,
                 "reason": explanation

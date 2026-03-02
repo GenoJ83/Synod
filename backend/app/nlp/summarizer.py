@@ -1,7 +1,4 @@
 import re
-import hashlib
-from typing import List, Optional
-
 try:
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
     import torch
@@ -9,9 +6,13 @@ try:
 except ImportError:
     HAS_TRANSFORMERS = False
 
+import hashlib
+from typing import List, Optional
+
 # Known tokenization artifacts from BART/distilBART on academic text
 _ARTIFACT_FIXES = {
     "pro-ishlypose": "propose", "pro-ishlyposes": "proposes", "pro-ishlyposed": "proposed",
+    "pro-ishypose": "propose", "pro-ishyposes": "proposes", "pro-ishyposed": "proposed",
     "an-ogleswering": "answering", "an-swering": "answering",
     "fol-gling": "following", "fol-lowing": "following",
     "pronening": "spanning", "spannen": "spanning",
@@ -23,7 +24,7 @@ _ARTIFACT_FIXES = {
 }
 
 # Generic: hyphenated word fragments that look like one word (e.g. "pro-pose" -> "propose")
-_HYPHEN_ARTIFACT = re.compile(r"\b(\w{2,5})-[\w]{1,4}(\w{2,8})\b")
+_HYPHEN_ARTIFACT = re.compile(r"\b(\w{2,5})-[\w]{1,6}(\w{2,8})\b")
 
 
 def _sanitize_input(text: str) -> str:
@@ -42,11 +43,35 @@ def _fix_tokenization_artifacts(text: str) -> str:
     # Merge obvious hyphenated fragments: "pro-pose" -> "propose" when parts concatenate sensibly
     def _merge(m):
         a, b = m.group(1), m.group(2)
-        if a.lower() + b.lower() in {"propose", "compare", "following", "answering", "reranking"}:
+        base = (a.lower() + b.lower()).rstrip('sd') # Check base word
+        if base in {"propose", "compare", "follow", "answer", "rerank", "transform"}:
             return a + b
         return m.group(0)
     text = _HYPHEN_ARTIFACT.sub(_merge, text)
     return text
+
+
+def _fix_repetition_artifacts(text: str) -> str:
+    """Detect and collapse sequences where a word repeats due to model stuck-loops."""
+    if not text:
+        return text
+    # Match words repeating 3+ times: "Cases Cases Cases" -> "Cases"
+    # Also handles "software software" -> "software"
+    words = text.split()
+    if not words:
+        return text
+    
+    new_words = [words[0]]
+    for i in range(1, len(words)):
+        # If the word is the same as the previous one and is 4+ chars (avoid "the the" if intentional)
+        if words[i].lower() == words[i-1].lower() and len(words[i]) > 3:
+            continue
+        # Also catch alternating loops: "A B A B" -> "A B"
+        if i > 2 and words[i].lower() == words[i-2].lower() and words[i-1].lower() == words[i-3].lower():
+            continue
+        new_words.append(words[i])
+    
+    return " ".join(new_words)
 
 
 def _filter_redundant_sentences(sentences: List[str], overlap_threshold: float = 0.5) -> List[str]:
@@ -73,7 +98,6 @@ def _filter_redundant_sentences(sentences: List[str], overlap_threshold: float =
             kept.append(sent)
     return kept
 
-
 def calculate_coverage_score(summary: str, original: str) -> float:
     """Calculates a simple n-gram overlap score (ROUGE-1 proxy)."""
     if not summary or not original:
@@ -85,83 +109,54 @@ def calculate_coverage_score(summary: str, original: str) -> float:
     overlap = len(s_words & o_words)
     return round(overlap / len(s_words), 3) if s_words else 0.0
 
-
 class Summarizer:
     def __init__(self, model_name: str = "sshleifer/distilbart-cnn-12-6"):
         """
         Initializes the summarization model and tokenizer.
+        Uses distilbart for a good balance of speed and quality.
         """
         self.has_transformers = HAS_TRANSFORMERS
-        self.cache = {}
-        
-        # Memory-aware model selection (especially for 8GB Macs)
-        try:
-            import psutil
-            total_ram = psutil.virtual_memory().total / (1024**3) # GB
-            if total_ram < 12 and "pegasus" in model_name.lower():
-                print(f"[WARNING] High-memory model '{model_name}' requested on low-RAM system ({total_ram:.1f}GB).")
-                print("Defaulting to DistilBART to prevent system crashes.")
-                model_name = "sshleifer/distilbart-cnn-12-6"
-        except ImportError:
-            pass
-            
-        self.model_name = model_name
+        self.cache = {} # Simple in-memory cache for speed
         if HAS_TRANSFORMERS:
             try:
                 print(f"Loading summarization model: {model_name}...")
-                self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-                self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+                try:
+                    # Try local files first to avoid network hangs
+                    self.tokenizer = AutoTokenizer.from_pretrained(model_name, local_files_only=True)
+                    self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name, local_files_only=True)
+                except Exception:
+                    # If not local, try fetching (standard behavior)
+                    self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+                    self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
                 
                 # Device detection: CUDA -> MPS -> CPU
                 if torch.cuda.is_available():
                     self.device = "cuda"
-                    try:
-                        self.model = self.model.half()
-                    except: pass
+                    self.model = self.model.half() # Precision optimization for CUDA
                 elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                    # Check memory - 8GB Macs struggle with MPS for large models
-                    try:
-                        import psutil
-                        total_ram = psutil.virtual_memory().total / (1024**3)
-                        if total_ram < 12:
-                            print(f"[NOTE] Low memory detected ({total_ram:.1f}GB). Using CPU instead of MPS for stability.")
-                            self.device = "cpu"
-                        else:
-                            self.device = "mps"
-                    except:
-                        self.device = "mps"
+                    self.device = "mps"
+                    # Half precision disabled for stability
+                    # self.model = self.model.half()
                 else:
                     self.device = "cpu"
-                
-                if self.device == "cpu":
+                    # Dynamic Quantization for CPU speedup
                     try:
+                        print("Applying Dynamic Quantization for CPU...")
                         self.model = torch.quantization.quantize_dynamic(
                             self.model, {torch.nn.Linear}, dtype=torch.qint8
                         )
-                    except: pass
+                    except Exception as qe:
+                        print(f"Quantization failed: {qe}")
                 
                 self.model.to(self.device)
                 print(f"Model loaded on {self.device} with optimized precision.")
             except Exception as e:
-                print(f"Error loading model {model_name}: {e}")
-                fallback = "sshleifer/distilbart-cnn-12-6"
-                if model_name != fallback:
-                    print(f"Attempting fallback to {fallback}...")
-                    try:
-                        self.tokenizer = AutoTokenizer.from_pretrained(fallback)
-                        self.model = AutoModelForSeq2SeqLM.from_pretrained(fallback)
-                        self.device = "cpu" # Safest fallback
-                        self.model.to(self.device)
-                        self.model_name = fallback
-                        print("Fallback model loaded on CPU.")
-                    except: 
-                        self.has_transformers = False
-                else:
-                    self.has_transformers = False
+                print(f"Error loading model: {e}. Falling back to MOCK mode.")
+                self.has_transformers = False
         else:
             print("Transformers not found. Running in MOCK mode.")
     
-    def summarize(self, text: str, max_length: int = 300, min_length: int = 100) -> dict:
+    def summarize(self, text: str, max_length: int = 150, min_length: int = 40) -> dict:
         """
         Summarizes the input text.
         """
@@ -186,151 +181,85 @@ class Summarizer:
 
         try:
             word_count = len(text.split())
-            SUMMARY_WORD_CAP = 500  # Hard cap for conciseness (per Grok feedback)
-            is_pegasus = "pegasus" in self.model_name.lower() or "Pegasus" in self.model_name
-
-            # Pegasus-X: trained on full papers -> abstract; use single-pass for docs that fit
-            PEGASUS_MAX_WORDS = 5500  # ~8K tokens, under 16K limit
-            if is_pegasus and word_count <= PEGASUS_MAX_WORDS:
-                clean_text = text.replace('\n', ' ')
-                # Model card: max_length=512, min_length=150, no_repeat_ngram_size=3
-                input_max = min(8192, word_count * 2)  # tokens
-                inputs = self.tokenizer(
-                    [clean_text],
-                    max_length=input_max,
-                    return_tensors="pt",
-                    truncation=True,
-                    padding=True,
-                ).to(self.device)
-                gen_kwargs = {
-                    "max_length": 512,
-                    "min_length": 150,
-                    "num_beams": 4,
-                    "length_penalty": 1.0,
-                    "early_stopping": True,
-                }
-                gen_kwargs["no_repeat_ngram_size"] = 3  # Reduces repetition (Pegasus model card)
-                gen_inputs = {"input_ids": inputs["input_ids"]}
-                if "attention_mask" in inputs and inputs["attention_mask"] is not None:
-                    gen_inputs["attention_mask"] = inputs["attention_mask"]
-                summary_ids = self.model.generate(**gen_inputs, **gen_kwargs)
-                summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
+            
+            # Dynamic length: target ~20-30% of document size, up to a massive 1500 words for deep context
+            if max_length == 150: # If using the default short limit, override it dynamically
+                target_max = min(1500, max(250, int(word_count * 0.3)))
+                target_min = min(500, max(80, int(word_count * 0.1)))
             else:
-                # Set length constraints based on user request for more detail
-                # Default to 100-300 range for robust summaries
-                target_min = min_length
                 target_max = max_length
-                
-                # If specifically requested small, we honor it, but default is now larger
-                if max_length == 150: # Old default, if still passed explicitly
-                    target_max = 250
-                    target_min = 100
+                target_min = min_length
 
-                # 1. Clean and split text
-                clean_text = _sanitize_input(text)
-                # Split on sentence boundaries OR newlines (important for slides)
-                sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+|\n+', clean_text) if s.strip()]
-                chunks = []
-                current_chunk = ""
-                current_len = 0
-
-                # Adjust chunk size based on document density
-                is_sparse = (len(clean_text.split()) / max(1, len(sentences))) < 15
-                # Smaller chunk size (300) forces more detail capture when merging
-                chunk_size = 800 if is_pegasus else (400 if is_sparse else 300)
-                
-                for sentence in sentences:
-                    sentence = str(sentence).strip()
-                    if not sentence: continue
-                    sentence_len = len(sentence.split())
-                    if current_len + sentence_len < chunk_size:
-                        current_chunk += " " + sentence
-                        current_len += sentence_len
-                    else:
-                        if current_chunk:
-                            chunks.append(current_chunk.strip())
-                        current_chunk = sentence
-                        current_len = sentence_len
-                if current_chunk:
-                    chunks.append(current_chunk.strip())
-                
-                # Merge very small trailing chunks (common in slides)
-                if len(chunks) > 1 and len(chunks[-1].split()) < 50:
-                    small = chunks.pop()
-                    chunks[-1] += " " + small
-
-                if len(chunks) <= 1:
-                    # Single pass for short documents
-                    inputs = self.tokenizer([clean_text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-                    # Explicitly set length_penalty and num_beams for higher quality detail
-                    summary_ids = self.model.generate(
-                        inputs["input_ids"], 
-                        num_beams=5, 
-                        max_length=target_max, 
-                        min_length=target_min, 
-                        early_stopping=True,
-                        length_penalty=2.0 # Higher penalty to encourage longer, more descriptive output
-                    )
-                    summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True).strip()
+            # Clean up newlines for better split
+            clean_text = text.replace('\n', ' ')
+            sentences = re.split(r'(?<=[.!?])\s+', clean_text)
+            chunks = []
+            current_chunk = ""
+            current_len = 0
+            
+            # Use smaller chunks (400 words) so the model MUST describe more details per section
+            for sentence in sentences:
+                sentence_len = len(sentence.split())
+                if current_len + sentence_len < 400:
+                    current_chunk += " " + sentence
+                    current_len += sentence_len
                 else:
-                    # Process chunks; Pegasus needs higher output limits when chunking
-                    chunk_summaries: List[str] = []
-                    # Increased base limits to ensure robust sub-summaries
-                    base_max, base_min = (250, 100) if is_pegasus else (180, 60)
-                    n_chunks = max(1, len(chunks))
-                    per_chunk_max = max(base_min, min(base_max, target_max // n_chunks))
-                    per_chunk_min = max(base_min // 2, min(base_min, target_min // n_chunks))
+                    if current_chunk:
+                        chunks.append(current_chunk.strip())
+                    current_chunk = sentence
+                    current_len = sentence_len
+            if current_chunk:
+                chunks.append(current_chunk.strip())
 
-                    for chunk in chunks:
-                        chunk_wc = len(str(chunk).split())
-                        if chunk_wc < 40:
-                            continue
-
-                        actual_c_max = min(per_chunk_max, int(chunk_wc * 0.6))
-                        actual_c_min = min(per_chunk_min, int(chunk_wc * 0.25))
-
-                        input_max = 2048 if is_pegasus else 1024
-                        inputs = self.tokenizer([chunk], max_length=input_max, return_tensors="pt", truncation=True).to(self.device)
-                        ids = self.model.generate(
-                            inputs["input_ids"], 
-                            num_beams=4, 
-                            max_length=actual_c_max, 
-                            min_length=actual_c_min, 
-                            early_stopping=True,
-                            length_penalty=2.0
-                        )
-                        chunk_summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
-
-                        # Per-chunk redundancy filter
-                        c_sentences = re.split(r'(?<=[.!?])\s+', chunk_summary)
-                        if len(c_sentences) > 1:
-                            filtered = _filter_redundant_sentences(c_sentences, overlap_threshold=0.7)
-                            chunk_summary = " ".join(filtered)
-                        chunk_summaries.append(chunk_summary)
-
-                    # Cross-chunk redundancy: dedupe across all chunk summaries
-                    all_sentences = []
-                    for cs in chunk_summaries:
-                        all_sentences.extend(re.split(r'(?<=[.!?])\s+', cs))
-                    all_sentences = [str(s).strip() for s in all_sentences if len(str(s).strip()) > 10]
-                    # Lower threshold (0.5) to keep more detail across chunks
-                    deduped = _filter_redundant_sentences(all_sentences, overlap_threshold=0.5)
-                    summary = " ".join(deduped).replace("\n", " ").strip()
+            if len(chunks) <= 1:
+                # Single pass for short documents
+                inputs = self.tokenizer([clean_text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+                summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=target_max, min_length=target_min, early_stopping=True)
+                summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+            else:
+                # Process chunks separately to capture full document context
+                chunk_summaries: List[str] = []
+                c_max = min(180, max(80, target_max // len(chunks)))
+                c_min = min(70, max(40, target_min // len(chunks)))
+                
+                for chunk in chunks:
+                    chunk_wc = len(chunk.split())
+                    if chunk_wc < 40: 
+                        continue # Skip tiny straggling chunks at the end
+                    
+                    actual_c_max = min(c_max, int(chunk_wc * 0.8))
+                    actual_c_min = min(c_min, int(chunk_wc * 0.3))
+                    
+                    inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+                    ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=actual_c_max, min_length=actual_c_min, early_stopping=True)
+                    chunk_summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
+                    
+                    # Redundancy filter per chunk (prevents repeating sentences within the chunk)
+                    c_sentences = re.split(r'(?<=[.!?])\s+', chunk_summary)
+                    if len(c_sentences) > 1:
+                        filtered: List[str] = [c_sentences[0]]
+                        for i in range(1, len(c_sentences)):
+                            is_redundant = False
+                            for prev in filtered:
+                                s1, s2 = set(c_sentences[i].lower().split()), set(prev.lower().split())
+                                if len(s1 & s2) / max(1, len(s1), len(s2)) > 0.7:
+                                    is_redundant = True
+                                    break
+                            if not is_redundant:
+                                filtered.append(c_sentences[i])
+                        chunk_summary = " ".join(filtered)
+                        
+                    chunk_summaries.append(chunk_summary)
+                
+                # Combine chunks into distinct readable paragraphs
+                summary = "\n\n".join(chunk_summaries)
 
             # Post-process: fix artifacts, apply length cap
             summary = _fix_tokenization_artifacts(summary)
-            words = summary.split()
-            if len(words) > SUMMARY_WORD_CAP:
-                summary = " ".join(words[:SUMMARY_WORD_CAP])
-                # End at sentence boundary if possible
-                last_period = str(summary).rfind(". ")
-                if last_period > 200:
-                    summary = str(summary)[: last_period + 1]
-
-            # Better compression metric
-            t_len = max(1, len(text.split()))
-            s_len = len(summary.split())
-            compression_ratio = round(float(s_len) / t_len, 3)
+            summary = _fix_repetition_artifacts(summary)
+            
+            # Simple compression metric
+            compression_ratio = len(summary.split()) / max(1, len(text.split()))
             coverage_score = calculate_coverage_score(summary, text)
             
             # Generate takeaways automatically for a complete result
@@ -340,35 +269,15 @@ class Summarizer:
                 "summary": summary,
                 "takeaways": takeaways,
                 "metrics": {
-                    "compression_ratio": compression_ratio,
+                    "compression_ratio": round(compression_ratio, 3),
                     "coverage_score": coverage_score
                 }
             }
             self.cache[text_hash] = result
             return result
         except Exception as e:
-            import traceback
-            print(f"!!! Summary Error: {type(e).__name__}: {e}")
-            traceback.print_exc()
-            
-            # Identify first few sentences instead of raw slice (less noisy)
-            sentences = re.split(r'(?<=[.!?])\s+', text)
-            fallback = " ".join(sentences[:5]) if len(sentences) > 0 else text[:400]
-            if len(fallback) > 800: fallback = fallback[:800] + "..."
-            
-            # More descriptive error
-            e_str = str(e).lower()
-            if "mps" in e_str or "memory" in e_str or "oom" in e_str:
-                error_type = "Hardware limit"
-            elif "task" in e_str or "keyerror" in e_str:
-                error_type = "Model task error"
-            else:
-                error_type = "General error"
-                
-            return {
-                "summary": f"[{error_type}] {fallback}", 
-                "metrics": {"compression_ratio": 0.0, "error": f"{type(e).__name__}: {str(e)}"}
-            }
+            print(f"Summary error: {e}")
+            return {"summary": text[:200] + "...", "metrics": {"compression_ratio": 0.0}}
 
     def generate_takeaways(self, text: str, num_bullets: int = 5) -> List[str]:
         """ Extracts specific, important takeaways as bullet points. """
@@ -378,64 +287,39 @@ class Summarizer:
         # Split text into segments and summarize each to get diverse points
         sentences = re.split(r'(?<=[.!?])\s+', text)
         if len(sentences) < 10:
-            return [s for s in sentences if len(s.split()) > 5][:num_bullets]
+            short_takeaways = [s.strip() for s in sentences if len(s.split()) > 5]
+            # Fix artifacts
+            short_takeaways = [_fix_tokenization_artifacts(s) for s in short_takeaways]
+            # Filter redundancy
+            return _filter_redundant_sentences(short_takeaways)[:num_bullets]
         
         # Group sentences into chunks
         chunk_size = max(1, len(sentences) // num_bullets)
+        takeaways: List[str] = []
         
-        # Extract more key points for robustness
-        top_points = []
-        max_points = 5 # Increased from 3
-        
-        # Use chunks if document was long, else extract from whole text
-        clean_text = _sanitize_input(text)
-        sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+|\n+', clean_text) if s.strip()]
-        chunks = []
-        current_chunk = ""
-        current_len = 0
-        
-        # Re-chunking logic similar to summarize, but for takeaways
-        # Smaller takeaway_chunk_size (150) allows more diverse points to be extracted
-        takeaway_chunk_size = 150 # words
-        for sentence in sentences:
-            sentence = str(sentence).strip()
-            if not sentence: continue
-            sentence_len = len(sentence.split())
-            if current_len + sentence_len < takeaway_chunk_size:
-                current_chunk += " " + sentence
-                current_len += sentence_len
-            else:
-                if current_chunk:
-                    chunks.append(current_chunk.strip())
-                current_chunk = sentence
-                current_len = sentence_len
-        if current_chunk:
-            chunks.append(current_chunk.strip())
-
-        source_for_points = chunks if chunks else [clean_text]
-        for chunk in source_for_points:
-            if len(chunk.split()) < 20: # Skip very short chunks
-                continue
+        for i in range(0, len(sentences), chunk_size):
+            chunk = " ".join(sentences[i:i + chunk_size])
+            if len(chunk.split()) < 20: continue
+            
             try:
-                inputs = self.tokenizer([chunk], return_tensors="pt", max_length=1024, truncation=True).to(self.device)
-                
-                ids = self.model.generate(
-                    inputs["input_ids"], 
-                    max_length=50, 
-                    min_length=15, 
-                    num_beams=4,
-                    length_penalty=1.5 # Increased for more descriptive points
-                )
+                inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+                # Generate very short summary for this chunk
+                ids = self.model.generate(inputs["input_ids"], max_length=40, min_length=10, num_beams=2)
                 point = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
-                if len(point) > 20 and point not in top_points:
-                    top_points.append(point)
-                if len(top_points) >= max_points:
-                    break
-            except Exception as e:
-                print(f"Error generating takeaway from chunk: {e}")
-                continue
                 
-        return top_points[:num_bullets]
+                # Fix artifacts and clean up
+                point = _fix_tokenization_artifacts(point)
+                
+                if point and point not in takeaways:
+                    takeaways.append(point)
+            except:
+                continue
+            
+            if len(takeaways) >= num_bullets:
+                break
+        
+        # Final redundancy filter to ensure diverse points
+        return _filter_redundant_sentences(takeaways)
 
 if __name__ == "__main__":
     # Quick test
