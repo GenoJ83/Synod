@@ -4,7 +4,7 @@
 **Synod** is an advanced NLP-based assistant designed to streamline the analysis of university lecture materials. The system helps both lecturers and students by automatically extracting key concepts, generating concise summaries, and producing high-quality revision questions from slides and documents.
 
 ## Group Details
-- **Group Members:** Geno Joshua, Mokili Promise Pierre, Pouch Mabor Makuei, Calvin Diego
+- **Group Members:** Geno Joshua, Mokili Promise Pierre, Pouch Mabor Makuei, Calvin Diego, Ssendi Aloysious
 - **Course:** Natural Language Processing and Text Analytics
 - **Project Duration:** 8 Weeks (Starting Feb 10, 2026)
 
