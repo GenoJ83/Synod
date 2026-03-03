@@ -107,7 +107,7 @@ def calculate_coverage_score(summary: str, original: str) -> float:
     if not o_words:
         return 0.0
     overlap = len(s_words & o_words)
-    return round(overlap / len(s_words), 3) if s_words else 0.0
+    return round(float(overlap / len(s_words)), 3) if s_words else 0.0
 
 class Summarizer:
     def __init__(self, model_name: str = "sshleifer/distilbart-cnn-12-6"):
@@ -175,7 +175,7 @@ class Summarizer:
             return {
                 "summary": summary,
                 "metrics": {
-                    "compression_ratio": round(len(summary.split()) / max(1, len(text.split())), 3)
+                    "compression_ratio": round(float(len(summary.split()) / max(1, len(text.split()))), 3)
                 }
             }
 
@@ -275,7 +275,7 @@ class Summarizer:
                 "summary": summary,
                 "takeaways": takeaways,
                 "metrics": {
-                    "compression_ratio": round(compression_ratio, 3),
+                    "compression_ratio": round(float(compression_ratio), 3),
                     "coverage_score": coverage_score
                 }
             }

@@ -195,15 +195,22 @@ class ExtractorService:
 
     @staticmethod
     def _extract_from_pptx(file_path: str) -> str:
+        """Extract text from PowerPoint file, handling GroupShape and other complex shapes."""
         text = ""
         prs = Presentation(file_path)
         for slide in prs.slides:
             for shape in slide.shapes:
-                if hasattr(shape, "text"):
-                    text += (shape.text or "") + "\n"
+                # Handle different shape types - GroupShape doesn't have 'text' attribute
+                try:
+                    if hasattr(shape, "text") and shape.text:
+                        text += str(shape.text) + "\n"
+                except (AttributeError, TypeError):
+                    # Skip shapes that can't be read (e.g., GroupShape, embedded objects)
+                    pass
         return text
 
     @staticmethod
     def _extract_from_txt(file_path: str) -> str:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             return f.read()
+
