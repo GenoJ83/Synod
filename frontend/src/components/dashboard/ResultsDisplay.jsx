@@ -95,7 +95,10 @@ function ResultsDisplay({ result, startQuiz }) {
                         {result.explanations.concepts.map((conceptObj, idx) => (
                             <div key={idx} className="bg-app-bg/50 border border-app-border/50 rounded-lg p-5 hover:border-purple-500/30 transition-colors">
                                 <h4 className="text-purple-400 font-bold capitalize mb-2">{conceptObj.term}</h4>
-                                <p className="text-app-muted text-sm leading-relaxed">{conceptObj.reason}</p>
+                                <p className="text-app-fg text-sm leading-relaxed mb-2"><span className="font-bold text-app-muted">Definition:</span> {conceptObj.definition}</p>
+                                {conceptObj.context && (
+                                    <p className="text-app-muted text-sm leading-relaxed italic border-l-2 border-purple-500/20 pl-3"><span className="font-bold not-italic">Context:</span> {conceptObj.context}</p>
+                                )}
                             </div>
                         ))}
                     </div>

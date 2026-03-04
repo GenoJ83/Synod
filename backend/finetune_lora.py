@@ -24,10 +24,10 @@ def train():
     peft_config = LoraConfig(
         task_type=TaskType.SEQ_2_SEQ_LM, 
         inference_mode=False, 
-        r=32, 
-        lora_alpha=64, 
-        lora_dropout=0.1,
-        target_modules=["q_proj", "v_proj"] # Target attention layers
+        r=64, 
+        lora_alpha=128, 
+        lora_dropout=0.05,
+        target_modules=["q_proj", "k_proj", "v_proj", "out_proj", "fc1", "fc2"] # Target more linear layers
     )
     
     model = get_peft_model(model, peft_config)

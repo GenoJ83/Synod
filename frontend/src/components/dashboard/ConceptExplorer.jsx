@@ -83,9 +83,13 @@ function ConceptExplorer({
                     </div>
 
                     <p className="text-sm text-app-fg leading-relaxed mb-4">
-                        {result.explanations.concepts.find(c => c.term === selectedConcept)?.reason ||
-                            result.explanations.global}
+                        <span className="font-bold">Definition:</span> {result.explanations.concepts.find(c => c.term === selectedConcept)?.definition || result.explanations.global}
                     </p>
+                    {result.explanations.concepts.find(c => c.term === selectedConcept)?.context && (
+                        <p className="text-sm text-app-fg leading-relaxed mb-4 italic border-l-2 border-blue-500/30 pl-3">
+                            <span className="font-bold not-italic">In Context:</span> {result.explanations.concepts.find(c => c.term === selectedConcept)?.context}
+                        </p>
+                    )}
 
                     {/* Related Concepts */}
                     <div className="pt-3 border-t border-blue-500/20">
