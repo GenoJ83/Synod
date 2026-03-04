@@ -37,7 +37,7 @@ def build_summarization_dataset() -> list:
     # --- 1. XSum (BBC: short abstractive summaries, ~1 sentence) ---
     print(f"[xsum] Loading {SUMMATION_LIMIT} samples...")
     try:
-        ds = load_dataset("EdinburghNLP/xsum", split=f"train[:{SUMMATION_LIMIT}]", trust_remote_code=True)
+        ds = load_dataset("EdinburghNLP/xsum", split=f"train[:{SUMMATION_LIMIT}]")
         for item in ds:
             text = clean_text(item["document"])
             summary = item["summary"].strip()
@@ -51,7 +51,7 @@ def build_summarization_dataset() -> list:
     print(f"[billsum] Loading {SUMMATION_LIMIT} samples...")
     before = len(pairs)
     try:
-        ds = load_dataset("billsum", split=f"train[:{SUMMATION_LIMIT}]", trust_remote_code=True)
+        ds = load_dataset("billsum", split=f"train[:{SUMMATION_LIMIT}]")
         for item in ds:
             text = clean_text(item["text"])
             summary = item["summary"].strip()
@@ -65,7 +65,7 @@ def build_summarization_dataset() -> list:
     print(f"[cnn_dailymail] Loading {SUMMATION_LIMIT} samples...")
     before = len(pairs)
     try:
-        ds = load_dataset("abisee/cnn_dailymail", "3.0.0", split=f"train[:{SUMMATION_LIMIT}]", trust_remote_code=True)
+        ds = load_dataset("abisee/cnn_dailymail", "3.0.0", split=f"train[:{SUMMATION_LIMIT}]")
         for item in ds:
             text = clean_text(item["article"])
             # Highlights are newline-separated bullet points — join them
@@ -98,7 +98,7 @@ def build_concept_dataset() -> list:
     # --- 1. midas/inspec (scientific keyphrases from engineering/CS abstracts) ---
     print(f"[midas/inspec] Loading {CONCEPT_LIMIT} samples...")
     try:
-        ds = load_dataset("midas/inspec", "raw", split=f"train[:{CONCEPT_LIMIT}]", trust_remote_code=True)
+        ds = load_dataset("midas/inspec", "raw", split=f"train[:{CONCEPT_LIMIT}]")
         positives = []
         for item in ds:
             text = " ".join(item["document"]) if isinstance(item["document"], list) else item["document"]
