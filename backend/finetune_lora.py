@@ -59,7 +59,7 @@ def train():
         per_device_train_batch_size=1,
         gradient_accumulation_steps=16,
         learning_rate=2e-4,
-        num_train_epochs=3,
+        num_train_epochs=10,
         logging_steps=10,
         eval_strategy="no",
         save_strategy="epoch",
