@@ -12,7 +12,8 @@ from peft import LoraConfig, get_peft_model, TaskType
 
 # Configuration
 MODEL_NAME = "sshleifer/distilbart-cnn-12-6"
-DATA_PATH = "training_data/final_training_set.json"
+RICH_DATA_PATH = "training_data/rich_summarization.json"   # Preferred — built by build_rich_dataset.py
+FALLBACK_DATA_PATH = "training_data/final_training_set.json"  # Legacy fallback
 OUTPUT_DIR = "trained_models/summarizer_lora"
 
 def train():
@@ -33,11 +34,32 @@ def train():
     model = get_peft_model(model, peft_config)
     model.print_trainable_parameters()
     
-    # Load Data
+    # Load Data — prefer the rich dataset, merge with legacy if both exist
     import json
-    with open(DATA_PATH, 'r') as f:
-        data = json.load(f)
-    
+
+    def _load_json(path):
+        with open(path, 'r') as f:
+            return json.load(f)
+
+    rich_exists    = os.path.exists(RICH_DATA_PATH)
+    legacy_exists  = os.path.exists(FALLBACK_DATA_PATH)
+
+    if rich_exists and legacy_exists:
+        print(f"Loading rich dataset + legacy dataset (merged)...")
+        rich_data   = _load_json(RICH_DATA_PATH)
+        legacy_data = [d for d in _load_json(FALLBACK_DATA_PATH) if len(d.get('summary','').split()) > 8]
+        data = rich_data + legacy_data
+    elif rich_exists:
+        print(f"Loading rich dataset: {RICH_DATA_PATH}")
+        data = _load_json(RICH_DATA_PATH)
+    elif legacy_exists:
+        print(f"Rich dataset not found. Falling back to: {FALLBACK_DATA_PATH}")
+        print("  → Run 'python3 build_rich_dataset.py' once to build the rich dataset.")
+        data = _load_json(FALLBACK_DATA_PATH)
+    else:
+        raise FileNotFoundError("No training data found. Run build_rich_dataset.py first.")
+
+    print(f"Total training samples: {len(data)}")
     dataset = Dataset.from_list(data)
     
     def preprocess_function(examples):

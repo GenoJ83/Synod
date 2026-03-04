@@ -344,19 +344,28 @@ class ModelTrainer:
             ], label=0.0),
         ]
         
-        # Load augmented data if available
+        # Load rich concept dataset (built by build_rich_dataset.py) if available
+        rich_concept_path = "training_data/rich_concepts.json"
         augmented_path = "training_data/concepts_augmented.json"
-        if os.path.exists(augmented_path):
-            with open(augmented_path, 'r') as f:
-                augmented_data = json.load(f)
-                for item in augmented_data:
+        
+        loaded = 0
+        for path in [rich_concept_path, augmented_path]:
+            if os.path.exists(path):
+                with open(path, 'r') as f:
+                    concept_data = json.load(f)
+                for item in concept_data:
                     train_examples.append(InputExample(texts=[item["text"], item["concept"]], label=item["label"]))
-            print(f"Loaded {len(train_examples)} concept pairs (including augmented data).")
+                loaded += len(concept_data)
+                print(f"Loaded {len(concept_data)} concept pairs from {path}")
+        
+        if loaded > 0:
+            print(f"Total concept training examples (including base): {len(train_examples)}")
+        else:
+            print("No external concept data found. Using base examples only. Run build_rich_dataset.py.")
         
         if use_external:
-            print("Skipping external concept data (e.g., midas/inspec) as script-free Parquet versions are not available.")
-            print("Relying entirely on high-quality local augmented concept pairs.")
-            pass
+            print("Note: External concept data is now handled via build_rich_dataset.py (midas/inspec).")
+
         
         # Create data loader
         train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=4)
