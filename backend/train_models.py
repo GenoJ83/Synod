@@ -455,7 +455,7 @@ def main():
         results.append(extractor_result)
         
         print("\n>>> PHASE 2: Fine-Tuning (Local Lecture Data)")
-        extractor_result = trainer.train_concept_extractor(epochs=5, use_external=False)
+        extractor_result = trainer.train_concept_extractor(epochs=10, use_external=False)
         results.append(extractor_result)
     except Exception as e:
         print(f"Error training concept extractor: {e}")
