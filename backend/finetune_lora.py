@@ -6,7 +6,8 @@ from transformers import (
     AutoTokenizer, 
     TrainingArguments, 
     Trainer, 
-    DataCollatorForSeq2Seq
+    DataCollatorForSeq2Seq,
+    EarlyStoppingCallback
 )
 from peft import LoraConfig, get_peft_model, TaskType
 
@@ -79,25 +80,29 @@ def train():
     training_args = TrainingArguments(
         output_dir=OUTPUT_DIR,
         per_device_train_batch_size=1,
-        gradient_accumulation_steps=16,
-        learning_rate=2e-4,
-        num_train_epochs=15,
-        logging_steps=10,
-        eval_strategy="no",
+        gradient_accumulation_steps=32, # Higher accumulation for stability
+        learning_rate=5e-5, # Much lower LR
+        num_train_epochs=10,
+        logging_steps=5,
+        eval_strategy="epoch", # Changed to epoch for early stopping
         save_strategy="epoch",
         fp16=False, # Mac MPS doesn't support fp16 training well in transformers yet
         push_to_hub=False,
-        report_to="none"
+        report_to="none",
+        load_best_model_at_end=True, # Added for early stopping
+        metric_for_best_model="loss" # Added for early stopping
     )
     
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=tokenized_dataset,
-        data_collator=DataCollatorForSeq2Seq(tokenizer, model=model)
+        eval_dataset=tokenized_dataset, # Added for early stopping
+        data_collator=DataCollatorForSeq2Seq(tokenizer, model=model),
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=3)] # Added early stopping callback
     )
     
-    print("Starting training on MPS...")
+    print("Starting stable training on MPS...")
     # Transformers Trainer handles device placement automatically
     trainer.train()
     

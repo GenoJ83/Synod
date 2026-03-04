@@ -1,4 +1,5 @@
 import re
+import os
 try:
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
     import torch
@@ -129,6 +130,18 @@ class Summarizer:
                     self.tokenizer = AutoTokenizer.from_pretrained(model_name)
                     self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
                 
+                # Load PEFT Adapter if exists
+                adapter_path = os.path.join("trained_models", "summarizer_lora", "final_adapter")
+                if os.path.exists(adapter_path):
+                    try:
+                        from peft import PeftModel
+                        print(f"Loading LoRA adapter from {adapter_path}...")
+                        self.model = PeftModel.from_pretrained(self.model, adapter_path)
+                    except ImportError:
+                        print("PEFT not installed. Skipping adapter loading.")
+                    except Exception as pe:
+                        print(f"Failed to load adapter: {pe}")
+
                 # Device detection: CUDA -> MPS -> CPU
                 if torch.cuda.is_available():
                     self.device = "cuda"
@@ -214,7 +227,15 @@ class Summarizer:
             if len(chunks) <= 1:
                 # Single pass for short documents
                 inputs = self.tokenizer([clean_text], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-                summary_ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=target_max, min_length=target_min, early_stopping=True)
+                summary_ids = self.model.generate(
+                    input_ids=inputs["input_ids"], 
+                    num_beams=4, 
+                    max_length=target_max, 
+                    min_length=target_min, 
+                    repetition_penalty=1.2,
+                    no_repeat_ngram_size=3,
+                    early_stopping=True
+                )
                 summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
             else:
                 # 1. First Pass: Process chunks separately
@@ -228,7 +249,15 @@ class Summarizer:
                     if chunk_wc < 40: continue
                     
                     inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-                    ids = self.model.generate(inputs["input_ids"], num_beams=4, max_length=c_max, min_length=c_min, early_stopping=True)
+                    ids = self.model.generate(
+                        input_ids=inputs["input_ids"], 
+                        num_beams=4, 
+                        max_length=c_max, 
+                        min_length=c_min, 
+                        repetition_penalty=1.1, # Slightly lower for chunks to maintain flow
+                        no_repeat_ngram_size=3,
+                        early_stopping=True
+                    )
                     chunk_summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
                     chunk_summaries.append(chunk_summary)
                 
@@ -248,11 +277,13 @@ class Summarizer:
                     inputs = self.tokenizer([synthesis_input], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
                     # Higher length_penalty favors longer, more detailed summaries
                     ids = self.model.generate(
-                        inputs["input_ids"], 
+                        input_ids=inputs["input_ids"], 
                         num_beams=6, 
                         max_length=final_max, 
                         min_length=final_min, 
                         length_penalty=2.5,
+                        repetition_penalty=1.2,
+                        no_repeat_ngram_size=3,
                         early_stopping=True
                     )
                     summary = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
