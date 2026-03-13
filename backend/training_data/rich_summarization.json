@@ -5980,172 +5980,8 @@
     "summary": "State Department report: Taliban military, technical capabilities stronger . Taliban called a determined threat to Afghan stability . Funding comes from Pakistan supporters, narcotics trafficking, abductions . Number of terror attacks increased from 969 in 2006 to 1,127 last year ."
   },
   {
-    "text": "Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
-    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
-  },
-  {
-    "text": "Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
-    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
-  },
-  {
-    "text": "Back to page Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
-    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
-  },
-  {
-    "text": "Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
-    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
-  },
-  {
-    "text": "Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
-    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
-  },
-  {
-    "text": "Back to page Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
-    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
-  },
-  {
-    "text": "Data preprocessing is a crucial step to prepare raw data for modeling. It includes cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downstream machine learning tasks.",
-    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
-  },
-  {
-    "text": "Data preprocessing is a crucial step to prepare raw data for modeling. modeling. modeling. It includes cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downstream machine learning tasks.",
-    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
-  },
-  {
-    "text": "Slide 1 of 12 Data preprocessing is a crucial step to prepare raw data for modeling. It includes cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downs- tream machine learning tasks.",
-    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
-  },
-  {
-    "text": "Data preprocessing is a crucial step to prepare raw data for modeling. It includes cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downstream machine learning tasks.",
-    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
-  },
-  {
-    "text": "Data preprocessing is a crucial step to prepare raw data for modeling. It includes cleaning cleaning cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downstream machine learning tasks.",
-    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
-  },
-  {
-    "text": "P.O. Box 4, Mukono Data preprocessing is a crucial step to prepare raw data for modeling. It includes cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downstream machine learning tasks.",
-    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
-  },
-  {
-    "text": "Clean code is software that is easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
-    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
-  },
-  {
-    "text": "Clean code is software that is easy easy easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
-    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
-  },
-  {
-    "text": "arXiv:2308.12345v1 [cs.CL] Clean code is software that is easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, functions, functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
-    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
-  },
-  {
-    "text": "Clean code is software that is easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
-    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
-  },
-  {
-    "text": "arXiv:2308.12345v1 [cs.CL] Clean code is software that is easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
-    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
-  },
-  {
-    "text": "Clean code is software that is easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
-    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
-  },
-  {
-    "text": "The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model uses multi-head attention to attend to information from different representation subspaces at different positions.",
-    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
-  },
-  {
-    "text": "Back to page The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model uses multi-head attention to attend to information from different representation subspaces at different positions.",
-    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
-  },
-  {
-    "text": "The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model uses multi-head attention to attend to information from different representation subspaces at different positions.",
-    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
-  },
-  {
-    "text": "arXiv:2308.12345v1 [cs.CL] The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model uses multi-head attention to attend to information from different representation subspaces at different positions.",
-    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
-  },
-  {
-    "text": "arXiv:2308.12345v1 [cs.CL] The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model model model uses multi-head attention to attend to information from different representation subspaces at different positions.",
-    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
-  },
-  {
-    "text": "arXiv:2308.12345v1 [cs.CL] The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model uses multi-head attention to attend to information from different representation subspaces at different positions.",
-    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
-  },
-  {
-    "text": "Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neurons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in images or semantic patterns in text.",
-    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
-  },
-  {
-    "text": "Back to page Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neurons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in images or semantic patterns in text.",
-    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
-  },
-  {
-    "text": "Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neur- ons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in images or semantic patterns in text.",
-    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
-  },
-  {
-    "text": "Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neurons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many many many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in images or semantic patterns in text.",
-    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
-  },
-  {
-    "text": "Slide 1 of 12 Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neurons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in images or semantic patterns in text.",
-    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
-  },
-  {
-    "text": "Back to page Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neurons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in in in images or semantic patterns in text.",
-    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
-  },
-  {
-    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
-    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
-  },
-  {
-    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
-    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
-  },
-  {
-    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
-    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
-  },
-  {
-    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
-    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
-  },
-  {
-    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
-    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
-  },
-  {
-    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
-    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
-  },
-  {
-    "text": "Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use filters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
-    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
-  },
-  {
-    "text": "Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use filters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
-    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
-  },
-  {
-    "text": "Slide 1 of 12 Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use fil- ters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
-    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
-  },
-  {
-    "text": "Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use filters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
-    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
-  },
-  {
-    "text": "Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use filters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers layers layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
-    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
-  },
-  {
-    "text": "Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use filters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
-    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
+    "text": "Dr. Daphne Nyachaki Bitalo Department of Computing & Technology Faculty of Engineering, Design & Technology DSC3108: Big Data Mining and Analytics Lecture 01 (BSCS_3:1) Fri 6th Sept 2024 COURSE OVERVIEW",
+    "summary": "Topic: Fundamentals of Big Data"
   },
   {
     "text": "Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
@@ -6314,5 +6150,589 @@
   {
     "text": "Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use filters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
     "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
+  },
+  {
+    "text": "Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
+    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
+  },
+  {
+    "text": "Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
+    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
+  },
+  {
+    "text": "Back to page Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
+    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
+  },
+  {
+    "text": "Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
+    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
+  },
+  {
+    "text": "Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
+    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
+  },
+  {
+    "text": "Back to page Big Data refers to massive datasets characterized by Volume, Velocity, Variety, and Veracity. Volume describes the sheer scale of information, Velocity the speed of generation, Variety the diverse formats, and Veracity the data quality. These attributes necessitate advanced distributed computing architectures like Hadoop and Spark for effective processing and insights.",
+    "summary": "## Summary: Big Data Fundamentals\n* **Definition**: Extremely large datasets exceeding traditional processing limits, defined by the 4Vs: Volume, Velocity, Variety, and Veracity.\n* **Objective**: Leveraging heterogeneous data to support decision-making and drive innovations across domains like health, smart cities, and robotics.\n* **Tools**: Uses frameworks like Hadoop (HDFS/MapReduce) and Spark for scalable, distributed analytics."
+  },
+  {
+    "text": "Data preprocessing is a crucial step to prepare raw data for modeling. It includes cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downstream machine learning tasks.",
+    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
+  },
+  {
+    "text": "Data preprocessing is a crucial step to prepare raw data for modeling. modeling. modeling. It includes cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downstream machine learning tasks.",
+    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
+  },
+  {
+    "text": "Slide 1 of 12 Data preprocessing is a crucial step to prepare raw data for modeling. It includes cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downs- tream machine learning tasks.",
+    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
+  },
+  {
+    "text": "Data preprocessing is a crucial step to prepare raw data for modeling. It includes cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downstream machine learning tasks.",
+    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
+  },
+  {
+    "text": "Data preprocessing is a crucial step to prepare raw data for modeling. It includes cleaning cleaning cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downstream machine learning tasks.",
+    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
+  },
+  {
+    "text": "P.O. Box 4, Mukono Data preprocessing is a crucial step to prepare raw data for modeling. It includes cleaning (handling missing values and noise), integration (merging datasets), transformation (normalization and feature engineering), and reduction (dimensionality reduction and sampling). This ensures the dataset is high-quality and computationally efficient for downstream machine learning tasks.",
+    "summary": "## Summary: Data Preprocessing\n* **Purpose**: Essential stage to transform raw data into a consistent, robust format suitable for predictive and descriptive modeling.\n* **Key Steps**:\n    1. **Cleaning**: Outlier removal and missing value imputation.\n    2. **Integration**: Standardizing formats and resolving duplicate entities.\n    3. **Transformation**: Normalization and creating engineered features.\n    4. **Reduction**: Optimizing feature sets via dimensionality reduction."
+  },
+  {
+    "text": "Clean code is software that is easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
+    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
+  },
+  {
+    "text": "Clean code is software that is easy easy easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
+    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
+  },
+  {
+    "text": "arXiv:2308.12345v1 [cs.CL] Clean code is software that is easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, functions, functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
+    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
+  },
+  {
+    "text": "Clean code is software that is easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
+    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
+  },
+  {
+    "text": "arXiv:2308.12345v1 [cs.CL] Clean code is software that is easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
+    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
+  },
+  {
+    "text": "Clean code is software that is easy to read and maintain. It avoids technical debt, which is the long-term cost of choosing quick, easy solutions over sustainable architecture. Principles include using meaningful names, creating small and focused functions, and ensuring that the internal structure is understandable for other developers, thus preventing software rot.",
+    "summary": "## Summary: Clean Coding Principles\n* **Core Concept**: Prioritizes readability and long-term maintainability over clever or complex implementations.\n* **Technical Debt**: The accumulated burden of quick fixes that eventually makes systems brittle and hard to change (software rot).\n* **Best Practices**: Focus on descriptive naming, function atomicity, and minimal complexity to ensure sustainable development."
+  },
+  {
+    "text": "The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model uses multi-head attention to attend to information from different representation subspaces at different positions.",
+    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
+  },
+  {
+    "text": "Back to page The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model uses multi-head attention to attend to information from different representation subspaces at different positions.",
+    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
+  },
+  {
+    "text": "The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model uses multi-head attention to attend to information from different representation subspaces at different positions.",
+    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
+  },
+  {
+    "text": "arXiv:2308.12345v1 [cs.CL] The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model uses multi-head attention to attend to information from different representation subspaces at different positions.",
+    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
+  },
+  {
+    "text": "arXiv:2308.12345v1 [cs.CL] The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model model model uses multi-head attention to attend to information from different representation subspaces at different positions.",
+    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
+  },
+  {
+    "text": "arXiv:2308.12345v1 [cs.CL] The Transformer architecture relies on the self-attention mechanism to compute representations of its input and output without using sequence-aligned RNNs or convolution. This allows for significantly more parallelization and has led to state-of-the-art results in tasks like translation and summarization. The model uses multi-head attention to attend to information from different representation subspaces at different positions.",
+    "summary": "## Summary: Transformer Architecture\n* **Key Innovation**: Self-attention mechanism that eliminates the need for recurrent or convolutional layers in sequence processing.\n* **Advantages**: Enables high degree of parallelization during training and superior performance on long-range dependencies.\n* **Core Components**: Multi-head attention (attending to multiple subspaces) and positional encodings to maintain sequence order."
+  },
+  {
+    "text": "Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neurons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in images or semantic patterns in text.",
+    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
+  },
+  {
+    "text": "Back to page Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neurons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in images or semantic patterns in text.",
+    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
+  },
+  {
+    "text": "Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neur- ons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in images or semantic patterns in text.",
+    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
+  },
+  {
+    "text": "Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neurons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many many many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in images or semantic patterns in text.",
+    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
+  },
+  {
+    "text": "Slide 1 of 12 Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neurons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in images or semantic patterns in text.",
+    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
+  },
+  {
+    "text": "Back to page Neural networks are inspired by the biological brain, consisting of layers of interconnected nodes or neurons. Each connection has a weight that is adjusted during training via backpropagation and gradient descent. Deep learning involves networks with many hidden layers, allowing the model to learn complex hierarchical features from raw data, such as edges in in in images or semantic patterns in text.",
+    "summary": "## Summary: Neural Networks & Deep Learning\n* **Structure**: Composed of input, hidden, and output layers where weights determine the strength of signal transmission between neurons.\n* **Training**: Uses backpropagation to calculate error gradients and gradient descent to iteratively update weights for loss minimization.\n* **Deep Learning**: Specialized subsets using deep architectures to automatically extract high-level features from unstructured datasets."
+  },
+  {
+    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
+    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
+  },
+  {
+    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
+    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
+  },
+  {
+    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
+    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
+  },
+  {
+    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
+    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
+  },
+  {
+    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
+    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
+  },
+  {
+    "text": "Large Language Models (LLMs) are trained on massive corpora of text to predict the next token in a sequence. Through this objective, they develop emergent capabilities like reasoning, coding, and translation. Fine-tuning techniques like RLHF (Reinforcement Learning from Human Feedback) or PEFT (Parameter-Efficient Fine-Tuning) are used to align these models with human instructions and specialized domains.",
+    "summary": "## Summary: Large Language Models (LLMs)\n* **Mechanism**: Statistical prediction models trained on global-scale datasets to master linguistic patterns and logical reasoning.\n* **Emergent Properties**: Capabilities beyond simple text prediction, including multi-step reasoning and complex problem solving.\n* **Alignment**: Processes like RLHF and LoRA (PEFT) ensure models follow specific instructions and maintain safety/utility across technical tasks."
+  },
+  {
+    "text": "Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use filters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
+    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
+  },
+  {
+    "text": "Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use filters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
+    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
+  },
+  {
+    "text": "Slide 1 of 12 Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use fil- ters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
+    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
+  },
+  {
+    "text": "Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use filters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
+    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
+  },
+  {
+    "text": "Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use filters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers layers layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
+    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
+  },
+  {
+    "text": "Convolutional Neural Networks (CNNs) are the benchmark for computer vision tasks. They use filters to perform convolution operations, capturing spatial hierarchies of features. Pooling layers reduce dimensionality while preserving important spatial information. CNNs are translation-invariant, meaning they can recognize objects regardless of their position in an image, making them ideal for classification and detection.",
+    "summary": "## Summary: Convolutional Neural Networks (CNNs)\n* **Application**: Primary architecture for image processing and spatial feature extraction.\n* **Key Layers**: Convolutional layers (feature detection via filters) and Pooling layers (spatial downsampling/reduction).\n* **Properties**: Translation invariance and hierarchical feature learning (from simple edges to complex object parts)."
+  },
+  {
+    "text": "1 1950s-1980s: Rule-Based MT Hand-crafted grammars and bilingual dictionaries dominated the landscape 2 1990s-2000s: Statistical MT Data-driven approaches using parallel corpora and probability models emerged 3 Mid-2010s: Neural MT Deep learning revolutionized translation with sequence-to-sequence architectures 4",
+    "summary": "The Evolution of Machine Translation"
+  },
+  {
+    "text": "SMT marked a fundamental shift from human-crafted rules to learning from data. Instead of encoding linguistic knowledge manually, these systems extracted translation patterns from parallel corpora\u2014large collections of documents professionally translated by humans. Sources included UN proceedings, Canadian Parliament records, and the European Parliament corpus, providing millions of sentence pairs for training.",
+    "summary": "The Paradigm Shift: 1990s-2000s"
+  },
+  {
+    "text": "SMT reframed translation as a decoding problem inspired by information theory. The model assumes the target language text was \"corrupted\" through a noisy channel into the source language. 1 Translation Model P(f|e) Ensures words are good matches for the source text 2 Language Model P(e) Ensures output sounds like natural human language 3",
+    "summary": "The Noisy Channel Model"
+  },
+  {
+    "text": "The encoder processes the source sentence sequentially, building up a representation that captures both the meaning of individual words and their relationships within the sentence.",
+    "summary": "The Encoder in Detail"
+  },
+  {
+    "text": "The decoder generates the target sentence autoregressively\u2014each word depends on all previously generated words. This creates fluent, coherent output that respects target language grammar.",
+    "summary": "The Decoder in Detail"
+  },
+  {
+    "text": "Consider translating English \"Red car\" to French \"Voiture rouge\" (literally \"Car red\"). English places adjectives before nouns, while French places them after. 1 Generate \"Voiture\" Attention focuses strongly on \"car\" in the source 2 Generate \"rouge\" Attention shifts to focus on \"red\" in the source The model learns this reordering pattern automatically from data, without any hand-written rules about adjective placement.",
+    "summary": "Attention: A Concrete Example"
+  },
+  {
+    "text": "Evaluating MT is notoriously difficult because there are many correct ways to translate any sentence. Automated metrics try to approximate human judgment by comparing machine output to reference translations. The industry standard is BLEU (Bilingual Evaluation Understudy), which measures n-gram overlap between candidate and reference translations.",
+    "summary": "The BLEU Score Challenge"
+  },
+  {
+    "text": "Idioms present one of the most difficult challenges for MT systems. Consider the English idiom \"kick the bucket,\" meaning to die. A literal translation to another language would describe striking a pail with one's foot\u2014completely missing the figurative meaning. Neural models must learn which phrases are idiomatic and find equivalent expressions in the target language, not word-for-word translations.",
+    "summary": "Challenge: Idioms and Figurative Language"
+  },
+  {
+    "text": "European institutions, web crawls, and commercial sources 100K English-Swahili Limited parallel data available, primarily religious texts and news 1K English-Luganda Extremely limited resources, researchstage only Approaches for Low-Resource MT",
+    "summary": "Parallel sentences available from"
+  },
+  {
+    "text": "TextRank applies PageRank-style graph algorithms to text. Each sentence becomes a node, and edges represent similarity between sentences based on word overlap.",
+    "summary": "TextRank Algorithm Deep Dive"
+  },
+  {
+    "text": "stable The algorithm iteratively updates sentence scores until convergence, with important sentences being those highly connected to other important sentences\u2014a recursive definition similar to PageRank for web pages.",
+    "summary": "Apply PageRankstyle updates until"
+  },
+  {
+    "text": "Gain hands-on experience with modern neural machine translation systems through experimentation with pre-trained models and analysis of their behavior. 1 Back-Translation Experiment Use googletrans or Hugging Face MarianMT to translate complex English sentences to French, then translate back to English. Analyze meaning preservation and idiom handling. 2 Pre-trained Model Demo Load Helsinki-NLP/opus-mt-en-fr from Hugging Face and experiment with various sentence types. Document strengths and failure modes.",
+    "summary": "Assignment 13: Exploring MT with APIs"
+  },
+  {
+    "text": "9 Cost function for the classification problem \ud835\udc41 \ud835\udc56=1 \ud835\udc3f= 1 \u2211\ud835\udc41 \ud835\udc3f\ud835\udc56(\ud835\udc53\ud835\udc65\ud835\udc56, \ud835\udf03, \ud835\udc66\ud835\udc56) , \ud835\udf03: \ud835\udc5a\ud835\udc5c\ud835\udc51\ud835\udc52\ud835\udc59\ud835\udc5d\ud835\udc4e\ud835\udc5f\ud835\udc4e\ud835\udc5a\ud835\udc52\ud835\udc61\ud835\udc52\ud835\udc5f\ud835\udc60 \ud835\udc56=1 \ud835\udc53\ud835\udc65\ud835\udc56, \ud835\udf03: \ud835\udc5d",
+    "summary": "Elements of Statistical Learning"
+  },
+  {
+    "text": "\u210e\ud835\udc4c= \ud835\udc66, \ud835\udc5d= \ud835\udc5d\ud835\udc66(1 \u2212 \ud835\udc5d)1\u2212\ud835\udc66 Likelihood = log \u220f\ud835\udc5b \u210e\ud835\udc4c= \ud835\udc66, \ud835\udc5d \ud835\udc56=1 = log \u220f\ud835\udc5b \ud835\udc5d\ud835\udc66(1 \u2212\ud835\udc5d)1\u2212\ud835\udc66 \ud835\udc66 \ud835\udc56=1 log(\ud835\udc5d 1 \u2212\ud835\udc5d)1\u2212\ud835\udc66 = \u2211\ud835\udc5b\ud835\udc56=1 ylog \ud835\udc5d 1 \u2212\ud835\udc66log(1 \u2212\ud835\udc5d) 1 Performance Measure & DL 10",
+    "summary": "Binary classification: Bernoulli Distribution"
+  },
+  {
+    "text": "Model performance should be measured on independent data set (test set) 1 Performance Measure & DL 15 Model Selection & Generalization Learning is an ill-posed problem; data is not sufficient to find a unique solution There is a trade-off between three factors (Dietterich, 2003) Complexity of \ud835\udc3b(hypothesis class), c (\ud835\udc3b) Training set size, N Generalization error, E, on new data",
+    "summary": "Generalizability: model is applicable to new data?"
+  },
+  {
+    "text": "Increasing the number of training examples Choose simple \ud835\udc3bOccam's Razor 16 1 Performance Measure & DL Occam's Razor 1 17 Performance Measure & DL",
+    "summary": "Decreasing the train error"
+  },
+  {
+    "text": "functions are added to neural networks, the gradients of the loss function approaches zero, making the network hard to train. 4",
+    "summary": "As more layers using certain activation"
+  },
+  {
+    "text": "1. Initialize trainable parameters (weight, bias) 2. Calculate the cost and its gradient at given parameters 3. Update parameters with the gradient and learning rate",
+    "summary": "In gradient descent algorithm"
+  },
+  {
+    "text": "\u2751Understand the characteristics, challenges, and opportunities of big data \u2751Learn about the big data architectures \u2751Learn about big data storage and management. \u2751Understand the principles of data pre-processing. By the end of this lecture, students should be able to: \u2751Have an understanding of the applications of big data. \u2751Use python libraries to manage and pre-process big data. A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "The Objectives of this lecture are :"
+  },
+  {
+    "text": "Data pre-processing Hands-on practical A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda What is Data?",
+    "summary": "Data storage and management"
+  },
+  {
+    "text": "facts that can be collected, analyzed, and interpreted. It can come in many different forms, such as text, numbers, images, audio, and video. For example, the number of hours spent studying for an exam, the temperature outside, or the number of likes on a social media . A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Data can be defined as any piece of"
+  },
+  {
+    "text": "A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Need for Data Science"
+  },
+  {
+    "text": "A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Need for Data Science"
+  },
+  {
+    "text": "\u25cfBig Data can bring \u201cbig values\u201d to our life in almost every aspect. \u25cfTechnologically, Big Data is bringing about changes in our lives because it allows diverse and heterogeneous data to be fully integrated and analyzed to help us make decisions. \u25cfToday, with the Big Data technology, thousands of data from seemingly unrelated areas can help support important decisions. This is the power of Big Data. A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Introduction to Big Data"
+  },
+  {
+    "text": "\u25cfBig Data refers to extremely large datasets that are difficult to process using traditional data processing applications and tools. These datasets are characterized by their volume, velocity, variety and veracity. \u25cfVolume: The sheer amount of data generated is massive. \u25cfVelocity: Data is generated at a high speed, often in real-time. \u25cfVariety: Data comes in various formats, including structured and unstructured data. \u25cfVeracity: Quality and robustness of data A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Introduction to Big Data"
+  },
+  {
+    "text": "A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Objectives of Big Data"
+  },
+  {
+    "text": "for Analytics Big data collection and transformation, integration and distributed data management and computing A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Big Data Computing: data center support"
+  },
+  {
+    "text": "for Science and Engineering Big Data and Multi-disciplines (Bio, Chemistry, Engineering, Social, Business) A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Big Data Science: 4th Paradigm \u2013 Analytics"
+  },
+  {
+    "text": "1.QUALITATIVE DATA (Non-Numerical): This is data that is descriptive in nature ie texts and is non numerical in nature. It is collected through surveys, questionnaires, interviews or observations, your social media posts. A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Two major categories of Data"
+  },
+  {
+    "text": "2. QUANTITATIVE DATA (Numerical) Consists of; i)Discrete: Takes on values that are typically whole numbers. For example; Number of people who visit a website each week, Total amount of transactions processed in a day. ii)Continuous: This is a type of numerical data that can take any value within a certain range, often with infinite possibilities for example; i)Average distance travelled by a moving car by which is constantly updated as the car continues to move.ii) Temperature measures as these keep varying according to the time.ii) Height measures of an individual A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Two major categories of Data"
+  },
+  {
+    "text": "All pieces of data that are collected have a feature or characteristic known as a data type that helps to identify the data whether it is a character, integer which is helpful in analytics. The different Data types. i)String: String data is treated as text composed of letters and numbers for example room number \"room 22\". ii)Integer: Consists of whole numbers or numbers that do not include decimals or fractions. For example 0, 1, 2, 3 A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Other types of Data"
+  },
+  {
+    "text": "iii) Floating point: Consists of numbers with decimals ie 1.2, 0.0003, -4.56 iv) Date and time: Stores an instant time that is expressed as a calendar date and time in the formats of 2001-03-15, YYYY-MM-DD, h:mm:s, 2001-03-15 11:24:09 v) Bolean: Data is treated as true or false and can be represented as \"yes\" or \"1\" (for true) and \"No\" or \"0\" ( for false). For example; 12 is greater than 10 = true. For example; Assume we have a database where we store employee details and a particular user Paul is not a manager this will eventually mean that; \" Paul is not a manager=yes\". A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Other types of Data"
+  },
+  {
+    "text": "and has clearly defined data types and patterns that make them easily stored and organized into columns and rows. This organization makes structured data easy to search and analyze. Sources of structured data include sales records, airline reservation systems, and inventory control. Structured data is usually stored in relational databases such as Structured Query Language (SQL) databases or in spreadsheets such as Microsoft Excel. A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "STRUCTURED DATA: Makes up about 10%-20% of generated data"
+  },
+  {
+    "text": "generated, about 80%, and cannot be organized into row and columns. This makes unstructured data difficult to search, manage, and analyze. Sources of unstructured data include images, PDFs, sensor data, and social media posts. Unstructured data is usually stored in a non-relational database also known as NoSQL Database. A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "UNSTRUCTURED DATA: Makes up most data that is"
+  },
+  {
+    "text": "From the top-down, we can see that UserID 1 refers to the customer Alice, who had two Order IDs of \u20181234\u2019 and \u20185678\u2019. Next, Alice had two ProductIDs of '765\u2019 and \u2018987\u2019. Finally, we can see Alice purchased two packages of potatoes and one package of dried spaghetti. A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda Structured Data vs. Unstructured Data A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Example of a Relational Database"
+  },
+  {
+    "text": "\u25cfStorage: Storing massive amounts of data requires efficient and scalable storage solutions. \u25cfProcessing: Processing large datasets can be computationally intensive and time-consuming. \u25cfAnalysis: Extracting meaningful insights from big data requires advanced analytics techniques/skills. \u25cfIntegration: Integrating data from multiple sources can be challenging due to inconsistencies and varying formats. \u25cfSecurity: Protecting sensitive data from unauthorized access is a major concern A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Challenges of Big Data"
+  },
+  {
+    "text": "\u25cfHadoop: A distributed computing framework for processing large datasets. \u25cfSpark: A fast and general-purpose cluster computing system. \u25cfNoSQL Databases: Databases designed to handle large-scale, unstructured data. \u25cfCloud Computing: Utilizing cloud-based infrastructure to store, process, and analyze big data. A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Tools for Big Data"
+  },
+  {
+    "text": "ETL (Extract, Transform, Load) processes A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda",
+    "summary": "Data warehousing and analytics"
+  },
+  {
+    "text": "A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda Data pre-processing using python",
+    "summary": "Key for predictive analysis"
+  },
+  {
+    "text": "\u25cfGenerate a dataset in excel with 8 variables/columns and call it Student_performance.xlsx \u25cf(Access_no, gender, age, course, DSC3108, DSC3114, MTH3108, SYE3104) \u25cfPopulate the rows with data that you will use in the practical A Complete Education for A Complete Person P.O. Box 4, Mukono, Uganda, Plot 67-173, Bishop Tucker Road, Mukono Hill | Tel: +256 (0) 312 350 800 Email: info@ucu.ac.ug Web: Founded by the Province of the Church of Uganda. Chartered by the Government of Uganda @ugandachristianuniversity @UCUniversity @UgandaChristianUniversity P.O. Box 4 Mukono, Uganda",
+    "summary": "PRACTICUM USING PANDAS AND NUMPY"
+  },
+  {
+    "text": "In professional software development, code is read far more often than it is written. While a programmer may write a piece of code once, that same code may be read, reviewed, debugged, extended, or refactored hundreds of times by different people over several years. Clean code is therefore not a matter of personal style; it is a professional responsibility. \u201cAny fool can write code that a computer can understand. Good programmers write code that humans can understand.\u201d \u2014 Martin Fowler. What Is Clean Code?",
+    "summary": "Introduction: Why Clean Code Matters"
+  },
+  {
+    "text": "Clean code communicates intent clearly, minimizes surprises, and reduces the cognitive effort required to understand how a system works. Why Clean Code Is a Core Part of Software Construction Clean code is central to software construction because software systems: Are built by teams, not individuals",
+    "summary": "Easy to maintain over time"
+  },
+  {
+    "text": "Google maintains billions of lines of code across thousands of repositories. Engineers are often required to modify code written by someone they have never met.",
+    "summary": "Industry Reality: Clean Code at Scale"
+  },
+  {
+    "text": "Naming, structure, and clarity are prioritized over cleverness At Google, a change may be rejected not because it is incorrect, but because it is hard to read or understand.",
+    "summary": "Code reviews are mandatory"
+  },
+  {
+    "text": "Bugs to be fixed safely without introducing new ones Many system failures historically traced back to poorly structured, tightly coupled code, not lack of technical skill.",
+    "summary": "Legacy systems to evolve"
+  },
+  {
+    "text": "Real-World Example Consider a variable named x. What does x represent? Why does it exist? What unit or meaning does it carry? A descriptive name (e.g., totalInvoiceAmount) removes ambiguity and reduces errors.",
+    "summary": "Cause bugs during maintenance"
+  },
+  {
+    "text": "A code smell is an indication that something may be wrong with the structure or design of the code. Code smells are not necessarily bugs, but they increase the risk of bugs.",
+    "summary": "Code Smells: Warning Signs in Software"
+  },
+  {
+    "text": "This week\u2019s concepts connect directly to: Refactoring (Week 8) Testing (Week 7) Modular design (Week 5) Team development (Week 10) Clean code is not a one-time activity; it is a continuous practice throughout the software lifecycle.",
+    "summary": "Relationship to the Course"
+  },
+  {
+    "text": "<7> Put Batch Normalization into your architecture \u2022 Let's normalize all activations in a batch to have N(0,1) \u2022 Motivation : Internal Covariate Shift? \u2013 Distribution of activations at the 1st epoch is severely different from that of the 10th epo ch, even though inputs are same. \u2013 This is due to the change in parameters during training. \u2013 In other words, if we normalize batch activations, then parameters do not fluctuate, thus r esulting in fast & stable training. \u2022 E.g. BN-x5 needs 14 times fewer steps than Inception to reach the 72.2% accuracy. Ioffe, Sergey, and Christian Szegedy. \"Batch normalization: Accelerating deep network training by reducing internal covariate shift.\" arXiv preprint arXiv:1 502.03167 (2015). 8",
+    "summary": "Step 1 : Build own architecture"
+  },
+  {
+    "text": "127.5 127.5 127.5 127.5 26 \u2022 i.e. simulating \u201cfake\u201d data \u2022 explicitly encoding image transform ations that shouldn\u2019t change object id entity.",
+    "summary": "Step 4 : Preprocess the data"
+  },
+  {
+    "text": "4. Color jittering (maybe even contrast jittering, etc.) - Simple: Change contrast small amounts, jitter the color distribut ions, etc. - Vignette,... (go crazy)",
+    "summary": "Step 4 : Preprocess the data"
+  },
+  {
+    "text": "Compute PCA on all [R,G,B] points values in the training data sample some color offset along the principal components at each forward pass add the offset to all pixels in a training image (As seen in [Krizhevsky et al.2012]) Run!! (Training) 33 Some slides from CS232n, Stanford University",
+    "summary": "Step 4 : Preprocess the data"
+  },
+  {
+    "text": "05 Transfer Learning + Hands-on \u201cThe process of adding each element of the image to its local neighbors, weighted by the kernel\u201d",
+    "summary": "CNN in Computer Vision"
+  },
+  {
+    "text": "3 1 ImageNet Large-Scale Visual Recognition Challenge (ILSVRC, 2010) Object Classification/localization problem 1.2M labeled images 1000 classes All winners since 2012 use deep learning technologies",
+    "summary": "CNN in Computer Vision"
+  },
+  {
+    "text": "1 5 Top-5 error is a common evaluation metric used in image classification tasks (such as the ImageNet competition shown in the table).",
+    "summary": "CNN in Computer Vision"
+  },
+  {
+    "text": "1 6 Meaning of Top-5 Top-5 predictions = the five classes with the highest probabilities predicted by the model. What Top-5 Error Means Top-5 error occurs when the correct class is NOT among the top 5 predictions. So:",
+    "summary": "CNN in Computer Vision"
+  },
+  {
+    "text": "Using 3x3 filter, instead of 11x11 or 7x7 filter 1 layer of 11x11 filter (AlexNet) 11x11 = 121 parameters 5 layer of 3x3 filter 3x3x5 = 45 parameters But, receptive field is almost same",
+    "summary": "Changes from ZFNet and AlexNet"
+  },
+  {
+    "text": "decreasing number of filters Inception module with dimension reduction using 1 x 1 convolution GoogLeNet (Inception Net) 2 GoogLeNet (Szegedy et al. CVPR2015) 9 inception modules 22 layers 1/12 parameters of AlexNet",
+    "summary": "Use 1 x 1 convolution"
+  },
+  {
+    "text": "Skip connection helps the gradient to back propagate Deep Residual Learning for Image Recognition paper by He et al. (2015) Residual Network (ResNet) 2 Residual Network (ResNet) 2 Residual Network (ResNet) 29 2 DenseNet & HarDNet Each layer is receiving a \u201ccollective knowledge\u201d from all preceding layers.",
+    "summary": "Easy for residual block to learn"
+  },
+  {
+    "text": "Digital marketing is the marketing done by digital technologies using the internet to market the products or services of a business and through any digital medium it is done. (or) The art of getting customers for a business via online is called digital marketing.",
+    "summary": "Introduction to Digital Marketing"
+  },
+  {
+    "text": "It helps you with personal branding. You can get a good job or become an entrepreneur. You can also help other companies as a consultant. You can use this knowledge to build your own business as marketing is the key for any business.",
+    "summary": "Opportunities in Digital marketing"
+  },
+  {
+    "text": "Digital marketing is a new field. Thousands of companies are looking for professionals in this field. There are no enough experts in the market. This is one of the highest paying jobs in the industry today. What to do if you are not interested to do job in Digital Marketing Start a side business and bring consistent income Video marketing, niche blogging etc. Consult clients on digital marketing strategies (charge per hour). Start a digital marketing agency. Who are eligible to learn Digital Marketing? Anyone can learn digital marketing. Subject of study doesn\u2019t matter. Tech or No Tech background, Doesn't matter",
+    "summary": "Job Opportunities in Digital marketing"
+  },
+  {
+    "text": "Search engine marketing (SEM) is a form of internet advertising utilizing search engine results to promote brands and websites. It is a paid media where advertisers bid of specific search keywords that when typed in, their ads are shown. Below given image shows the paid ads on search engine.",
+    "summary": "Topic 3: Search Engine Marketing"
+  },
+  {
+    "text": "PPC \u2013 Pay per click. CPC \u2013 Cost per click. CREATIVE \u2013 Heading and description of search ad. SERP \u2013 Search engine results page. CTR%\u2013 Click through rate (as a percentage). Impressions- The number of times your ad is shown. Google content Network\u2013 Display banner ads outside of google. Rank/position \u2013 The position your ad is shown when a keyword is searched. Quality Score\u2013 A ranking google gives your ad based on its CTR, relevance to the keyword and the landing page\u2019s relevance and other factors.",
+    "summary": "Topic 3: Search Engine Marketing"
+  },
+  {
+    "text": "Google dominates the search engine market share, averaging an 86\u201396% market share worldwide. Google's global search engine market share was 91.88% as of June 2022. Baidu reigns supreme in China with a 75.54% market share.",
+    "summary": "Search Engine Market Share"
+  },
+  {
+    "text": "The marketing that is done on social media platform such as Facebook, twitter, Instagram, linked-in. Facebook has 2.91 billion as of 2023. The potential reach of Facebook Ads is 2.11 billion users According to Hootsuite, this reach is 72.5% of their total 2.91 billion monthly active users. The largest Facebook audience in 2021 is men aged between 25 and 34, accounting for 19% of total potential reach. From the above-mentioned point, you can just imagine how important (SMM) in digital marketing. It can create a great impact on getting huge number of audiences to engage with the content you put in various posts about your business. Now a days it\u2019s very important to have social media presence for every business as many people are spending more time on Facebook, twitter etc. Facebook is the best platform for social media marketing as it is having more number of users. Cont.. Let\u2019s take Facebook as our SMM platform and learn how to do marketing Below mentioned are the steps to be considered to marketing on Facebook. Setting up a Facebook page. scheduling the content and content distribution. Engaging with audiences on Facebook. Advertising on Facebook. Measuring the advertising campaigns through analytics. Setting up a Facebook page. If you have a personal account then you will be having a create Facebook page option. You can create a Facebook page on the name of your business. You can add an image as profile picture which is having your business logo. You can give all the details",
+    "summary": "Topic 4: Social Media Marketing"
+  },
+  {
+    "text": "Most people use social media to distract themselves from their regular work and relax. Entertainment need not necessarily be fun or humorous. It could also include facts; stories pictures etc. which people can relate to or get excited about according their interests. content distribution.",
+    "summary": "EXCITE WITH THE CONTENT"
+  },
+  {
+    "text": "Millions of people post content on Facebook every day but only about 300 posts make it to each user\u2019s news feed. In such a cut-throat competition, a good post is one which can grab the audiences \u201cattention in the initial 2 or 3 seconds having an attention -grabbing headline is one such way. content distribution.",
+    "summary": "ENTERTAIN WITH THE CONTENT"
+  },
+  {
+    "text": "Providing only entertainment and no value to the audience may sometimes annoy them. It is thus judicious to combine entertainment with education. The content which receives high engagement rates even after long periods of posting it is known as evergreen content such content is highly valuable to a digital marketer. Such content may be posted multiple times to reach people in different time zones. Scheduling the content and content distribution. In content marketing you should post the content related to your business such as product information, useful tips, company news and photos and also company events which include staff. Scheduling the content in Facebook is very important. You should plan on what days in a week you distribute content so that you can post regularly according to the plan. While posting the content it is very important to give the URL of your \u2018LANDING PAGE\u2019 of your website .Landing page means the actual page of your website which your trying to promote or the page which consists of product purchase activities and important information or sign up form for a e-book or newsletter.",
+    "summary": "EDUCATE WITH THE CONTENT"
+  },
+  {
+    "text": "It doesn\u2019t matter how much content you post on Facebook it matters when you with your audiences via replies and assisting their queries. Some users comment on post, ask questions and some other message on messenger and some like your posts. It\u2019s your duty to say \u2018THANK YOU\u2019 if the post reaches highly and get huge response. Some email to the mail ID which you have provided on the page.",
+    "summary": "ENGAGING WITH AUDIENCES ON FACEBOOK"
+  },
+  {
+    "text": "Email marketing is sending emails to your subscribers regarding your products, promotional offers and other information related your business. Email marketing is permission-based marketing. You cannot send an email without the person permission by just collecting data or email ids. If a person subscribes to your website or blog or for any other product then only you can send emails. Email marketing has automation capabilities. There are many automation tools for email marketing among them top tools are MAILCHIMP, DRIP and AWEBER. These email marketing tools will deliver your emails in bulk to all the subscribers.",
+    "summary": "Topic 5: Email Marketing"
+  },
+  {
+    "text": "Create a subscriber option in your blog or website for a product like e course, eBook, newsletter where customers enter their email id\u2019s. Collect all the subscribers in the email marketing tool. So now all the email ids are in the tool. Email marketing tools has the automation techniques or the work flow designed by you as per the work flow the customers get emails in regular intervals. After a time gap the promotional mail will go to the customer according to the automated work flow. MEASURING THE EMAIL MARKETING CAMPAIGNS THROUGH ANALYTICS To measure the email marketing campaigns there is an analytics option in the tool where you can monitor. Metrics like CTR (Click through rate) and how many people have actually seen the email and how many people opened it are very useful insights to enhance your email marketing campaigns. Click through rate is the ratio of users who click on a link to the number of total users who view an email. For suppose 100 people viewed the email but only 20 people clicked on the link given in the email then the CTR is 20%. HOW EMAIL MARKETING IS USEFUL TO THE BUSINESS It gives valuable information to the customer through emails It increases sales in the business. It maintains relationship with the customers. Email marketing plays a major role in digital marketing. Marketers use it as a primary for business. Some business gets revenue through email marketing by increased sales. This is how the marketing through email works. HOW TO DO A/B TESTING IN E",
+    "summary": "STEPS TO FOLLOW TO DO EMAIL MARKETING"
+  },
+  {
+    "text": "Content marketing is defined as creating and distributing valuable and relevant content to attract the audiences. Content is in many forms. You can create and distribute content in the form of videos, images, blogging (blogs), eBooks, social media posts.",
+    "summary": "Topic 6: Content Marketing"
+  },
+  {
+    "text": "VIDEOS, IMAGES VIDEOS, IMAGES Video is one of the best forms that you can create content. You can create an exciting and engaging video related to your products and distribute it to blogs, social media etc. and market it to many targeted audiences.",
+    "summary": "Topic 6: Content Marketing"
+  },
+  {
+    "text": "Before you write content, you should know your niche(kingdom) especially which age they belong to. You should write content based on their interest, age, gender and many factors to consider. For instance, if you have a blog on muscle building or body building related topic. For those gym going youngsters are more interested. You can consider from age 20-35 years and write content which suits them. Likewise, for every topic you should write content based on segmentation which benefits your blog, eCommerce websites, social media pages etc. MEASURING SUCCESS IN CONTENT MARKETING THROUGH ANALYTICS You can measure your success in content marketing through analytics. For instance, if you write a blog post you can notice how many people read the post. Tools like google analytics for blog, Facebook analytics for social media posts. After getting insights you can improve your content marketing skills better.",
+    "summary": "WRITING CONTENT BASED ON SEGMENTATION"
+  },
+  {
+    "text": "Display advertising is defined as advertising on websites, mobile apps and social media through banners or the other ad format like images, text, video and audio. The main objective of display advertising is to promote the brand. In display advertising you should know who is an advertiser and who is a publisher",
+    "summary": "Topic 7: Display Advertising"
+  },
+  {
+    "text": "You are having a website and you want to display your ads on other websites to increase sales and traffic. Suppose you have film review blog and you want to increase your traffic through display advertising. First you need to make a list of publisher websites that you want to advertise on. In display advertising you can advertising on your product related websites like Book my show, PVR other movie ticket booking partners because your website or blog is related to films. Not only on product related websites but also you can advertise on websites where nothing is related. But first preference should be on related websites. Now you start looking for a display ad network where it shows some websites to advertise on and pay according to cost per click, cost per impressions. Thus, the display advertising is done.",
+    "summary": "ADVERTISING ON OTHER WEBSITES"
+  },
+  {
+    "text": "First a visitor checks into your website for some product and leaves without making a purchase. After leaving your website visitor goes into other site then your banner appears on that website this is called re marketing in display advertising. Re marketing increases the sales and brand name. Re marketing brings customers back.",
+    "summary": "RE MARKETING IN DISPLAY ADVERTISING"
+  },
+  {
+    "text": "Conversion rate optimization is an ongoing process of increasing the percentage of visitors to your website who will take an action such as filling a contact form or purchasing a product on your site. In CRO you can understand the visitor\u2019s journey on your site like how the visitor is moving on your site and what is that stopping the visitor to make an action.",
+    "summary": "Topic 8: Conversion rate optimization"
+  },
+  {
+    "text": "You can improve the conversion rate by understanding your customers better. Take the insights from your website traffic data and improve the user experience on your site. Designing the beautiful landing pages where the customer lands to perform the action. Improve the conversion rate by giving offers to the customers. Promote your landing page with different social media channels and increase conversions and conversion rate.",
+    "summary": "HOW TO IMPROVE CONVERSION RATE"
+  },
+  {
+    "text": "You can improve the conversion rate by understanding your customers better. Take the insights from your website traffic data and improve the user experience on your site. Designing the beautiful landing pages where the customer lands to perform the action. Improve the conversion rate by giving offers to the customers. Promote your landing page with different social media channels and increase conversions and conversion rate.",
+    "summary": "HOW TO IMPROVE CONVERSION RATE"
+  },
+  {
+    "text": "Tool that helps you to improve conversion rate. Lucky orange is a tool that gives you the total user experience on your site such as (recordings of your visitors on the site). By using this tool, you can understand what the visitor is looking in your site and where the visitor is moving along with these you can also know where the customer is facing difficulties. By using this tool, you can understand the customer and make changes in your site which suits to your visitors and improve the site experience which helps to increase your conversion rate. A/B TESTING TO IMPROVE YOUR CONVERSION RATE Design A landing page and B landing page using best landing page tool such as unbounce.com Set that A landing page will appear for 50% of the audience and B landing page for 50%. Check which has more conversions and click through rate and decide the winner. Make winner landing page to appear for 100% of your visitors. This is how the A/B Testing is done.",
+    "summary": "HOW TO IMPROVE CONVERSION RATE"
+  },
+  {
+    "text": "Metrics are quantitative measurements. It\u2019s a number (an average, Ratio) for example \u2013 How many visitors came to your website today is a metric. How many sessions happened today is also a metric? Dimensions are attributes of your data. Example- visitors they came from (location) is a dimension. They came from \u201cpairs\u201d (Paris is a dimension).",
+    "summary": "Metrics and Dimensions in Analytics"
+  },
+  {
+    "text": "Mobile marketing is a digital marketing strategy to reach target audience on their smartphones, tablets through websites, emails, SMS and MMS, social media and apps. In earlier days people used to use desktops for opening an email to visiting a website and reading content. Now this can be done on a small screen mobile phone. 95% of the internet users own a smart phone now-a-day. According to the google more than 50% of search queries throughout the globe come from mobile devices. In united states mobile platforms such as smartphones and tablets, host up to 60% of digital media time for users.",
+    "summary": "Topic 10: Mobile Marketing"
+  },
+  {
+    "text": "Mobile marketing is a digital marketing strategy to reach target audience on their smartphones, tablets through websites, emails, SMS and MMS, social media and apps. In earlier days people used to use desktops for opening an email to visiting a website and reading content. Now this can be done on a small screen mobile phone. 95% of the internet users own a smart phone now-a-day. According to the google more than 50% of search queries throughout the globe come from mobile devices. In united states mobile platforms such as smartphones and tablets, host up to 60% of digital media time for users. Mobile Marketing for email. Now -a -days most of the emails are opened on mobile platforms and most of them deleting it as the email isn\u2019t optimized for mobile. As most of them is engaging with email campaigns on mobile devices you should make sure to select a responsive design which is a strategy that automatically formats web page content for viewing on any device. Make sure you design email CTA (call to action) with mobile users in mind . Try to place CTA early in the message and make sure the button is easily tap-able for mobile users. And don\u2019t forget even if your emails are mobile friendly and click through takes to a landing page that isn\u2019t optimized for mobiles will be a frustrating situation to the users. You must connect landing pages to the emails which are mobile optimized andimages Mobile App for Mobile Marketing. Mobile apps are very supportive for business goals. They are ",
+    "summary": "Topic 10: Mobile Marketing"
+  },
+  {
+    "text": "Prediction. To be able to predict what the responses are going to be to future input variables; Information. To extract some information about how nature is associating the response variables to the input variables. There are two different approaches toward these goals:",
+    "summary": "There are two goals in analyzing the data:"
+  },
+  {
+    "text": "The analysis in this culture starts with assuming a stochastic data model for the inside of the black box. For example, a common data model is that data are generated by independent draws from response variables = f(predictor variables, random noise, parameters) Leo Breiman is Professor, Department of Statistics, University of California, Berkeley, California 947204735 (e-mail: leo@stat.berkeley.edu). The values of the parameters are estimated from the data and the model then used for information and/or prediction. Thus the black box is \ufb01lled in like this: y x linear regression logistic regression",
+    "summary": "The Data Modeling Culture"
+  },
+  {
+    "text": "The analysis in this culture considers the inside of the box complex and unknown. Their approach is to \ufb01nd a function fx\u2014an algorithm that operates on x to predict the responses y. Their black box looks like this: y x unknown decision trees neural nets Model validation. Measured by predictive accuracy. Estimated culture population. 2% of statisticians, many in other \ufb01elds. In this paper I will argue that the focus in the statistical community on data models has: \u2022 Led to irrelevant theory and questionable scienti\ufb01c conclusions; 199 200 L. BREIMAN \u2022 Kept statisticians from using more suitable algorithmic models; \u2022 Prevented statisticians from working on exciting new problems; I will also review some of the interesting new developments in algorithmic modeling in machine learning and look at applications to three data sets. 2. ROAD MAP It may be revealing to understand how I became a member of the small second culture. After a sevenyear stint as an academic probabilist, I resigned and went into full-time free-lance consulting. After thirteen years of consulting I joined the Berkeley Statistics Department in 1980 and have been there since. My experiences as a consultant formed my views about algorithmic modeling. Section 3 describes two of the projects I worked on. These are given to show how my views grew from such problems. When I returned to the university and began reading statistical journals, the research was distant from what I had done as a consultant. All articles begin ",
+    "summary": "The Algorithmic Modeling Culture"
+  },
+  {
+    "text": "Section 11 is titled \u201cInformation from a Black Box\u201d and is important in showing that an algorithmic model can produce more and more reliable information about the structure of the relationship between inputs and outputs than data models. This is illustrated using two medical data sets and a genetic data set. A glossary at the end of the paper explains terms that not all statisticians may be familiar with. 3. PROJECTS IN CONSULTING As a consultant I designed and helped supervise surveys for the Environmental Protection Agency (EPA) and the state and federal court systems. Controlled experiments were designed for the EPA, and I analyzed traf\ufb01c data for the U.S. Department of Transportation and the California Transportation Department. Most of all, I worked on a diverse set of prediction projects. Here are some examples: Predicting next-day ozone levels. Using mass spectra to identify halogen-containing compounds. Predicting the class of a ship from high altitude radar returns. Using sonar returns to predict the class of a submarine. Identity of hand-sent Morse Code. Toxicity of chemicals. On-line prediction of the cause of a freeway traf\ufb01c breakdown.",
+    "summary": "Bellman: dimensionality\u2014curse or blessing?"
+  },
+  {
+    "text": "201 daylight hour varying only a few percent from one weekday to another. With the total amount of emissions about constant, the resulting ozone levels depend on the meteorology of the preceding days. A large data base was assembled consisting of lower and upper air measurements at U.S. weather stations as far away as Oregon and Arizona, together with hourly readings of surface temperature, humidity, and wind speed at the dozens of air pollution stations in the Basin and nearby areas. Altogether, there were daily and hourly readings of over 450 meteorological variables for a period of seven years, with corresponding hourly values of ozone and other pollutants in the Basin. Let x be the predictor vector of meteorological variables on the nth day. There are more than 450 variables in x since information several days back is included. Let y be the ozone level on the n + 1st day. Then the problem was to construct a function fx such that for any future day and future predictor variables x for that day, fx is an accurate predictor of the next day\u2019s ozone level y. To estimate predictive accuracy, the \ufb01rst \ufb01ve years of data were used as the training set. The last two years were set aside as a test set. The algorithmic modeling methods available in the pre1980s decades seem primitive now. In this project large linear regressions were run, followed by variable selection. Quadratic terms in, and interactions among, the retained variables were added and variable selection used again to p",
+    "summary": "STATISTICAL MODELING: THE TWO CULTURES"
+  },
+  {
+    "text": "203 answer the question posed? Is inference justi\ufb01ed when your sample is the entire population? Should a data model be used? The de\ufb01ciencies in analysis occurred because the focus was on the model and not on the problem. The linear regression model led to many erroneous conclusions that appeared in journal articles waving the 5% signi\ufb01cance level without knowing whether the model \ufb01t the data. Nowadays, I think most statisticians will agree that this is a suspect way to arrive at conclusions. At the time, there were few objections from the statistical profession about the fairy-tale aspect of the procedure, But, hidden in an elementary textbook, Mosteller and Tukey (1977) discuss many of the fallacies possible in regression and write \u201cThe whole area of guided regression is fraught with intellectual, statistical, computational, and subject matter dif\ufb01culties.\u201d Even currently, there are only rare published critiques of the uncritical use of data models. One of the few is David Freedman, who examines the use of regression models (1994); the use of path models (1987) and data modeling (1991, 1995). The analysis in these papers is incisive. 5.2 Problems in Current Data Modeling Current applied practice is to check the data model \ufb01t using goodness-of-\ufb01t tests and residual analysis. At one point, some years ago, I set up a simulated regression problem in seven dimensions with a controlled amount of nonlinearity. Standard tests of goodness-of-\ufb01t did not reject linearity until the nonl",
+    "summary": "STATISTICAL MODELING: THE TWO CULTURES"
+  },
+  {
+    "text": "205 Perhaps the damaging consequence of the insistence on data models is that statisticians have ruled themselves out of some of the most interesting and challenging statistical problems that have arisen out of the rapidly increasing ability of computers to store and manipulate data. These problems are increasingly present in many \ufb01elds, both scienti\ufb01c and commercial, and solutions are being found by nonstatisticians. 7. ALGORITHMIC MODELING Under other names, algorithmic modeling has been used by industrial statisticians for decades. See, for instance, the delightful book \u201cFitting Equations to Data\u201d (Daniel and Wood, 1971). It has been used by psychometricians and social scientists. Reading a preprint of Gi\ufb01\u2019s book (1990) many years ago uncovered a kindred spirit. It has made small inroads into the analysis of medical data starting with Richard Olshen\u2019s work in the early 1980s. For further work, see Zhang and Singer (1999). Jerome Friedman and Grace Wahba have done pioneering work on the development of algorithmic methods. But the list of statisticians in the algorithmic modeling business is short, and applications to data are seldom seen in the journals. The development of algorithmic methods was taken up by a community outside statistics. 7.1 A New Research Community In the mid-1980s two powerful new algorithms for \ufb01tting data became available: neural nets and decision trees. A new research community using these tools sprang up. Their goal was predictive accuracy. The comm",
+    "summary": "STATISTICAL MODELING: THE TWO CULTURES"
+  },
+  {
+    "text": "which four people, from different vantage points, witness an incident in which one person dies and another is supposedly raped. When they come to testify in court, they all report the same facts, but their stories of what happened are very different. What I call the Rashomon Effect is that there is often a multitude of different descriptions [equations fx] in a class of functions giving about the same minimum error rate. The most easily understood example is subset selection in linear regression. Suppose there are 30 variables and we want to \ufb01nd the best \ufb01ve variable linear regressions. There are about 140,000 \ufb01ve-variable subsets in competition. Usually we pick the one with the lowest residual sum-of-squares (RSS), or, if there is a test set, the lowest test error. But there may be (and generally are) many \ufb01ve-variable equations that have RSS within 1.0% of the lowest RSS (see Breiman, 1996a). The same is true if test set error is being measured. So here are three possible pictures with RSS or test set error within 1.0% of each other:",
+    "summary": "Rashomon is a wonderful Japanese movie in"
+  },
+  {
+    "text": "209 class #2 are x2. If these two sets of vectors can be separated by a hyperplane then there is an optimal separating hyperplane. \u201cOptimal\u201d is de\ufb01ned as meaning that the distance of the hyperplane to any prediction vector is maximal (see below).",
+    "summary": "STATISTICAL MODELING: THE TWO CULTURES"
+  },
+  {
+    "text": "211 \u2013 1 0 0 1 0 2 0 3 0 4 0 5 0 percent increse in error 0 1 2 3 4 5 6 7 8 9 1 0 1 1 1 2 1 3 1 4 1 5 1 6 1 7 1 8 1 9 2 0 variables Fig. 2. Variable importance-random forest.",
+    "summary": "STATISTICAL MODELING: THE TWO CULTURES"
+  },
+  {
+    "text": "213 the misclassi\ufb01cation error rate is 28%. The variable importance given by random forests is in Figure 4. Blood tests 3 and 5 are the most important, followed by test 4. Random forests also outputs an intrinsic similarity measure which can be used to cluster. When this was applied, two clusters were discovered in class two. The average of each variable is computed and plotted in each of these clusters in Figure 5. An interesting facet emerges. The class two subjects consist of two distinct groups: those that have high scores on blood tests 3, 4, and 5 and those that have low scores on those tests. 11.3 Example III: Microarray Data Random forests was run on a microarray lymphoma data set with three classes, sample size of 81 and 4,682 variables (genes) without any variable selection [for more information about this data set, see Dudoit, Fridlyand and Speed, (2000)]. The error rate was low. What was also interesting from a scienti\ufb01c viewpoint was an estimate of the importance of each of the 4,682 gene expressions. The graph in Figure 6 was produced by a run of random forests. This result is consistent with assessments of variable importance made using other algorithmic methods, but appears to have sharper detail. 11.4 Remarks about the Examples The examples show that much information is available from an algorithmic model. Friedman Fig. 6. Microarray variable importance. (1999) derives similar variable information from a different way of constructing a forest. The similarity ",
+    "summary": "STATISTICAL MODELING: THE TWO CULTURES"
+  },
+  {
+    "text": "215 bagged predictor at x. In classi\ufb01cation, that class which has the plurality vote of the \u03c6kx is the bagged predictor. Bagging has been shown effective in variance reduction (Breiman, 1996b). Boosting. This is a more complex way of forming an ensemble of predictors in classi\ufb01cation than bagging (Freund and Schapire, 1996). It uses no randomization but proceeds by altering the weights on the training set. Its performance in terms of low prediction error is excellent (for details see Breiman, 1998).",
+    "summary": "STATISTICAL MODELING: THE TWO CULTURES"
+  },
+  {
+    "text": "formed in three decades of conversations with my old friend and collaborator, Jerome Friedman. Conversations with Richard Olshen about the Cox model and its use in biostatistics helped me to understand the background. I am also indebted to William Meisel, who headed some of the prediction projects I consulted on and helped me make the transition from probability theory to algorithms, and to Charles Stone for illuminating conversations about the nature of statistics and science. I\u2019m grateful also for the comments of the editor, Leon Gleser, which prompted a major rewrite of the \ufb01rst draft of this manuscript and resulted in a different and better paper.",
+    "summary": "Many of my ideas about data modeling were"
+  },
+  {
+    "text": "Explain the concept and scope of Software Construction within the software development lifecycle. Differentiate between programming and software construction using real-world examples. By the end of this lecture, students should be able to Clearly distinguish between programming and software construction in theory and practice. Explain why software systems must be designed for evolution and maintainability. Describe the role of professional tools such as GitHub in modern software construction. Demonstrate awareness of responsible AI use in understanding and working with code.",
+    "summary": "The Objectives of this lecture are :"
+  },
+  {
+    "text": "In real-world environments: Code Software is built by teams, not individuals Software is used for years, not weeks Software must adapt to changing requirements",
+    "summary": "Why Software Construction Matters"
+  },
+  {
+    "text": "states from all layers of the biLM, exposing deep internals for downstream tasks. Forward LSTM reads left-to-right, backward LSTM reads right-to-left.",
+    "summary": "Key Innovation: Combines internal"
+  },
+  {
+    "text": "document is a mixture of topics; each topic is a distribution over words. Uses Dirichlet priors and inference via Gibbs sampling or variational EM.",
+    "summary": "Latent Dirichlet Allocation: Each"
+  },
+  {
+    "text": "Bengio, Y., Courville, A., & Vincent, P. (2013). Representation learning: A review and new perspectives. IEEE transactions on pattern analysis and machine intelligence, 35(8), 1798-1828. 4",
+    "summary": "Linear Model is not Enough"
+  },
+  {
+    "text": "ANN wherein connections between nodes do not form a cycle If there is cycle, it is recurrent neural network (RNN) Consists of at least three layers of nodes with nonlinear activation functions 2",
+    "summary": "Feedforward artificial neural network"
   }
 ]
