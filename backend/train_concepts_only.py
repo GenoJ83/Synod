@@ -51,7 +51,7 @@ def train():
     print(f"Total concept training examples: {len(train_examples)}")
     
     # Create data loader
-    train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=16)
+    train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=8)
     
     # Use cosine similarity loss
     train_loss = losses.CosineSimilarityLoss(model)
