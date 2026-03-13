@@ -77,12 +77,17 @@ def build_summarization_dataset() -> list:
         print(f"[cnn_dailymail] Failed: {e}")
 
     # --- 4. Keep existing local fine-tuning data (domain-specific lecture content) ---
-    for local_file in ["training_data/final_training_set.json", "training_data/expert_augmented.json"]:
+    local_files = [
+        "training_data/final_training_set.json", 
+        "training_data/expert_augmented.json",
+        "training_data/summarization_lecture_notes.json"
+    ]
+    for local_file in local_files:
         if os.path.exists(local_file):
             with open(local_file) as f:
                 local_data = json.load(f)
-            # Only keep pairs with a meaningful summary (not just a header like "Hadoop" or "Use Cases:")
-            filtered = [d for d in local_data if d.get("summary") and len(d["summary"].split()) > 8]
+            # Filter pairs for quality
+            filtered = [d for d in local_data if d.get("summary") and len(d["summary"].split()) > 3]
             pairs.extend(filtered)
             print(f"[local] Added {len(filtered)} pairs from {local_file}")
 
@@ -128,12 +133,16 @@ def build_concept_dataset() -> list:
         print(f"[midas/inspec] Failed: {e}")
 
     # --- 2. Merge existing local concept data ---
-    local_concept = "training_data/concepts_augmented.json"
-    if os.path.exists(local_concept):
-        with open(local_concept) as f:
-            local_data = json.load(f)
-        samples.extend(local_data)
-        print(f"[local] Added {len(local_data)} concept pairs from {local_concept}")
+    local_paths = [
+        "training_data/concepts_augmented.json",
+        "training_data/concepts_lecture_notes.json"
+    ]
+    for local_concept in local_paths:
+        if os.path.exists(local_concept):
+            with open(local_concept) as f:
+                local_data = json.load(f)
+            samples.extend(local_data)
+            print(f"[local] Added {len(local_data)} concept pairs from {local_concept}")
 
     print(f"\nTotal concept samples: {len(samples)}")
     return samples
