@@ -355,5 +355,7 @@ if __name__ == "__main__":
     print(f"Fill-in-the-blanks ({len(fibs)} questions)")
     print(f"MCQs ({len(mcqs)} questions)")
     print(f"True/False ({len(tf)} questions)")
+    for q in tf[:4]:
+        print(f"  [{'T' if q['correct'] else 'F'}] {q['question']}")
     print(f"Comprehension ({len(comp)} questions)")
     print(f"\nTotal questions: {len(fibs) + len(mcqs) + len(tf) + len(comp)}")
