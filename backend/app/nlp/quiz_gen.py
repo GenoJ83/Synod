@@ -1,10 +1,12 @@
-import random
-from typing import List, Dict, Tuple
-import re
+import spacy
 
 class QuizGenerator:
     def __init__(self):
-        pass
+        try:
+            self.nlp = spacy.load("en_core_web_sm")
+        except:
+            # Fallback if model not downloaded
+            self.nlp = None
 
     def generate_fill_in_the_blanks(self, text: str, concepts: List[str]) -> List[Dict]:
         """
@@ -29,7 +31,7 @@ class QuizGenerator:
                         "answer": concept
                     })
         
-        return questions[:8]  # Reduce to make room for comprehension questions
+        return questions[:8]
 
     def generate_mcqs(self, text: str, concepts: List[str], all_concepts: List[str], extractor=None) -> List[Dict]:
         """Standard MCQ - mask a word in sentence with semantically relevant distractors"""
@@ -218,28 +220,28 @@ class QuizGenerator:
         return questions[:8]
 
     def _create_false_statement(self, sentence: str, concepts: List[str]) -> str:
-        """Create a false version of a statement for True/False questions."""
-        sentence_lower = sentence.lower()
+        """Create a semantically plausible false version of a statement."""
+        if self.nlp:
+            doc = self.nlp(sentence)
+            # Find the root verb or auxiliary to negate
+            for token in doc:
+                if (token.pos_ == "VERB" or token.pos_ == "AUX") and token.dep_ == "ROOT":
+                    # Simple negation: "is" -> "is not", "contains" -> "does not contain"
+                    if token.lemma_ == "be":
+                        # Find the next token to insert 'not' after
+                        return sentence[:token.idx + len(token.text)] + " not" + sentence[token.idx + len(token.text):]
+                    else:
+                        # For other verbs, use a simple heuristic for now
+                        # Better would be to use a proper NLG tool, but this is a step up
+                        neg = "does not " if token.tag_ == "VBZ" else "did not " if token.tag_ == "VBD" else "do not "
+                        return sentence[:token.idx] + neg + token.lemma_ + sentence[token.idx + len(token.text):]
         
-        # Try negating the sentence
-        negations = ["not ", "never ", "cannot "]
-        for neg in negations:
-            if neg not in sentence_lower:
-                # Add negation
-                words = sentence.split()
-                if len(words) > 3:
-                    insert_pos = len(words) // 2
-                    words.insert(insert_pos, neg)
-                    return " ".join(words)
-        
-        # Try swapping concepts
-        if len(concepts) >= 2:
-            concept1, concept2 = random.sample(concepts, 2)
-            if concept1.lower() in sentence_lower:
-                return sentence.replace(concept1, concept2, 1)
-            elif concept2.lower() in sentence_lower:
-                return sentence.replace(concept2, concept1, 1)
-        
+        # Fallback to simple negation if spaCy is missing or fails
+        words = sentence.split()
+        if len(words) > 3:
+            insert_pos = len(words) // 2
+            return " ".join(words[:insert_pos]) + " not " + " ".join(words[insert_pos:])
+
         return ""
 
     def _is_sentence_specific(self, sentence: str, concepts: List[str]) -> bool:
@@ -295,24 +297,32 @@ class QuizGenerator:
         return count
 
     def _statement_to_question(self, statement: str) -> str:
-        """Convert a statement to a question format."""
+        """Convert a statement to a clean TRUE/FALSE assertion format."""
         statement = statement.strip()
         if not statement:
             return ""
         
-        # Remove leading conjunctions
-        if statement.lower().startswith(('however', 'therefore', 'additionally', 'furthermore')):
-            parts = statement.split(' ', 1)
-            if len(parts) > 1:
-                statement = parts[1]
+        # Remove leading conjunctions or interrogative starts that make poor T/F questions
+        # This handles cases like "Why deep convolutional neural network is useful?" -> "Deep convolutional neural network is useful."
+        bad_starts = ('however', 'therefore', 'additionally', 'furthermore', 'why', 'how', 'when', 'what', 'which')
+        words = statement.split()
+        if words and words[0].lower().strip(".,!?;:\"'") in bad_starts:
+            if len(words) > 1:
+                # If first word is why/how/what, strip it and try to fix the remaining sentence
+                statement = " ".join(words[1:])
         
-        # Capitalize first letter
-        statement = statement[0].upper() + statement[1:] if statement else statement
+        # Capitalize and ensure it ends with a period for a T/F assertion
+        statement = statement.strip()
+        if not statement:
+            return ""
+            
+        statement = statement[0].upper() + statement[1:]
         
-        # Add question mark instead of period
-        if statement.endswith('.'):
-            statement = statement[:-1] + '?'
-        
+        if statement.endswith('?'):
+            statement = statement[:-1] + '.'
+        elif not statement.endswith('.'):
+            statement = statement + '.'
+            
         return statement
 
 
