@@ -118,11 +118,10 @@ def process_logic(text: str):
 
         # 3. Quiz generation from full text and concepts
         logger.info("Starting quiz generation...")
-        fibs = quiz_gen.generate_fill_in_the_blanks(text, concepts)
         mcqs = quiz_gen.generate_mcqs(text, concepts, concepts, extractor=extractor)
         true_false = quiz_gen.generate_true_false(text, concepts)
         comprehension = quiz_gen.generate_comprehension(text, concepts)
-        logger.info(f"Generated {len(fibs)} FIB, {len(mcqs)} MCQ, {len(true_false)} TF, {len(comprehension)} comprehension questions")
+        logger.info(f"Generated {len(mcqs)} MCQ (Unified), {len(true_false)} TF, {len(comprehension)} comprehension questions")
 
         # 4. Generate explanations for each concept (passing extractor for dynamic definitions)
         logger.info("Starting explanation generation...")
@@ -135,7 +134,7 @@ def process_logic(text: str):
             "concept_details": concept_data, 
             "takeaways": takeaways,
             "quiz": {
-                "fill_in_the_blanks": fibs,
+                "fill_in_the_blanks": [], # Deprecated
                 "mcqs": mcqs,
                 "true_false": true_false,
                 "comprehension": comprehension,
