@@ -8,33 +8,20 @@ class QuizGenerator:
         try:
             self.nlp = spacy.load("en_core_web_sm")
         except:
-            # Fallback if model not downloaded
             self.nlp = None
+        
+        # Fallback distractors for the general tech/NLP/AI domain
+        self.fallback_distractors = [
+            "Data preprocessing", "Hyperparameter tuning", "Loss function", 
+            "Backpropagation", "Gradient descent", "Feature engineering",
+            "Cross-validation", "Overfitting", "Stochastic process",
+            "Linear regression", "Dimensionality reduction", "Unsupervised learning"
+        ]
+        self.used_sentences = set()
 
     def generate_fill_in_the_blanks(self, text: str, concepts: List[str]) -> List[Dict]:
-        """
-        Generates fill-in-the-blank questions by masking concepts in the text.
-        """
-        questions: List[Dict] = []
-        sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
-        
-        for sentence in sentences:
-            sentence = sentence.strip()
-            if not self._is_sentence_specific(sentence, concepts):
-                continue
-            
-            for concept in concepts:
-                pattern = re.compile(re.escape(concept), re.IGNORECASE)
-                match = pattern.search(sentence)
-                if match:
-                    question_text = pattern.sub("__________", sentence)
-                    questions.append({
-                        "type": "fill-in-the-blank",
-                        "question": question_text.strip(),
-                        "answer": concept
-                    })
-        
-        return questions[:8]
+        """Deprecated in favor of unified generate_mcqs which provides distractors."""
+        return []
 
     def generate_mcqs(self, text: str, concepts: List[str], all_concepts: List[str], extractor=None) -> List[Dict]:
         """Standard MCQ - mask a word in sentence with semantically relevant distractors"""
