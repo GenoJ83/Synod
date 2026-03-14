@@ -340,6 +340,7 @@ if __name__ == "__main__":
     Tokenization breaks text into smaller units. Embeddings represent words as dense vectors. Sentiment analysis determines the emotional tone of text.
     Named entity recognition identifies specific entities in text. Text summarization creates shorter versions of documents.
     Question answering systems can extract answers from large documents. Language models predict the probability of word sequences.
+    Why deep convolutional neural network is useful? Because it preserves spatial integrity.
     """
     test_concepts = ["artificial intelligence", "machine learning", "neural networks", "deep learning", "computer vision", 
                     "speech recognition", "transformer", "attention", "tokenization", "embeddings", "sentiment analysis",
