@@ -24,56 +24,76 @@ class QuizGenerator:
         return []
 
     def generate_mcqs(self, text: str, concepts: List[str], all_concepts: List[str], extractor=None) -> List[Dict]:
-        """Standard MCQ - mask a word in sentence with semantically relevant distractors"""
+        """Enhanced MCQ generator - ensures 4 options and deduplicates sentences."""
         questions: List[Dict] = []
         sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
 
         for sentence in sentences:
             sentence = sentence.strip()
-            if not self._is_sentence_specific(sentence, concepts):
+            # Strict uniqueness check for sentences and quality check
+            if not self._is_sentence_specific(sentence, concepts) or sentence in self.used_sentences:
                 continue
                 
             matched_concepts = []
             for concept in concepts:
-                pattern = re.compile(re.escape(concept), re.IGNORECASE)
-                if pattern.search(sentence):
+                if concept.lower() in sentence.lower():
                     matched_concepts.append(concept)
             
-            for matched_concept in matched_concepts:
-                question_text = re.compile(re.escape(matched_concept), re.IGNORECASE).sub("__________", sentence)
-                
-                # Semantic Distractor Selection
-                distractors = []
-                other_candidates = [c for c in all_concepts if c.lower() != matched_concept.lower()]
-                
-                if extractor and extractor.has_deps and len(other_candidates) > 3:
-                    try:
-                        # Find distractors semantically similar to the answer
-                        from sentence_transformers import util
-                        ans_emb = extractor.model.encode([matched_concept], convert_to_tensor=True)
-                        cand_embs = extractor.model.encode(other_candidates, convert_to_tensor=True)
-                        scores = util.cos_sim(ans_emb, cand_embs).cpu().numpy().flatten()
-                        # Pick top 5 most similar but not identical
-                        top_indices = scores.argsort()[-5:][::-1]
-                        distractors = [other_candidates[i] for i in top_indices if other_candidates[i].lower() not in matched_concept.lower() and matched_concept.lower() not in other_candidates[i].lower()]
-                    except:
-                        distractors = random.sample(other_candidates, min(len(other_candidates), 3))
-                else:
-                    distractors = random.sample(other_candidates, min(len(other_candidates), 3))
+            if not matched_concepts:
+                continue
+            
+            # Pick the best concept (longest/most specific) if multiple match
+            best_concept = max(matched_concepts, key=len)
+            question_text = re.compile(re.escape(best_concept), re.IGNORECASE).sub("__________", sentence)
+            
+            # Semantic Distractor Selection
+            other_candidates = [c for c in all_concepts if c.lower() != best_concept.lower()]
+            distractors = []
+            
+            if extractor and extractor.has_deps and len(other_candidates) > 3:
+                try:
+                    from sentence_transformers import util
+                    ans_emb = extractor.model.encode([best_concept], convert_to_tensor=True)
+                    cand_embs = extractor.model.encode(other_candidates, convert_to_tensor=True)
+                    scores = util.cos_sim(ans_emb, cand_embs).cpu().numpy().flatten()
+                    # Filter out candidates that are too similar to the answer or contain it
+                    top_indices = scores.argsort()[-15:][::-1]
+                    distractors = [other_candidates[i] for i in top_indices 
+                                  if other_candidates[i].lower() not in best_concept.lower() 
+                                  and best_concept.lower() not in other_candidates[i].lower()][:3]
+                except:
+                    pass
 
-                if len(distractors) >= 2:
-                    options = distractors[:3]
-                    options.append(matched_concept)
-                    random.shuffle(options)
-                    
-                    questions.append({
-                        "type": "mcq",
-                        "question": question_text.strip(),
-                        "options": options,
-                        "answer": matched_concept
-                    })
+            # Fill up with random concepts if not enough semantic ones from the lecture
+            if len(distractors) < 3:
+                available = [c for c in other_candidates if c not in distractors]
+                needed = 3 - len(distractors)
+                if len(available) >= needed:
+                    distractors.extend(random.sample(available, needed))
+            
+            # Final fallback to generic domain distractors if still short (important for short lectures)
+            if len(distractors) < 3:
+                needed = 3 - len(distractors)
+                fallback = [d for d in self.fallback_distractors if d.lower() != best_concept.lower()]
+                distractors.extend(random.sample(fallback, min(len(fallback), needed)))
+
+            # Only add if we successfully got 3 distractors (total 4 options)
+            if len(distractors) >= 3:
+                # Record sentence use to prevent duplicates
+                self.used_sentences.add(sentence)
+                
+                options = distractors[:3]
+                options.append(best_concept)
+                random.shuffle(options)
+                
+                questions.append({
+                    "type": "mcq",
+                    "question": question_text.strip(),
+                    "options": options,
+                    "answer": best_concept
+                })
         
-        return questions[:8]
+        return questions[:12]
 
     def generate_true_false(self, text: str, concepts: List[str]) -> List[Dict]:
         """
@@ -342,6 +362,9 @@ if __name__ == "__main__":
     
     print(f"Fill-in-the-blanks ({len(fibs)} questions)")
     print(f"MCQs ({len(mcqs)} questions)")
+    for i, q in enumerate(mcqs[:3]):
+        print(f"  MCQ {i+1} Options: {len(q['options'])} - {q['options']}")
+    
     print(f"True/False ({len(tf)} questions)")
     for q in tf[:4]:
         print(f"  [{'T' if q['correct'] else 'F'}] {q['question']}")
