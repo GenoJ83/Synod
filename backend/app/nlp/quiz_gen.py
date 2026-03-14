@@ -1,3 +1,6 @@
+import random
+from typing import List, Dict, Tuple
+import re
 import spacy
 
 class QuizGenerator:
@@ -12,7 +15,7 @@ class QuizGenerator:
         """
         Generates fill-in-the-blank questions by masking concepts in the text.
         """
-        questions = []
+        questions: List[Dict] = []
         sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
         
         for sentence in sentences:
@@ -35,7 +38,7 @@ class QuizGenerator:
 
     def generate_mcqs(self, text: str, concepts: List[str], all_concepts: List[str], extractor=None) -> List[Dict]:
         """Standard MCQ - mask a word in sentence with semantically relevant distractors"""
-        questions = []
+        questions: List[Dict] = []
         sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
 
         for sentence in sentences:
@@ -90,7 +93,7 @@ class QuizGenerator:
         Generates True/False questions about the lecture content.
         Tests comprehension by presenting statements about the content.
         """
-        questions = []
+        questions: List[Dict] = []
         sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
         
         # Create statements from sentences - some true, some modified (false)
@@ -140,7 +143,7 @@ class QuizGenerator:
         """
         Generates comprehension questions that test understanding of concepts and relationships.
         """
-        questions = []
+        questions: List[Dict] = []
         sentences = re.split(r'(?<=[.!?])\s+|(?:\n\n|\n)', text)
         
         # Find sentences that describe relationships or processes
@@ -229,10 +232,10 @@ class QuizGenerator:
                     # Simple negation: "is" -> "is not", "contains" -> "does not contain"
                     if token.lemma_ == "be":
                         # Find the next token to insert 'not' after
-                        return sentence[:token.idx + len(token.text)] + " not" + sentence[token.idx + len(token.text):]
+                        idx = token.idx + len(token.text)
+                        return sentence[:idx] + " not" + sentence[idx:]
                     else:
                         # For other verbs, use a simple heuristic for now
-                        # Better would be to use a proper NLG tool, but this is a step up
                         neg = "does not " if token.tag_ == "VBZ" else "did not " if token.tag_ == "VBD" else "do not "
                         return sentence[:token.idx] + neg + token.lemma_ + sentence[token.idx + len(token.text):]
         
