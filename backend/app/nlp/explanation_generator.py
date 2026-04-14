@@ -1,5 +1,5 @@
 import re
-from typing import List, Dict
+from typing import List, Dict, Optional, Set
 from sentence_transformers import util
 
 # Rubric / assignment PDFs — not lecture definitions; blocks bad "context" blobs.
@@ -194,62 +194,82 @@ class ExplanationGenerator:
         if context_sentences:
             return " ".join(context_sentences[:2])
         return ""
-    
+
+    def generate_concept_detail(
+        self,
+        concept: str,
+        text: str,
+        extractor=None,
+        *,
+        reserved_context_sentences: Optional[Set[str]] = None,
+        reserve_chosen: bool = False,
+    ) -> Dict:
+        """
+        Definition + best lecture context for one concept.
+        When ``reserve_chosen`` is True, adds the chosen context sentence to ``reserved_context_sentences``
+        (for batch generation so each card gets a distinct context line when possible).
+        """
+        concept = (concept or "").strip()
+        if not concept:
+            return {"term": "", "definition": "", "context": ""}
+
+        reserved = reserved_context_sentences or set()
+        best_sent = ""
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+
+        if extractor and hasattr(extractor, "model"):
+            try:
+                concept_emb = extractor.model.encode([concept], convert_to_tensor=True)
+                sent_embs = extractor.model.encode(sentences, convert_to_tensor=True)
+                scores = util.cos_sim(concept_emb, sent_embs).cpu().numpy().flatten()
+                ranked_indices = scores.argsort()[::-1]
+
+                for idx in ranked_indices:
+                    sent = sentences[idx].strip()
+                    if scores[idx] < 0.34:
+                        break
+                    if sent in reserved:
+                        continue
+                    if _is_assignment_context_blob(sent):
+                        continue
+                    if len(sent.split()) >= 6 and not sent.isupper():
+                        best_sent = sent
+                        if reserve_chosen:
+                            reserved.add(sent)
+                        break
+            except Exception:
+                pass
+
+        if best_sent:
+            definition = self._get_general_explanation(concept, "Key term from the lecture.")
+            contextual_use = best_sent
+        else:
+            definition = self._get_general_explanation(
+                concept, "Key term identified based on semantic centrality."
+            )
+            contextual_use = ""
+
+        return {"term": concept, "definition": definition, "context": contextual_use}
+
     def generate_all_explanations(self, concepts: List[str], text: str, extractor=None) -> Dict:
         """Generate explanations for all concepts, ensuring contextual uniqueness."""
         explanations = {
             "global": "These foundational concepts are key to understanding the lecture material.",
-            "concepts": []
+            "concepts": [],
         }
-        
-        used_contexts = set()
-        sentences = re.split(r'(?<=[.!?])\s+', text)
-        
-        for concept in concepts:
-            # Custom logic to find a UNIQUE context for this concept
-            explanation = ""
-            best_sent = ""
-            
-            if extractor and hasattr(extractor, 'model'):
-                try:
-                    concept_emb = extractor.model.encode([concept], convert_to_tensor=True)
-                    sent_embs = extractor.model.encode(sentences, convert_to_tensor=True)
-                    scores = util.cos_sim(concept_emb, sent_embs).cpu().numpy().flatten()
-                    
-                    # Sort sentences by relevance
-                    ranked_indices = scores.argsort()[::-1]
-                    
-                    for idx in ranked_indices:
-                        sent = sentences[idx].strip()
-                        if scores[idx] < 0.34:
-                            break
-                        if sent in used_contexts:
-                            continue
-                        if _is_assignment_context_blob(sent):
-                            continue
 
-                        # Prefer real sentences over rubric fragments
-                        if len(sent.split()) >= 6 and not sent.isupper():
-                            best_sent = sent
-                            used_contexts.add(sent)
-                            break
-                except Exception:
-                    pass
-            
-            if best_sent:
-                # If we found context, we still want a general definition if possible
-                definition = self._get_general_explanation(concept, "Key term from the lecture.")
-                contextual_use = best_sent
-            else:
-                definition = self._get_general_explanation(concept, "Key term identified based on semantic centrality.")
-                contextual_use = ""
-            
-            explanations["concepts"].append({
-                "term": concept,
-                "definition": definition,
-                "context": contextual_use
-            })
-        
+        used_contexts: Set[str] = set()
+        for concept in concepts:
+            explanations["concepts"].append(
+                self.generate_concept_detail(
+                    concept,
+                    text,
+                    extractor,
+                    reserved_context_sentences=used_contexts,
+                    reserve_chosen=True,
+                )
+            )
+
         return explanations
 
 
