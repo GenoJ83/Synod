@@ -251,6 +251,57 @@ class ExplanationGenerator:
 
         return {"term": concept, "definition": definition, "context": contextual_use}
 
+    def gather_grounding_snippet(
+        self,
+        concept: str,
+        text: str,
+        extractor,
+        *,
+        max_chars: int = 14000,
+        max_sentences: int = 10,
+        min_score: float = 0.26,
+    ) -> str:
+        """
+        Concatenate the most relevant lecture sentences for external LLM grounding
+        (keeps prompts bounded and reduces hallucination vs. sending the full document).
+        """
+        concept = (concept or "").strip()
+        if not concept or not (text or "").strip():
+            return ""
+
+        sentences = re.split(r"(?<=[.!?])\s+", text)
+        if not sentences or not extractor or not hasattr(extractor, "model"):
+            return (text or "")[:max_chars]
+
+        try:
+            concept_emb = extractor.model.encode([concept], convert_to_tensor=True)
+            sent_embs = extractor.model.encode(sentences, convert_to_tensor=True)
+            scores = util.cos_sim(concept_emb, sent_embs).cpu().numpy().flatten()
+            ranked_indices = scores.argsort()[::-1]
+        except Exception:
+            return (text or "")[:max_chars]
+
+        parts: List[str] = []
+        total = 0
+        for idx in ranked_indices:
+            if len(parts) >= max_sentences:
+                break
+            if scores[idx] < min_score:
+                break
+            sent = sentences[int(idx)].strip()
+            if _is_assignment_context_blob(sent):
+                continue
+            if len(sent.split()) < 5:
+                continue
+            if total + len(sent) + 2 > max_chars:
+                break
+            parts.append(sent)
+            total += len(sent) + 2
+
+        if not parts:
+            return (text or "")[:max_chars]
+        return "\n\n".join(parts)
+
     def generate_all_explanations(self, concepts: List[str], text: str, extractor=None) -> Dict:
         """Generate explanations for all concepts, ensuring contextual uniqueness."""
         explanations = {

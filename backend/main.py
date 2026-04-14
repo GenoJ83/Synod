@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 import os
 import shutil
+import asyncio
 import uvicorn
 import logging
 import traceback
@@ -23,6 +24,7 @@ from app.nlp.summarizer import Summarizer
 from app.nlp.extractor import ConceptExtractor
 from app.nlp.quiz_gen import QuizGenerator
 from app.nlp.explanation_generator import ExplanationGenerator
+from app.nlp.gemini_concept_explain import _gemini_enabled, explain_concept_with_gemini
 from app.ingestion.extractor_service import ExtractorService
 from app.auth import router as auth_router
 
@@ -187,7 +189,22 @@ async def explain_concept(request: ExplainConceptRequest):
     if len(text) < 50:
         raise HTTPException(status_code=400, detail="Text must be at least 50 characters")
     try:
-        return explanation_gen.generate_concept_detail(concept, text, extractor=extractor)
+        baseline = explanation_gen.generate_concept_detail(concept, text, extractor=extractor)
+        if _gemini_enabled():
+            api_key = (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
+            snippet = explanation_gen.gather_grounding_snippet(concept, text, extractor)
+            if api_key and snippet.strip():
+
+                def _gemini_call():
+                    return explain_concept_with_gemini(
+                        concept=concept, snippet=snippet, api_key=api_key
+                    )
+
+                improved = await asyncio.to_thread(_gemini_call)
+                if improved and improved.get("definition"):
+                    logger.info("explain-concept: using Gemini for term=%r", concept[:48])
+                    return improved
+        return baseline
     except Exception as e:
         logger.error(f"Error in /explain-concept: {str(e)}")
         logger.error(traceback.format_exc())
