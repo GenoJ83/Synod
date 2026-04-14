@@ -103,8 +103,42 @@ def _clean_summary_output(text: str) -> str:
             continue
         out.append(p)
     if not out:
-        return s
+        # No `.?` splits (e.g. one long clause): treat whole string as one unit.
+        if len(s) >= 18 and not _is_slide_metadata_or_bibliography_unit(s):
+            return s
+        return ""
     return " ".join(out).strip()
+
+
+def _safe_clean_summary_output(text: str) -> str:
+    """Drop bad sentences; if one paragraph is entirely junk, try other paragraphs or strip the opener prefix."""
+    raw = (text or "").strip()
+    cleaned = _clean_summary_output(raw)
+    if cleaned.strip():
+        return cleaned
+    blocks = [b.strip() for b in raw.split("\n\n") if b.strip()]
+    kept = []
+    for b in blocks:
+        c = _clean_summary_output(b)
+        if c.strip():
+            kept.append(c.strip())
+    if kept:
+        return "\n\n".join(kept)
+    stripped = re.sub(
+        r"(?i)^this\s+lecture\s+introduces\s+main\s+themes\s+from\s+the\s+session:\s*",
+        "",
+        raw,
+    ).strip()
+    stripped = re.sub(
+        r"(?i)introduction\s+to\s+[^.!?\n]{3,120}\s+lecturer\s*:\s*.+$",
+        " ",
+        stripped,
+    )
+    stripped = re.sub(r"(?i)\blecturer\s*:\s*.+$", " ", stripped, flags=re.MULTILINE)
+    stripped = re.sub(r"\s+", " ", stripped).strip()
+    if stripped:
+        return stripped
+    return ""
 
 
 def _glitch_token_fraction(text: str, max_scan: int = 160) -> float:
@@ -789,10 +823,12 @@ class Summarizer:
         
         if not self.has_transformers:
             # Mock summary: just take the first few sentences
-            sentences = text.split(". ")
+            sentences = scrubbed.split(". ")
             summary = ExtractorService.normalize_pipeline_text(
-                _lecture_narrative_from_bart_and_source(
-                    ". ".join(sentences[:2]) + " (Mock Summary)", text
+                _safe_clean_summary_output(
+                    _lecture_narrative_from_bart_and_source(
+                        ". ".join(sentences[:2]) + " (Mock Summary)", scrubbed
+                    )
                 )
             )
             mock_take = self.generate_takeaways(scrubbed, num_bullets=7, extractor=extractor)
@@ -912,10 +948,14 @@ class Summarizer:
                 )
                 fb_summary, fb_takeaways = _extractive_fallback_summary(scrubbed)
                 summary = ExtractorService.normalize_pipeline_text(
-                    _clean_summary_output(
+                    _safe_clean_summary_output(
                         _lecture_narrative_from_bart_and_source(fb_summary, scrubbed)
                     )
                 )
+                if not summary.strip():
+                    summary = ExtractorService.normalize_pipeline_text(
+                        _balance_two_paragraphs(re.sub(r"\s+", " ", fb_summary))
+                    )
                 takeaways = fb_takeaways or self.generate_takeaways(
                     scrubbed, num_bullets=7, extractor=extractor
                 )
@@ -934,10 +974,15 @@ class Summarizer:
                 return result
 
             summary = ExtractorService.normalize_pipeline_text(
-                _clean_summary_output(
+                _safe_clean_summary_output(
                     _lecture_narrative_from_bart_and_source(summary, scrubbed)
                 )
             )
+            if not summary.strip():
+                fb_summary, _ = _extractive_fallback_summary(scrubbed, max_chars=2800)
+                summary = ExtractorService.normalize_pipeline_text(
+                    _balance_two_paragraphs(re.sub(r"\s+", " ", fb_summary))
+                )
 
             # Simple compression metric
             compression_ratio = len(summary.split()) / max(1, len(text.split()))

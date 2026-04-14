@@ -60,6 +60,13 @@ class ExtractorService:
         t = _URL_INLINE.sub(" ", t)
         t = re.sub(r"\*?\s*Wikipedia\*?", " ", t, flags=re.IGNORECASE)
         t = re.sub(r"(?:\s*The instructor\s*){2,}", " The instructor ", t, flags=re.IGNORECASE)
+        # Title slide + lecturer row (OCR / pasted decks) — strip so summarizer and quizzes see less noise.
+        t = re.sub(
+            r"(?i)\s*introduction\s+to\s+[^.\n]{3,120}\s+lecturer\s*:\s*[^\n]+",
+            " ",
+            t,
+        )
+        t = re.sub(r"(?i)\s+lecturer\s*:\s*[^\n]+", " ", t)
         t = re.sub(r"[ \t]+", " ", t)
         t = re.sub(r"\s+\.\s+", ". ", t)
         t = re.sub(r"\s*\.\s*\.", ".", t)
