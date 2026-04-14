@@ -34,7 +34,37 @@ _JUNK_PATTERNS = [
     re.compile(r"^\s*[\W_]+\s*$", re.IGNORECASE), # Purely non-alphanumeric lines
 ]
 
+# Emails and "First Last, Ph.D (…)" lines in pasted decks / model echoes
+_EMAIL_ANYWHERE = re.compile(
+    r"\(?\s*[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\s*\)?"
+)
+_NAME_PHD_ATTRIB = re.compile(
+    r"\b(?:[A-Z][a-z]+\s+){1,3}[A-Z][a-z]+,\s*Ph\.D\s*(?:\([^)]{0,120}\))?\s*",
+    re.UNICODE,
+)
+_URL_INLINE = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
+
+
 class ExtractorService:
+    @staticmethod
+    def normalize_pipeline_text(text: str) -> str:
+        """
+        Remove lecturer attribution and emails from pasted or extracted text (and from summaries).
+        Keeps course content; replaces name+Ph.D with neutral 'The instructor'.
+        """
+        if not text or not str(text).strip():
+            return text
+        t = str(text)
+        t = _EMAIL_ANYWHERE.sub(" ", t)
+        t = _NAME_PHD_ATTRIB.sub("The instructor ", t)
+        t = _URL_INLINE.sub(" ", t)
+        t = re.sub(r"\*?\s*Wikipedia\*?", " ", t, flags=re.IGNORECASE)
+        t = re.sub(r"(?:\s*The instructor\s*){2,}", " The instructor ", t, flags=re.IGNORECASE)
+        t = re.sub(r"[ \t]+", " ", t)
+        t = re.sub(r"\s+\.\s+", ". ", t)
+        t = re.sub(r"\s*\.\s*\.", ".", t)
+        return t.strip()
+
     @staticmethod
     def extract_text(file_path: str) -> str:
         ext = os.path.splitext(file_path)[1].lower()

@@ -1,6 +1,26 @@
 import React from 'react';
 import { CheckCircle2, Brain, BookOpen, Lightbulb } from 'lucide-react';
 
+/** Renders **markdown bold** in summary text (no full markdown engine). */
+function SummaryInlineText({ text }) {
+    const parts = String(text).split(/(\*\*[^*]+\*\*)/g);
+    return (
+        <>
+            {parts.map((part, i) => {
+                const m = part.match(/^\*\*([^*]+)\*\*$/);
+                if (m) {
+                    return (
+                        <strong key={i} className="font-semibold text-app-fg">
+                            {m[1]}
+                        </strong>
+                    );
+                }
+                return <React.Fragment key={i}>{part}</React.Fragment>;
+            })}
+        </>
+    );
+}
+
 function ResultsDisplay({ result, startQuiz }) {
     if (!result) return null;
 
@@ -20,7 +40,7 @@ function ResultsDisplay({ result, startQuiz }) {
                 <div className="space-y-4">
                     {result.summary.split('\n\n').map((paragraph, index) => (
                         <p key={index} className="text-app-fg text-lg leading-relaxed font-medium">
-                            {paragraph}
+                            <SummaryInlineText text={paragraph} />
                         </p>
                     ))}
                 </div>

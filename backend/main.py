@@ -95,11 +95,11 @@ def process_logic(text: str):
     if not text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be only whitespace")
     
-    # Validate minimum text length
-    if len(text.strip()) < 50:
+    text = ExtractorService.normalize_pipeline_text(text.strip())
+    if len(text) < 50:
         raise HTTPException(status_code=400, detail="Text must be at least 50 characters")
     
-    logger.info(f"Processing text of length: {len(text)} characters")
+    logger.info(f"Processing text of length: {len(text)} characters (after metadata scrub)")
     
     try:
         # 1. Summarization (now returns dict with summary, takeaways, and metrics)
