@@ -9,16 +9,23 @@ def run_pipeline(text: str):
     # Note: Using t5-small or similar for faster local testing if possible
     summarizer = Summarizer(model_name="t5-small")
     summary = summarizer.summarize(text)
+    if isinstance(summary, dict):
+        summary = summary.get("summary", "")
     print(f"Summary:\n{summary}\n")
     
     # 2. Concept Extraction
     extractor = ConceptExtractor()
-    concepts = extractor.extract_concepts(text)
+    concept_data = extractor.extract_concepts(text)
+    concepts = (
+        [c["term"] for c in concept_data]
+        if concept_data and isinstance(concept_data[0], dict)
+        else concept_data
+    )
     print(f"Extracted Concepts: {concepts}\n")
-    
+
     # 3. Quiz Generation
     qg = QuizGenerator()
-    fibs = qg.generate_fill_in_the_blanks(summary, concepts)
+    fibs = qg.generate_fill_in_the_blanks(summary, concepts, concepts)
     mcqs = qg.generate_mcqs(summary, concepts, concepts) # Simplified all_concepts for test
     
     print("Generated Quiz Questions:")

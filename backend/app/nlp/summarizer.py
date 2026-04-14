@@ -14,7 +14,7 @@ from typing import List, Optional, Tuple
 logger = logging.getLogger("app.nlp.summarizer")
 
 # Bumped when summary behavior changes so cache does not return old collapsed output.
-_SUMMARY_CACHE_SALT = "v7-longer-whole-doc-summary"
+_SUMMARY_CACHE_SALT = "v9-takeaway-semantic-guard"
 
 
 def _glitch_token_fraction(text: str, max_scan: int = 160) -> float:
@@ -83,7 +83,13 @@ def _extractive_fallback_summary(text: str, max_chars: int = 2000) -> Tuple[str,
     summary = " ".join(kept)
     if len(summary) > max_chars:
         summary = summary[: max_chars - 1] + "…"
-    takeaways = [x for x in kept[:6] if len(x.split()) >= 5][:5]
+    raw_take = [x for x in kept[:10] if len(x.split()) >= 8]
+    takeaways = []
+    for x in raw_take:
+        fin = _finalize_takeaway_sentence(x)
+        if fin:
+            takeaways.append(fin)
+    takeaways = _filter_redundant_sentences(takeaways)[:7]
     return summary, takeaways
 
 
@@ -202,7 +208,7 @@ def _line_ok_for_lecture_support(s: str) -> bool:
         return False
     words = t.split()
     n = len(words)
-    if n < 6 or n > 42:
+    if n < 5 or n > 42:
         return False
     tl = t.lower()
     if re.match(r"^\d{1,3}\s+the instructor\b", tl):
@@ -456,6 +462,101 @@ def _fix_repetition_artifacts(text: str) -> str:
     return " ".join(new_words)
 
 
+_INCOMPLETE_TAKEAWAY_TAIL = re.compile(
+    r"(?i)\s(to|from|and|or|for|with|of|in|at|by|as|on|via|the|a|an|is|are|will|may|can|should|that|which)\s*$"
+)
+
+
+def _takeaway_lexically_grounded(candidate: str, source: str, min_ratio: float = 0.62) -> bool:
+    """Reject abstractive bullets whose content words mostly do not appear in the source."""
+    c = set(re.findall(r"[a-z]{4,}", (candidate or "").lower()))
+    sset = set(re.findall(r"[a-z]{4,}", (source or "").lower()))
+    if not c:
+        return False
+    if len(c) < 6:
+        return len(c & sset) >= max(4, int(0.88 * len(c)))
+    return len(c & sset) / max(len(c), 1) >= min_ratio
+
+
+def _takeaway_semantically_close_to_source(
+    candidate: str, source: str, extractor, min_cos: float = 0.28
+) -> bool:
+    """Optional embedding gate: takeaway must align with document semantics."""
+    if not extractor or not getattr(extractor, "has_deps", False):
+        return True
+    try:
+        from sentence_transformers import util
+
+        c = (candidate or "").strip()[:480]
+        src = (source or "").strip()[:12000]
+        if len(c) < 20 or len(src) < 80:
+            return True
+        emb = extractor.model.encode([c, src], convert_to_tensor=True)
+        sim = float(util.cos_sim(emb[0:1], emb[1:2]).cpu().numpy().flatten()[0])
+        return sim >= min_cos
+    except Exception:
+        return True
+
+
+def _finalize_takeaway_sentence(s: str, min_words: int = 9, max_words: int = 52) -> Optional[str]:
+    """Keep only bullets that already end as real sentences; do not invent punctuation or trim semantics."""
+    s = re.sub(r"\s+", " ", (s or "").strip())
+    s = re.sub(r"\s+([.!?])", r"\1", s)
+    if len(s) < 40:
+        return None
+    s = re.sub(r"[-–—]{2,}\s*$", "", s).strip()
+
+    if s[-1] not in ".!?":
+        cut = max(s.rfind("."), s.rfind("!"), s.rfind("?"))
+        if cut >= 48:
+            s = s[: cut + 1].strip()
+        else:
+            return None
+
+    if _INCOMPLETE_TAKEAWAY_TAIL.search(s):
+        return None
+
+    words = s.split()
+    if len(words) < min_words:
+        return None
+    if len(words) > max_words:
+        s = " ".join(words[:max_words])
+        cut = max(s.rfind("."), s.rfind("!"), s.rfind("?"))
+        if cut >= 36:
+            s = s[: cut + 1].strip()
+        else:
+            return None
+
+    if s and s[0].isalpha() and s[0].islower():
+        s = s[0].upper() + s[1:]
+    return s
+
+
+def _takeaway_sentences_from_source(text: str, min_words: int = 10) -> List[str]:
+    """Prefer full declarative sentences from the document (complete thoughts)."""
+    text = (text or "").replace("\r\n", "\n").strip()
+    if not text:
+        return []
+    seen: set[str] = set()
+    good: List[str] = []
+    for para in re.split(r"\n\s*\n+", text):
+        para = para.strip()
+        if not para:
+            continue
+        for u in re.split(r"(?<=[.!?])\s+", para):
+            u = re.sub(r"\s+", " ", u.strip())
+            if len(u.split()) < min_words:
+                continue
+            if not u or u[-1] not in ".!?":
+                continue
+            k = u.lower()
+            if k in seen:
+                continue
+            seen.add(k)
+            good.append(u)
+    return good
+
+
 def _filter_redundant_sentences(sentences: List[str], overlap_threshold: float = 0.5) -> List[str]:
     """Remove sentences that overlap too much with previously kept ones.
     Lowered threshold (0.5) to keep more distinct information for robust summaries.
@@ -562,7 +663,13 @@ class Summarizer:
         else:
             print("Transformers not found. Running in MOCK mode.")
     
-    def summarize(self, text: str, max_length: int = 150, min_length: int = 40) -> dict:
+    def summarize(
+        self,
+        text: str,
+        max_length: int = 150,
+        min_length: int = 40,
+        extractor=None,
+    ) -> dict:
         """
         Summarizes the input text.
         """
@@ -588,11 +695,13 @@ class Summarizer:
                     ". ".join(sentences[:2]) + " (Mock Summary)", text
                 )
             )
+            mock_take = self.generate_takeaways(text, num_bullets=7, extractor=extractor)
             return {
                 "summary": summary,
+                "takeaways": mock_take,
                 "metrics": {
                     "compression_ratio": round(float(len(summary.split()) / max(1, len(text.split()))), 3)
-                }
+                },
             }
 
         try:
@@ -705,7 +814,9 @@ class Summarizer:
                 summary = ExtractorService.normalize_pipeline_text(
                     _lecture_narrative_from_bart_and_source(fb_summary, text)
                 )
-                takeaways = fb_takeaways or self.generate_takeaways(text)
+                takeaways = fb_takeaways or self.generate_takeaways(
+                    text, num_bullets=7, extractor=extractor
+                )
                 compression_ratio = len(summary.split()) / max(1, len(text.split()))
                 coverage_score = calculate_coverage_score(summary, text)
                 result = {
@@ -729,7 +840,7 @@ class Summarizer:
             coverage_score = calculate_coverage_score(summary, text)
             
             # Generate takeaways automatically for a complete result
-            takeaways = self.generate_takeaways(text)
+            takeaways = self.generate_takeaways(text, num_bullets=7, extractor=extractor)
             
             result = {
                 "summary": summary,
@@ -745,47 +856,85 @@ class Summarizer:
             print(f"Summary error: {e}")
             return {"summary": text[:200] + "...", "metrics": {"compression_ratio": 0.0}}
 
-    def generate_takeaways(self, text: str, num_bullets: int = 5) -> List[str]:
-        """ Extracts specific, important takeaways as bullet points. """
+    def generate_takeaways(
+        self, text: str, num_bullets: int = 7, extractor=None
+    ) -> List[str]:
+        """
+        Verbatim or tightly grounded bullets only: full source sentences first;
+        abstractive gap-fill only when lexically (and optionally embedding-) aligned with the document.
+        """
         if not self.has_transformers:
-            return ["Key point from the lecture (Mock)"]
-        
-        # Split text into segments and summarize each to get diverse points
-        sentences = re.split(r'(?<=[.!?])\s+', text)
-        if len(sentences) < 10:
-            short_takeaways = [s.strip() for s in sentences if len(s.split()) > 5]
-            # Fix artifacts
-            short_takeaways = [_fix_tokenization_artifacts(s) for s in short_takeaways]
-            # Filter redundancy
-            return _filter_redundant_sentences(short_takeaways)[:num_bullets]
-        
-        # Group sentences into chunks
-        chunk_size = max(1, len(sentences) // num_bullets)
-        takeaways: List[str] = []
-        
+            ext = _takeaway_sentences_from_source(text, min_words=8)
+            mock_take = [
+                x
+                for x in (
+                    _finalize_takeaway_sentence(_fix_tokenization_artifacts(s)) for s in ext
+                )
+                if x
+            ]
+            mock_take = _filter_redundant_sentences(mock_take)[:num_bullets]
+            return mock_take or ["Key point from the lecture (Mock)"]
+
+        ext = _takeaway_sentences_from_source(text, min_words=10)
+        ext = [_finalize_takeaway_sentence(_fix_tokenization_artifacts(x)) for x in ext]
+        ext = [x for x in ext if x and _takeaway_lexically_grounded(x, text, min_ratio=0.5)]
+        ext = _filter_redundant_sentences(ext)
+        out: List[str] = list(ext[:num_bullets])
+
+        if len(out) >= num_bullets:
+            return out[:num_bullets]
+
+        sentences = re.split(r"(?<=[.!?])\s+", text)
+        sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
+        need = num_bullets - len(out)
+        chunk_size = max(2, len(sentences) // max(need + 2, 4))
+
         for i in range(0, len(sentences), chunk_size):
-            chunk = " ".join(sentences[i:i + chunk_size])
-            if len(chunk.split()) < 20: continue
-            
-            try:
-                inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
-                # Generate very short summary for this chunk
-                ids = self.model.generate(inputs["input_ids"], max_length=40, min_length=10, num_beams=2)
-                point = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
-                
-                # Fix artifacts and clean up
-                point = _fix_tokenization_artifacts(point)
-                
-                if point and point not in takeaways:
-                    takeaways.append(point)
-            except:
-                continue
-            
-            if len(takeaways) >= num_bullets:
+            if len(out) >= num_bullets:
                 break
-        
-        # Final redundancy filter to ensure diverse points
-        return _filter_redundant_sentences(takeaways)
+            chunk = " ".join(sentences[i : i + chunk_size])
+            if len(chunk.split()) < 22:
+                continue
+            try:
+                inputs = self.tokenizer(
+                    [chunk], max_length=1024, return_tensors="pt", truncation=True
+                ).to(self.device)
+                ids = self.model.generate(
+                    inputs["input_ids"],
+                    max_length=88,
+                    min_length=26,
+                    num_beams=4,
+                    length_penalty=1.05,
+                    repetition_penalty=1.2,
+                    no_repeat_ngram_size=3,
+                    early_stopping=True,
+                )
+                point = self.tokenizer.decode(ids[0], skip_special_tokens=True).strip()
+                point = _fix_tokenization_artifacts(point)
+                fin = _finalize_takeaway_sentence(point)
+                if not fin or fin.lower() in {x.lower() for x in out}:
+                    continue
+                if not _takeaway_lexically_grounded(fin, text, min_ratio=0.62):
+                    continue
+                if not _takeaway_semantically_close_to_source(fin, text, extractor):
+                    continue
+                out.append(fin)
+            except Exception:
+                continue
+
+        if len(out) < num_bullets:
+            for s in sentences:
+                if len(out) >= num_bullets:
+                    break
+                fin = _finalize_takeaway_sentence(_fix_tokenization_artifacts(s))
+                if (
+                    fin
+                    and fin.lower() not in {x.lower() for x in out}
+                    and _takeaway_lexically_grounded(fin, text, min_ratio=0.5)
+                ):
+                    out.append(fin)
+
+        return _filter_redundant_sentences(out)[:num_bullets]
 
 if __name__ == "__main__":
     # Quick test

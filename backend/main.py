@@ -104,7 +104,7 @@ def process_logic(text: str):
     try:
         # 1. Summarization (now returns dict with summary, takeaways, and metrics)
         logger.info("Starting summarization...")
-        sum_result = summarizer.summarize(text)
+        sum_result = summarizer.summarize(text, extractor=extractor)
         summary = sum_result.get("summary", "")
         takeaways = sum_result.get("takeaways", [])
         metrics = sum_result.get("metrics", {})
@@ -119,9 +119,15 @@ def process_logic(text: str):
         # 3. Quiz generation from full text and concepts
         logger.info("Starting quiz generation...")
         mcqs = quiz_gen.generate_mcqs(text, concepts, concepts, extractor=extractor)
+        fill_in_the_blanks = quiz_gen.generate_fill_in_the_blanks(
+            text, concepts, concepts, extractor=extractor
+        )
         true_false = quiz_gen.generate_true_false(text, concepts)
         comprehension = quiz_gen.generate_comprehension(text, concepts)
-        logger.info(f"Generated {len(mcqs)} MCQ (Unified), {len(true_false)} TF, {len(comprehension)} comprehension questions")
+        logger.info(
+            f"Generated {len(mcqs)} MCQ, {len(fill_in_the_blanks)} FIB, "
+            f"{len(true_false)} TF, {len(comprehension)} comprehension"
+        )
 
         # 4. Generate explanations for each concept (passing extractor for dynamic definitions)
         logger.info("Starting explanation generation...")
@@ -134,7 +140,7 @@ def process_logic(text: str):
             "concept_details": concept_data, 
             "takeaways": takeaways,
             "quiz": {
-                "fill_in_the_blanks": [], # Deprecated
+                "fill_in_the_blanks": fill_in_the_blanks,
                 "mcqs": mcqs,
                 "true_false": true_false,
                 "comprehension": comprehension,

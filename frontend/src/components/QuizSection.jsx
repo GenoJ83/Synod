@@ -11,6 +11,29 @@ const QuizSection = ({ quiz }) => {
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
 
+    const shuffleInPlace = (arr) => {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    };
+
+    /** Round-robin across types so the deck mixes MCQ, blanks, T/F, and comprehension. */
+    const interleaveByType = (mcqQ, fibQ, tfQ, compQ) => {
+        const pools = [mcqQ, fibQ, tfQ, compQ].map((p) => [...p]);
+        const out = [];
+        let guard = 0;
+        const max = mcqQ.length + fibQ.length + tfQ.length + compQ.length + 10;
+        while (pools.some((p) => p.length > 0) && guard < max) {
+            for (const pool of pools) {
+                if (pool.length > 0) out.push(pool.shift());
+            }
+            guard += 1;
+        }
+        return shuffleInPlace(out);
+    };
+
     // Combine all question types into a single quiz array
     const quizData = React.useMemo(() => {
         if (!quiz) return [];
@@ -18,25 +41,32 @@ const QuizSection = ({ quiz }) => {
         const fibs = quiz.fill_in_the_blanks || [];
         const trueFalse = quiz.true_false || [];
         const comprehension = quiz.comprehension || [];
-        
-        // Convert MCQs to quiz format
-        const mcqQuestions = mcqs.map((q) => ({
-            question: q.question,
-            options: q.options || [],
-            correct: q.options ? q.options.indexOf(q.answer) : 0,
-            type: 'mcq'
-        }));
-        
-        // Convert fill-in-the-blanks to quiz format
-        const fibQuestions = fibs.map((q) => ({
-            question: q.question,
-            options: [q.answer], // Single answer for FIB
-            correct: 0,
-            type: 'fib',
-            answer: q.answer
-        }));
-        
-        // Convert True/False questions
+
+        const mcqQuestions = mcqs.map((q) => {
+            const opts = q.options || [];
+            let idx = q.answer != null ? opts.indexOf(q.answer) : 0;
+            if (idx < 0) idx = 0;
+            return {
+                question: q.question,
+                options: opts,
+                correct: idx,
+                type: 'mcq'
+            };
+        });
+
+        const fibQuestions = fibs.map((q) => {
+            const opts = q.options && q.options.length >= 2 ? q.options : [q.answer].filter(Boolean);
+            let idx = q.answer != null ? opts.indexOf(q.answer) : 0;
+            if (idx < 0) idx = 0;
+            return {
+                question: q.question,
+                options: opts,
+                correct: idx,
+                type: 'fib',
+                explanation: q.explanation
+            };
+        });
+
         const tfQuestions = trueFalse.map((q) => ({
             question: q.question,
             options: ['True', 'False'],
@@ -44,26 +74,25 @@ const QuizSection = ({ quiz }) => {
             type: 'true_false',
             explanation: q.explanation
         }));
-        
-        // Convert comprehension questions
+
         const compQuestions = comprehension.map((q) => ({
             question: q.question,
             options: q.options || [],
-            correct: q.answer || 0,
+            correct: q.answer != null ? q.answer : 0,
             type: 'comprehension',
             explanation: q.explanation
         }));
-        
-        // Combine all types
-        return [...mcqQuestions, ...fibQuestions, ...tfQuestions, ...compQuestions];
+
+        return interleaveByType(mcqQuestions, fibQuestions, tfQuestions, compQuestions);
     }, [quiz]);
-    
-    // Shuffle questions on first render (only once)
+
     const [shuffledQuestions, setShuffledQuestions] = React.useState(null);
     React.useEffect(() => {
+        setShuffledQuestions(null);
+    }, [quiz]);
+    React.useEffect(() => {
         if (quizData.length > 0 && !shuffledQuestions) {
-            const shuffled = [...quizData].sort(() => Math.random() - 0.5);
-            setShuffledQuestions(shuffled);
+            setShuffledQuestions(shuffleInPlace([...quizData]));
         }
     }, [quizData, shuffledQuestions]);
     
@@ -233,7 +262,7 @@ const QuizSection = ({ quiz }) => {
                                 onClick={nextQuestion}
                                 className="px-8 py-3 bg-app-fg text-app-bg rounded-xl font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-all shadow-lg"
                             >
-                                {currentQuestion === quizData.length - 1 ? 'Finish Assessment' : 'Next Question'}
+                                {currentQuestion === displayQuestions.length - 1 ? 'Finish Assessment' : 'Next Question'}
                                 <ChevronRight className="w-4 h-4" />
                             </button>
                         </motion.div>

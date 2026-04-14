@@ -11,6 +11,46 @@ from collections import Counter
 from typing import List, Tuple, Set
 
 # Comprehensive stopwords and generic phrases to filter from concepts
+# Rubric / homework PDFs: noun phrases are often instructions, not concepts.
+_ASSIGNMENT_LEX = re.compile(
+    r"(?i)\b("
+    r"submit|submission|assignment|homework|semester|semi[-\s]?final|rubric|"
+    r"please\s+discuss|please\s+note|please\s+make|write\s+one\s+comment|"
+    r"per\s+line|python\s+file|you\s+must|challenge\s+input|task\s*\d|"
+    r"assignment\s+program|performance\s+graph|confusion\s+matrix|"
+    r"learning\s+data\s*\(|not\s+necessarily\s+the\s+same"
+    r")\b"
+)
+_CAMERA_UI_PAIR = re.compile(
+    r"(?i)^(webcams?|flip|pan|rotate|zoom|shrink|go)\s+(flip|pan|rotate|zoom|webcams?|shrink|go)$"
+)
+_DUP_TOKEN_TRIPLET = re.compile(r"(?i)\b(\w{3,})\s+\w+\s+\1\b")
+_MAX_CONCEPT_WORDS = 5
+
+
+def _is_low_value_concept_term(term: str) -> bool:
+    t = re.sub(r"\s+", " ", (term or "").strip())
+    if len(t) < 3:
+        return True
+    tl = t.lower()
+    words = tl.split()
+    if len(words) > _MAX_CONCEPT_WORDS:
+        return True
+    if _ASSIGNMENT_LEX.search(tl):
+        return True
+    if _CAMERA_UI_PAIR.match(tl):
+        return True
+    if _DUP_TOKEN_TRIPLET.search(tl):
+        return True
+    if re.match(r"(?i)^(this|these|those|your|the\s+same)\s+", tl):
+        return True
+    if re.search(r"(?i)\b(architecture\s+network|your\s+own\s+designed|designed\s+network)\b", tl):
+        return True
+    if re.search(r"(?i)\b(image\s+processing)\s+task\b", tl):
+        return True
+    return False
+
+
 CONCEPT_STOPWORDS = {
     'a', 'an', 'the', 'this', 'that', 'these', 'those',
     'is', 'are', 'was', 'were', 'be', 'been', 'being',
@@ -118,7 +158,9 @@ class ConceptExtractor:
         for cand in candidates:
             if any(p.search(cand) for p in metadata_patterns):
                 continue
-            filtered_candidates.append(cand) if isinstance(filtered_candidates, list) else filtered_candidates.add(cand)
+            if _is_low_value_concept_term(cand):
+                continue
+            filtered_candidates.add(cand)
         
         if not filtered_candidates:
             return []

@@ -42,15 +42,22 @@ def test_pipeline():
     print("\n--- Testing Summarization ---")
     try:
         summary = summarizer.summarize(text)
+        if isinstance(summary, dict):
+            summary = summary.get("summary", text)
         print(f"✅ Summary generated (Length: {len(summary)})")
-        print(f"Snippet: {summary[:50]}...")
+        print(f"Snippet: {str(summary)[:50]}...")
     except Exception as e:
         print(f"❌ Summarization failed: {e}")
         summary = text # Fallback for next steps
 
     print("\n--- Testing Concept Extraction ---")
     try:
-        concepts = extractor.extract_concepts(text)
+        concept_data = extractor.extract_concepts(text)
+        concepts = (
+            [c["term"] for c in concept_data]
+            if concept_data and isinstance(concept_data[0], dict)
+            else concept_data
+        )
         print(f"✅ Concepts extracted: {concepts}")
     except Exception as e:
         print(f"❌ Concept extraction failed: {e}")
@@ -58,7 +65,7 @@ def test_pipeline():
 
     print("\n--- Testing Quiz Generation ---")
     try:
-        fibs = quiz_gen.generate_fill_in_the_blanks(summary, concepts)
+        fibs = quiz_gen.generate_fill_in_the_blanks(summary, concepts, concepts)
         mcqs = quiz_gen.generate_mcqs(summary, concepts, concepts)
         print(f"✅ Fill-in-the-blanks: {len(fibs)}")
         print(f"✅ MCQs: {len(mcqs)}")

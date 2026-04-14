@@ -2,6 +2,38 @@ import re
 from typing import List, Dict
 from sentence_transformers import util
 
+# Rubric / assignment PDFs — not lecture definitions; blocks bad "context" blobs.
+_ASSIGNMENT_OR_SUBMISSION = re.compile(
+    r"(?i)\b("
+    r"submit|submission|assignment|homework|semester|semi[-\s]?final|rubric|"
+    r"please\s+discuss|please\s+note|please\s+make|write\s+one\s+comment|"
+    r"per\s+line\s+of\s+code|python\s+file|you\s+must\s+present|"
+    r"learning\s+data\s*\(|performance\s+comparison|confusion\s+matrix|"
+    r"deep\s+learning\s+challenge|assignment\s+program|task\s*\d|"
+    r"challenge\s+input|not\s+necessarily\s+the\s+same\s+as\s+the\s+original"
+    r")\b"
+)
+# Run-on syllabus lines (many tasks jammed together)
+_OCR_SYLLABUS_JAM = re.compile(
+    r"(?i)(task\s*\d\s+.*task\s*\d|practice\s+1\.|flip,\s*pan,\s*rotate.*zoom)"
+)
+
+
+def _is_assignment_context_blob(s: str) -> bool:
+    t = re.sub(r"\s+", " ", (s or "").strip())
+    if len(t) < 12:
+        return True
+    if _ASSIGNMENT_OR_SUBMISSION.search(t):
+        return True
+    if _OCR_SYLLABUS_JAM.search(t):
+        return True
+    if len(t) > 420:
+        return True
+    if len(t.split()) > 55:
+        return True
+    return False
+
+
 class ExplanationGenerator:
     """
     Generates meaningful explanations for concepts based on lecture content.
@@ -39,6 +71,16 @@ class ExplanationGenerator:
         "regression": "A statistical method for modeling relationships between variables.",
         "clustering": "Grouping similar data points together based on their characteristics.",
         "feature engineering": "The process of creating input features for machine learning models.",
+        "data augmentation": "Techniques that artificially expand a training set (e.g. flips, crops, color jitter) so models generalize better without collecting new labeled images.",
+        "convolutional neural network": "A neural network that uses convolution layers to scan local patterns in images or sequences, sharing weights across positions.",
+        "convolutional network": "A neural network architecture built around convolution layers, commonly used for image and spatial pattern recognition.",
+        "vggnet": "A family of deep convolutional networks (e.g. VGG-16/VGG-19) known for stacked 3×3 convolutions and strong image-classification baselines.",
+        "vgg": "A deep convolutional architecture (VGG) using repeated small convolutions, often used as a backbone for image classification and transfer learning.",
+        "opencv": "An open-source computer-vision library for image and video I/O, transforms, filtering, and real-time processing.",
+        "open cv": "An open-source computer-vision library for image and video I/O, transforms, filtering, and real-time processing.",
+        "dropout": "A regularization method that randomly drops units during training to reduce co-adaptation and overfitting.",
+        "dropblock": "A structured form of dropout that drops contiguous regions of a feature map, often used in convolutional networks.",
+        "regularization": "Techniques (weight decay, dropout, data augmentation, etc.) that constrain a model to improve generalization beyond the training set.",
         "overfitting": "When a model learns noise in training data rather than general patterns.",
         "underfitting": "When a model is too simple to capture patterns in data.",
         "hyperparameter": "A parameter set before training that controls the learning process.",
@@ -73,10 +115,15 @@ class ExplanationGenerator:
                     concept_emb = extractor.model.encode([concept], convert_to_tensor=True)
                     sent_embs = extractor.model.encode(sentences, convert_to_tensor=True)
                     scores = util.cos_sim(concept_emb, sent_embs).cpu().numpy().flatten()
-                    top_idx = scores.argmax()
-                    # If similarity is high enough, we assume it's a good descriptive sentence
-                    if scores[top_idx] > 0.35:
-                        specific_context = sentences[top_idx].strip()
+                    ranked = scores.argsort()[::-1]
+                    for ri in ranked[:12]:
+                        if scores[ri] < 0.38:
+                            break
+                        cand = sentences[int(ri)].strip()
+                        if _is_assignment_context_blob(cand):
+                            continue
+                        specific_context = cand
+                        break
             except Exception as e:
                 print(f"Semantic context extraction failed: {e}")
 
@@ -107,41 +154,43 @@ class ExplanationGenerator:
     
     def _get_general_explanation(self, concept: str, default_msg: str) -> str:
         """Get general explanation from knowledge base with precision and fuzzy normalization."""
-        # Normalize: lower, strip
-        concept_clean = concept.lower().strip()
-        
+        concept_clean = re.sub(r"\s+", " ", (concept or "").lower().strip())
+        # OCR / spacing variants
+        if concept_clean in ("open cv", "open-cv"):
+            concept_clean = "opencv"
+        if concept_clean.startswith("opencv "):
+            concept_clean = "opencv"
+
         # 1. Try exact match first
         if concept_clean in self.CONCEPT_CATEGORIES:
             return self.CONCEPT_CATEGORIES[concept_clean]
-            
-        # 2. Try prefix/stem matches (e.g. "clean coding" matches "clean code")
-        # Sort keys by length descending to get the most specific match
+
+        # 2. Prefix matches only (e.g. "machine learning basics" → "machine learning").
+        # Do not use short shared-prefix heuristics: they map unrelated terms (e.g. "data augmentation" → "data structure").
         sorted_keys = sorted(self.CONCEPT_CATEGORIES.keys(), key=len, reverse=True)
         for key in sorted_keys:
-            # If the concept starts with the key or the key starts with the concept
-            # (e.g. key="machine learning", concept="machine learning basics")
-            if concept_clean.startswith(key) or key.startswith(concept_clean):
+            if concept_clean == key:
                 return self.CONCEPT_CATEGORIES[key]
-            
-            # Stemming-lite: check if first 5 chars match for longer words
-            if len(key) > 5 and len(concept_clean) > 5:
-                if key[:5] == concept_clean[:5]:
-                    return self.CONCEPT_CATEGORIES[key]
-        
+            if concept_clean.startswith(key + " ") or key.startswith(concept_clean + " "):
+                return self.CONCEPT_CATEGORIES[key]
+
         return default_msg
     
     def _extract_context(self, text: str, concept: str, max_sentences: int = 2) -> str:
         """Extract relevant context sentences from text."""
         sentences = re.split(r'(?<=[.!?])\s+', text)
         concept_pattern = re.compile(re.escape(concept), re.IGNORECASE)
-        
+
         context_sentences = []
         for sentence in sentences:
             if len(sentence.split()) > 5 and concept_pattern.search(sentence):
-                context_sentences.append(sentence.strip())
+                st = sentence.strip()
+                if _is_assignment_context_blob(st):
+                    continue
+                context_sentences.append(st)
                 if len(context_sentences) >= max_sentences:
                     break
-        
+
         if context_sentences:
             return " ".join(context_sentences[:2])
         return ""
@@ -172,16 +221,19 @@ class ExplanationGenerator:
                     
                     for idx in ranked_indices:
                         sent = sentences[idx].strip()
-                        if scores[idx] < 0.3: break # Threshold
-                        if sent in used_contexts: continue
-                        
-                        # Heuristic check for "good" explanation sentence
-                        # Relaxed from 6 to 3 words for short punchy definitions/segments
-                        if len(sent.split()) >= 3 and not sent.isupper():
+                        if scores[idx] < 0.34:
+                            break
+                        if sent in used_contexts:
+                            continue
+                        if _is_assignment_context_blob(sent):
+                            continue
+
+                        # Prefer real sentences over rubric fragments
+                        if len(sent.split()) >= 6 and not sent.isupper():
                             best_sent = sent
                             used_contexts.add(sent)
                             break
-                except:
+                except Exception:
                     pass
             
             if best_sent:
