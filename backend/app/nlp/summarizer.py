@@ -14,7 +14,97 @@ from typing import List, Optional, Tuple
 logger = logging.getLogger("app.nlp.summarizer")
 
 # Bumped when summary behavior changes so cache does not return old collapsed output.
-_SUMMARY_CACHE_SALT = "v9-takeaway-semantic-guard"
+_SUMMARY_CACHE_SALT = "v10-summary-deck-bib-scrub"
+
+# Slide titles + instructor rows, bibliography tails, and OCR phrase stacks (pre-BART + extractive filters).
+_LECTURER_COLON = re.compile(r"(?i)\blecturer\s*:")
+_INTRO_THEN_LECTURER = re.compile(r"(?i)\bintroduction\s+to\s+[^.\n]{3,120}\s+lecturer\s*:")
+_JOURNAL_VOLUME_PAGES = re.compile(
+    r"(?i)\b\d{1,3}\.\d{1,3}\s*\(\s*(?:19|20)\d{2}\s*\)\s*:\s*\d{3,5}\s*[–-]\s*\d{3,5}\b"
+)
+_JOURNAL_PROPER = re.compile(
+    r"(?i)\b(?:cerebral\s+cortex|nature\s+neuroscience|journal\s+of|"
+    r"proceedings\s+of|ieee\s+transactions|arxiv)\b"
+)
+_QUOTED_TITLE_THEN_JOURNAL = re.compile(
+    r'(?i)"[^"]{20,400}"\s*.{0,120}\(\s*(?:19|20)\d{2}\s*\)'
+)
+_DL_OCR_STACK = re.compile(
+    r"(?i)deep\s+learning\s+combination\s+of\s+non[-\s]?linear"
+)
+
+
+def _is_slide_metadata_or_bibliography_unit(t: str) -> bool:
+    """True for title/instructor lines, citation tails, and known OCR junk (not lecture substance)."""
+    s = re.sub(r"\s+", " ", (t or "").strip())
+    if len(s) < 10:
+        return True
+    sl = s.lower()
+    if _LECTURER_COLON.search(s):
+        return True
+    if _INTRO_THEN_LECTURER.search(s):
+        return True
+    if re.search(r"(?i)\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2},?\s+\d{4}\b", s):
+        if len(s.split()) <= 12 and not re.search(r"(?i)\b(is|are|was|were|uses|means|defines|shows|trains)\b", sl):
+            return True
+    if _JOURNAL_VOLUME_PAGES.search(s):
+        return True
+    if _JOURNAL_PROPER.search(s) and re.search(r"\(\s*(?:19|20)\d{2}\s*\)", s):
+        return True
+    if _QUOTED_TITLE_THEN_JOURNAL.search(s):
+        return True
+    if re.search(r"(?i)\bet\s+al\b", s):
+        return True
+    if _DL_OCR_STACK.search(s) and not re.search(r"(?i)\b(is|are|was|were|means|refers)\b", sl):
+        return True
+    return False
+
+
+def _scrub_text_for_neural_summary(text: str) -> str:
+    """Strip deck metadata and references before seq2seq so BART is not trained on garbage from the first slide."""
+    raw = (text or "").replace("\r\n", "\n").strip()
+    if not raw:
+        return ""
+    kept_lines: List[str] = []
+    for ln in raw.split("\n"):
+        s = re.sub(r"\s+", " ", ln.strip())
+        if not s or _is_slide_metadata_or_bibliography_unit(s):
+            continue
+        s2 = _QUOTED_TITLE_THEN_JOURNAL.sub("", s)
+        s2 = re.sub(r"\s+", " ", s2).strip()
+        if s2 and not _is_slide_metadata_or_bibliography_unit(s2):
+            kept_lines.append(s2)
+    joined = " ".join(kept_lines) if kept_lines else re.sub(r"\s+", " ", raw)
+    units = re.split(r"(?<=[.!?])\s+", joined)
+    kept_u: List[str] = []
+    for u in units:
+        u = re.sub(r"\s+", " ", u.strip())
+        if len(u) < 22:
+            continue
+        if _is_slide_metadata_or_bibliography_unit(u):
+            continue
+        kept_u.append(u)
+    out = " ".join(kept_u) if kept_u else joined
+    return re.sub(r"\s+", " ", out).strip()
+
+
+def _clean_summary_output(text: str) -> str:
+    """Remove any metadata or citation sentences that slipped through post-hoc."""
+    s = re.sub(r"\s+", " ", (text or "").strip())
+    if not s:
+        return s
+    parts = re.split(r"(?<=[.!?])\s+", s)
+    out: List[str] = []
+    for p in parts:
+        p = p.strip()
+        if len(p) < 18:
+            continue
+        if _is_slide_metadata_or_bibliography_unit(p):
+            continue
+        out.append(p)
+    if not out:
+        return s
+    return " ".join(out).strip()
 
 
 def _glitch_token_fraction(text: str, max_scan: int = 160) -> float:
@@ -206,6 +296,8 @@ def _line_ok_for_lecture_support(s: str) -> bool:
     t = re.sub(r"\s+", " ", (s or "").strip())
     if len(t) < 26 or len(t) > 520:
         return False
+    if _is_slide_metadata_or_bibliography_unit(t):
+        return False
     words = t.split()
     n = len(words)
     if n < 5 or n > 42:
@@ -233,7 +325,11 @@ def _line_ok_for_lecture_support(s: str) -> bool:
         return False
     if re.search(r"\*?\s*wikipedia\b", tl):
         return False
-    if re.search(r"\bet\s+al\b", tl):
+    if re.search(r"(?i)\bet\s+al\b", tl):
+        return False
+    if _JOURNAL_VOLUME_PAGES.search(t):
+        return False
+    if _JOURNAL_PROPER.search(t) and re.search(r"\(\s*(?:19|20)\d{2}\s*\)", t):
         return False
     if re.search(r"\b\d{1,2}\s+machine learning\b", tl):
         return False
@@ -679,6 +775,10 @@ class Summarizer:
         if not text or len(text) < 50:
             return {"summary": text or "", "metrics": {"compression_ratio": 1.0}}
 
+        scrubbed = _scrub_text_for_neural_summary(text)
+        if len((scrubbed or "").split()) < 35:
+            scrubbed = text
+
         # Cache check (salt so behavior fixes invalidate old bad summaries)
         text_hash = hashlib.sha256(f"{_SUMMARY_CACHE_SALT}\n{text}".encode()).hexdigest()
         if text_hash in self.cache:
@@ -695,7 +795,7 @@ class Summarizer:
                     ". ".join(sentences[:2]) + " (Mock Summary)", text
                 )
             )
-            mock_take = self.generate_takeaways(text, num_bullets=7, extractor=extractor)
+            mock_take = self.generate_takeaways(scrubbed, num_bullets=7, extractor=extractor)
             return {
                 "summary": summary,
                 "takeaways": mock_take,
@@ -705,7 +805,7 @@ class Summarizer:
             }
 
         try:
-            word_count = len(text.split())
+            word_count = len(scrubbed.split())
             # distilBART is CNN-tuned; scale output with doc length but cap to reduce collapse on tiny inputs.
             if max_length == 150:
                 target_max = max(56, min(240, word_count // 4, word_count + 48))
@@ -714,8 +814,8 @@ class Summarizer:
                 target_max = max_length
                 target_min = min_length
 
-            # Clean up newlines for better split
-            clean_text = text.replace('\n', ' ')
+            # Clean up newlines for better split (scrubbed source → less title/citation leakage into BART)
+            clean_text = scrubbed.replace('\n', ' ')
             sentences = re.split(r'(?<=[.!?])\s+', clean_text)
             chunks = []
             current_chunk = ""
@@ -810,12 +910,14 @@ class Summarizer:
                     "Summarizer output failed sanity check; using extractive fallback. "
                     "If you use a custom LoRA, set SYNOD_USE_SUMMARIZER_LORA=true only when it matches the base model."
                 )
-                fb_summary, fb_takeaways = _extractive_fallback_summary(text)
+                fb_summary, fb_takeaways = _extractive_fallback_summary(scrubbed)
                 summary = ExtractorService.normalize_pipeline_text(
-                    _lecture_narrative_from_bart_and_source(fb_summary, text)
+                    _clean_summary_output(
+                        _lecture_narrative_from_bart_and_source(fb_summary, scrubbed)
+                    )
                 )
                 takeaways = fb_takeaways or self.generate_takeaways(
-                    text, num_bullets=7, extractor=extractor
+                    scrubbed, num_bullets=7, extractor=extractor
                 )
                 compression_ratio = len(summary.split()) / max(1, len(text.split()))
                 coverage_score = calculate_coverage_score(summary, text)
@@ -832,15 +934,17 @@ class Summarizer:
                 return result
 
             summary = ExtractorService.normalize_pipeline_text(
-                _lecture_narrative_from_bart_and_source(summary, text)
+                _clean_summary_output(
+                    _lecture_narrative_from_bart_and_source(summary, scrubbed)
+                )
             )
 
             # Simple compression metric
             compression_ratio = len(summary.split()) / max(1, len(text.split()))
-            coverage_score = calculate_coverage_score(summary, text)
+            coverage_score = calculate_coverage_score(summary, scrubbed)
             
             # Generate takeaways automatically for a complete result
-            takeaways = self.generate_takeaways(text, num_bullets=7, extractor=extractor)
+            takeaways = self.generate_takeaways(scrubbed, num_bullets=7, extractor=extractor)
             
             result = {
                 "summary": summary,
