@@ -1,3 +1,9 @@
+import os as _os
+
+# Applied at import time (before hub clients are created in typical flows).
+_os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "120")
+_os.environ.setdefault("HF_HUB_ETAG_TIMEOUT", "60")
+
 try:
     from sentence_transformers import SentenceTransformer, util
     import spacy
@@ -97,7 +103,17 @@ class ConceptExtractor:
                     self.device = "cpu"
                 
                 print(f"Loading embedding model: {model_name} on {self.device}...")
-                self.model = SentenceTransformer(model_name, device=self.device)
+                try:
+                    self.model = SentenceTransformer(
+                        model_name, device=self.device, local_files_only=True
+                    )
+                    print("Loaded embedding model from local Hugging Face cache.")
+                except Exception:
+                    print(
+                        "Local cache miss — downloading embedding model "
+                        f"(timeout HF_HUB_DOWNLOAD_TIMEOUT={_os.environ.get('HF_HUB_DOWNLOAD_TIMEOUT', '?')}s)..."
+                    )
+                    self.model = SentenceTransformer(model_name, device=self.device)
                 
                 # Precision optimization (Disabled half() due to stability issues on some MPS versions)
                 # if self.device in ["cuda", "mps"]:

@@ -68,8 +68,7 @@ function NotesChatPanel({ sourceText, summary }) {
                 <h3 className="text-xs font-bold uppercase tracking-widest">Study assistant</h3>
             </div>
             <p className="text-[11px] text-app-muted mb-4 leading-relaxed">
-                Ask questions about this upload. Answers use your notes (and the summary as context) plus an AI tutor — configure{' '}
-                <code className="text-[10px] bg-app-card px-1 rounded">GOOGLE_API_KEY</code> on the server.
+                Ask questions about this upload. Answers are grounded in your notes and the summary.
             </p>
 
             {!canChat && (

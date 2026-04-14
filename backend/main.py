@@ -20,6 +20,11 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
+# Hugging Face Hub defaults to a 10s read timeout; slow or flaky networks see endless retries.
+# Must be set before importing transformers / sentence_transformers.
+os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "120")
+os.environ.setdefault("HF_HUB_ETAG_TIMEOUT", "60")
+
 from app.nlp.summarizer import Summarizer
 from app.nlp.extractor import ConceptExtractor
 from app.nlp.quiz_gen import QuizGenerator
