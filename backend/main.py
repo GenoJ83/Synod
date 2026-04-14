@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Optional
 import os
 import shutil
@@ -25,6 +25,11 @@ from app.nlp.extractor import ConceptExtractor
 from app.nlp.quiz_gen import QuizGenerator
 from app.nlp.explanation_generator import ExplanationGenerator
 from app.nlp.gemini_concept_explain import _gemini_enabled, explain_concept_with_gemini
+from app.nlp.notes_chat import (
+    build_retrieved_notes_context,
+    gemini_notes_chat_reply,
+    notes_chat_enabled,
+)
 from app.ingestion.extractor_service import ExtractorService
 from app.auth import router as auth_router
 
@@ -102,6 +107,31 @@ class ConceptExplanationResponse(BaseModel):
     term: str
     definition: str
     context: str
+
+
+class NotesChatTurn(BaseModel):
+    role: str
+    content: str
+
+    @field_validator("role")
+    @classmethod
+    def _normalize_role(cls, v: str) -> str:
+        r = (v or "").strip().lower()
+        if r not in ("user", "assistant"):
+            raise ValueError("role must be 'user' or 'assistant'")
+        return r
+
+
+class NotesChatRequest(BaseModel):
+    source_text: str = Field(..., min_length=50)
+    message: str = Field(..., min_length=1, max_length=4000)
+    history: List[NotesChatTurn] = Field(default_factory=list)
+    summary_hint: Optional[str] = Field(default=None, max_length=8000)
+
+
+class NotesChatResponse(BaseModel):
+    reply: str
+
 
 def process_logic(text: str):
     """Process text through the complete NLP pipeline with comprehensive error handling."""
@@ -209,6 +239,52 @@ async def explain_concept(request: ExplainConceptRequest):
         logger.error(f"Error in /explain-concept: {str(e)}")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Explanation error: {str(e)}")
+
+
+@app.post("/chat/notes", response_model=NotesChatResponse)
+async def chat_notes(request: NotesChatRequest):
+    """
+    Tutor-style Q&A grounded in the student's uploaded notes (requires Gemini API key).
+    """
+    if len(request.history) > 24:
+        raise HTTPException(status_code=400, detail="At most 24 prior turns are supported.")
+    if not notes_chat_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Notes chat is disabled (set USE_NOTES_CHAT=true) or GOOGLE_API_KEY is not configured.",
+        )
+    raw = (request.source_text or "").strip()
+    if len(raw) > 600_000:
+        raw = raw[:600_000]
+    text = ExtractorService.normalize_pipeline_text(raw)
+    if len(text) < 50:
+        raise HTTPException(status_code=400, detail="Notes text is too short after normalization.")
+
+    api_key = (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
+    hint = (request.summary_hint or "").strip()
+
+    def _run() -> str:
+        ctx = build_retrieved_notes_context(text, request.message.strip(), extractor)
+        hist = [{"role": t.role, "content": t.content} for t in request.history]
+        return gemini_notes_chat_reply(
+            notes_context=ctx,
+            summary_hint=hint,
+            question=request.message.strip(),
+            history=hist,
+            api_key=api_key,
+        )
+
+    try:
+        reply = await asyncio.to_thread(_run)
+        return NotesChatResponse(reply=reply)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("chat/notes: %s", e)
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Chat failed.") from e
 
 
 @app.post("/analyze", response_model=ProcessResponse)

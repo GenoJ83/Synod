@@ -42,6 +42,8 @@ def build_retrieved_notes_context(
     """Topically relevant sentences from notes for prompting (bounded size)."""
     notes = (notes or "").strip()
     question = (question or "").strip()
+    if len(notes) > 120_000:
+        notes = notes[:120_000] + "\n…"
     if not notes:
         return ""
     if not question:

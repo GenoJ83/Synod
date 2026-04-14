@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import ResultsDisplay from '../components/dashboard/ResultsDisplay';
 import ConceptExplorer from '../components/dashboard/ConceptExplorer';
+import NotesChatPanel from '../components/dashboard/NotesChatPanel';
 import QuizSection from '../components/QuizSection';
 
 function AnalysisResults() {
@@ -90,7 +91,7 @@ function AnalysisResults() {
                                 result={result}
                                 startQuiz={startQuiz}
                             >
-                                <div className="w-full xl:w-2/3 max-w-4xl mx-auto mt-8">
+                                <div className="w-full xl:w-2/3 max-w-4xl mx-auto mt-8 space-y-8">
                                     <ConceptExplorer
                                         result={result}
                                         selectedConcept={selectedConcept}
@@ -99,6 +100,10 @@ function AnalysisResults() {
                                         setViewedConcepts={setViewedConcepts}
                                         setShowQuiz={setShowQuiz}
                                         quizRef={quizRef}
+                                    />
+                                    <NotesChatPanel
+                                        sourceText={result.source_text}
+                                        summary={result.summary}
                                     />
                                 </div>
                             </ResultsDisplay>
