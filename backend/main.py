@@ -111,7 +111,7 @@ class ConceptExplanationResponse(BaseModel):
 
 class NotesChatTurn(BaseModel):
     role: str
-    content: str
+    content: str = Field(..., min_length=1, max_length=6000)
 
     @field_validator("role")
     @classmethod
