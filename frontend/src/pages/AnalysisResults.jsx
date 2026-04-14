@@ -89,19 +89,19 @@ function AnalysisResults() {
                             <ResultsDisplay
                                 result={result}
                                 startQuiz={startQuiz}
-                            />
-
-                            <div className="w-full xl:w-2/3 max-w-4xl mx-auto grid sm:grid-cols-1 gap-8 mt-8">
-                                <ConceptExplorer
-                                    result={result}
-                                    selectedConcept={selectedConcept}
-                                    setSelectedConcept={setSelectedConcept}
-                                    viewedConcepts={viewedConcepts}
-                                    setViewedConcepts={setViewedConcepts}
-                                    setShowQuiz={setShowQuiz}
-                                    quizRef={quizRef}
-                                />
-                            </div>
+                            >
+                                <div className="w-full xl:w-2/3 max-w-4xl mx-auto mt-8">
+                                    <ConceptExplorer
+                                        result={result}
+                                        selectedConcept={selectedConcept}
+                                        setSelectedConcept={setSelectedConcept}
+                                        viewedConcepts={viewedConcepts}
+                                        setViewedConcepts={setViewedConcepts}
+                                        setShowQuiz={setShowQuiz}
+                                        quizRef={quizRef}
+                                    />
+                                </div>
+                            </ResultsDisplay>
 
                             {showQuiz && (
                                 <div ref={quizRef} className="w-full xl:w-2/3 max-w-4xl mx-auto pt-16 pb-20">

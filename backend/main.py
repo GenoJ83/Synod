@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 import os
 import shutil
@@ -85,6 +85,21 @@ class ProcessResponse(BaseModel):
     explanations: Optional[Dict] = None
     takeaways: Optional[List[str]] = None
     metrics: Optional[Dict] = None
+    source_text: Optional[str] = Field(
+        default=None,
+        description="Normalized lecture text for POST /explain-concept when the user opens a concept.",
+    )
+
+
+class ExplainConceptRequest(BaseModel):
+    text: str
+    concept: str
+
+
+class ConceptExplanationResponse(BaseModel):
+    term: str
+    definition: str
+    context: str
 
 def process_logic(text: str):
     """Process text through the complete NLP pipeline with comprehensive error handling."""
@@ -129,15 +144,10 @@ def process_logic(text: str):
             f"{len(true_false)} TF, {len(comprehension)} comprehension"
         )
 
-        # 4. Generate explanations for each concept (passing extractor for dynamic definitions)
-        logger.info("Starting explanation generation...")
-        explanations = explanation_gen.generate_all_explanations(concepts, text, extractor=extractor)
-        logger.info("Explanation generation complete")
-
         return {
             "summary": summary,
-            "concepts": concepts, 
-            "concept_details": concept_data, 
+            "concepts": concepts,
+            "concept_details": concept_data,
             "takeaways": takeaways,
             "quiz": {
                 "fill_in_the_blanks": fill_in_the_blanks,
@@ -145,8 +155,9 @@ def process_logic(text: str):
                 "true_false": true_false,
                 "comprehension": comprehension,
             },
-            "explanations": explanations,
+            "explanations": None,
             "metrics": metrics,
+            "source_text": text,
         }
     except Exception as e:
         logger.error(f"Error in process_logic: {str(e)}")
@@ -162,6 +173,26 @@ async def root():
             "extractor": extractor.device if hasattr(extractor, "device") else "mock"
         }
     }
+
+@app.post("/explain-concept", response_model=ConceptExplanationResponse)
+async def explain_concept(request: ExplainConceptRequest):
+    """Generate definition + lecture context for one concept (on demand)."""
+    raw = (request.text or "").strip()
+    concept = (request.concept or "").strip()
+    if not raw:
+        raise HTTPException(status_code=400, detail="Text is required")
+    if not concept:
+        raise HTTPException(status_code=400, detail="Concept is required")
+    text = ExtractorService.normalize_pipeline_text(raw)
+    if len(text) < 50:
+        raise HTTPException(status_code=400, detail="Text must be at least 50 characters")
+    try:
+        return explanation_gen.generate_concept_detail(concept, text, extractor=extractor)
+    except Exception as e:
+        logger.error(f"Error in /explain-concept: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Explanation error: {str(e)}")
+
 
 @app.post("/analyze", response_model=ProcessResponse)
 async def analyze_text(request: ProcessRequest):

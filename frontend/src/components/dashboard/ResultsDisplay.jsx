@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Brain, BookOpen, Lightbulb } from 'lucide-react';
+import { CheckCircle2, Brain, Lightbulb } from 'lucide-react';
 
 /** Renders **markdown bold** in summary text (no full markdown engine). */
 function SummaryInlineText({ text }) {
@@ -21,7 +21,7 @@ function SummaryInlineText({ text }) {
     );
 }
 
-function ResultsDisplay({ result, startQuiz }) {
+function ResultsDisplay({ result, startQuiz, children }) {
     if (!result) return null;
 
     const totalQuestions = (result.quiz?.mcqs?.length || 0) +
@@ -99,31 +99,7 @@ function ResultsDisplay({ result, startQuiz }) {
                 </div>
             )}
 
-            {/* Fundamental Concepts Section */}
-            {result.explanations?.concepts && result.explanations.concepts.length > 0 && (
-                <div className="pro-card p-8 shadow-sm">
-                    <div className="flex items-center gap-3 mb-6 text-purple-500">
-                        <BookOpen className="w-6 h-6" />
-                        <h3 className="text-sm font-bold uppercase tracking-widest">Fundamental Concepts</h3>
-                    </div>
-                    {result.explanations.global && (
-                        <p className="text-app-muted italic text-sm mb-6 pb-6 border-b border-app-border/30">
-                            {result.explanations.global}
-                        </p>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {result.explanations.concepts.map((conceptObj, idx) => (
-                            <div key={idx} className="bg-app-bg/50 border border-app-border/50 rounded-lg p-5 hover:border-purple-500/30 transition-colors">
-                                <h4 className="text-purple-400 font-bold capitalize mb-2">{conceptObj.term}</h4>
-                                <p className="text-app-fg text-sm leading-relaxed mb-2"><span className="font-bold text-app-muted">Definition:</span> {conceptObj.definition}</p>
-                                {conceptObj.context && (
-                                    <p className="text-app-muted text-sm leading-relaxed italic border-l-2 border-purple-500/20 pl-3"><span className="font-bold not-italic">Context:</span> {conceptObj.context}</p>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+            {children}
 
             {/* Knowledge Check CTA */}
             <div className="relative overflow-hidden bg-gradient-to-br from-app-fg to-zinc-400 text-app-bg rounded-2xl p-10 flex flex-col items-center justify-center text-center shadow-xl group">
