@@ -20,7 +20,7 @@ def _parse_json_object(raw: str) -> Dict[str, Any]:
         logger.error(f"Failed to decode Gemini JSON: {str(e)} | Raw: {raw[:200]}...")
         return {}
 
-def analyze_with_gemini(text: str, api_key: str, model: str = "gemini-2.5-flash", timeout_s: float = 60.0) -> Dict[str, Any]:
+def analyze_with_gemini(text: str, api_key: str, model: str = "gemini-1.5-flash", timeout_s: float = 60.0) -> Dict[str, Any]:
     """Generates summary, concepts, and quizzes using the Gemini API directly."""
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     
