@@ -25,11 +25,10 @@ load_dotenv()
 os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "120")
 os.environ.setdefault("HF_HUB_ETAG_TIMEOUT", "60")
 
-from app.nlp.summarizer import Summarizer
 from app.nlp.extractor import ConceptExtractor
-from app.nlp.quiz_gen import QuizGenerator
 from app.nlp.explanation_generator import ExplanationGenerator
 from app.nlp.gemini_concept_explain import _gemini_enabled, explain_concept_with_gemini
+from app.nlp.gemini_analyzer import analyze_with_gemini
 from app.nlp.notes_chat import (
     build_retrieved_notes_context,
     gemini_notes_chat_reply,
@@ -71,9 +70,10 @@ Lightweight NLP pipeline wiring.
 The heavy model objects are instantiated once at startup and reused.
 Each component has an internal MOCK/fallback mode when dependencies are missing.
 """
-summarizer = Summarizer(model_name=os.getenv("SUMMARY_MODEL", "sshleifer/distilbart-cnn-12-6"))
+# Removing Summarizer & QuizGenerator to mitigate high CPU/RAM layout and model flakiness.
+# summarizer = Summarizer(model_name=os.getenv("SUMMARY_MODEL", "sshleifer/distilbart-cnn-12-6"))
 extractor = ConceptExtractor(model_name=os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"))
-quiz_gen = QuizGenerator()
+# quiz_gen = QuizGenerator()
 explanation_gen = ExplanationGenerator()
 file_extractor = ExtractorService()
 
@@ -139,61 +139,40 @@ class NotesChatResponse(BaseModel):
 
 
 def process_logic(text: str):
-    """Process text through the complete NLP pipeline with comprehensive error handling."""
+    """Process text through the Gemini NLP pipeline natively."""
     if not text:
         raise HTTPException(status_code=400, detail="Text is required")
     
-    # Validate text is not just whitespace
     if not text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be only whitespace")
     
     text = ExtractorService.normalize_pipeline_text(text.strip())
-    if len(text) < 50:
-        raise HTTPException(status_code=400, detail="Text must be at least 50 characters")
+    # Minimum words stripped to 0 to fix strict ingestion limits
     
-    logger.info(f"Processing text of length: {len(text)} characters (after metadata scrub)")
+    logger.info(f"Processing text of length: {len(text)} characters via Gemini")
     
+    api_key = (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Gemini API Key missing or not set in backend .env")
+        
     try:
-        # 1. Summarization (now returns dict with summary, takeaways, and metrics)
-        logger.info("Starting summarization...")
-        sum_result = summarizer.summarize(text, extractor=extractor)
-        summary = sum_result.get("summary", "")
-        takeaways = sum_result.get("takeaways", [])
-        metrics = sum_result.get("metrics", {})
-        logger.info(f"Summarization complete. Summary length: {len(summary)}")
-
-        # 2. Concept extraction (returns list of dicts with term and relevance)
-        logger.info("Starting concept extraction...")
-        concept_data = extractor.extract_concepts(text)
-        concepts = [c["term"] for c in concept_data]
-        logger.info(f"Extracted {len(concepts)} concepts")
-
-        # 3. Quiz generation from full text and concepts
-        logger.info("Starting quiz generation...")
-        mcqs = quiz_gen.generate_mcqs(text, concepts, concepts, extractor=extractor)
-        fill_in_the_blanks = quiz_gen.generate_fill_in_the_blanks(
-            text, concepts, concepts, extractor=extractor
-        )
-        true_false = quiz_gen.generate_true_false(text, concepts)
-        comprehension = quiz_gen.generate_comprehension(text, concepts)
-        logger.info(
-            f"Generated {len(mcqs)} MCQ, {len(fill_in_the_blanks)} FIB, "
-            f"{len(true_false)} TF, {len(comprehension)} comprehension"
-        )
-
+        # Single robust LLM call replacing sum, extraction, and quiz heuristics
+        result = analyze_with_gemini(text, api_key)
+        quiz = result.get("quiz", {})
+        
         return {
-            "summary": summary,
-            "concepts": concepts,
-            "concept_details": concept_data,
-            "takeaways": takeaways,
+            "summary": result.get("summary", "No summary generated."),
+            "concepts": result.get("concepts", []),
+            "concept_details": result.get("concept_details", []),
+            "takeaways": result.get("takeaways", []),
             "quiz": {
-                "fill_in_the_blanks": fill_in_the_blanks,
-                "mcqs": mcqs,
-                "true_false": true_false,
-                "comprehension": comprehension,
+                "fill_in_the_blanks": quiz.get("fill_in_the_blanks", []),
+                "mcqs": quiz.get("mcqs", []),
+                "true_false": quiz.get("true_false", []),
+                "comprehension": quiz.get("comprehension", []),
             },
             "explanations": None,
-            "metrics": metrics,
+            "metrics": {},
             "source_text": text,
         }
     except Exception as e:

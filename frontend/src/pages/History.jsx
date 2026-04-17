@@ -8,33 +8,43 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
+import { db } from '../firebase';
+import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+
 const History = () => {
-    // Initialize history from localStorage lazily to avoid useEffect issues and brief empty state flash
-    const [history, setHistory] = useState(() => {
-        if (typeof window !== 'undefined') {
-            try {
-                return JSON.parse(localStorage.getItem('synod_history') || '[]');
-            } catch (e) {
-                console.error('Error loading history:', e);
-                return [];
-            }
-        }
-        return [];
-    });
+    const [history, setHistory] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [loadingHistory, setLoadingHistory] = useState(true);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const { user, logout } = useAuth();
 
-    // Update localStorage when history changes
     useEffect(() => {
-        localStorage.setItem('synod_history', JSON.stringify(history));
-    }, [history]);
+        const fetchHistory = async () => {
+            if (!user) { setLoadingHistory(false); return; }
+            setLoadingHistory(true);
+            try {
+                const q = query(collection(db, "history"), where("userId", "==", user.id || user.email || 'anonymous'));
+                const snapshot = await getDocs(q);
+                const items = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+                items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+                setHistory(items);
+            } catch (e) {
+                console.error('Error loading history:', e);
+            } finally {
+                setLoadingHistory(false);
+            }
+        };
+        fetchHistory();
+    }, [user]);
 
-    const deleteEntry = (id) => {
-        const updated = history.filter(item => item.id !== id);
-        setHistory(updated);
-        localStorage.setItem('synod_history', JSON.stringify(updated));
+    const deleteEntry = async (id) => {
+        try {
+            await deleteDoc(doc(db, "history", id));
+            setHistory(prev => prev.filter(item => item.id !== id));
+        } catch (e) {
+            console.error('Error deleting document:', e);
+        }
     };
 
     const filteredHistory = history.filter(item =>

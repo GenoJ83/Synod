@@ -16,6 +16,8 @@ import { cn } from '../utils/cn';
 import AnalysisInput from '../components/dashboard/AnalysisInput';
 
 import { API_BASE_URL } from '../config';
+import { db } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 function Dashboard() {
     const [text, setText] = useState('');
@@ -49,14 +51,19 @@ function Dashboard() {
             const data = response.data;
             setResult(data);
 
-            const history = JSON.parse(localStorage.getItem('synod_history') || '[]');
             const newEntry = {
-                id: Date.now(),
                 date: new Date().toISOString(),
+                userId: user?.id || user?.email || 'anonymous',
                 title: textToAnalyze.slice(0, 50) + (textToAnalyze.length > 50 ? '...' : ''),
                 ...data
             };
-            localStorage.setItem('synod_history', JSON.stringify([newEntry, ...history].slice(0, 50)));
+            try {
+                const docRef = await addDoc(collection(db, "history"), newEntry);
+                newEntry.id = docRef.id;
+            } catch (fbErr) {
+                console.error("Firebase err:", fbErr);
+                newEntry.id = Date.now().toString();
+            }
             navigate('/analysis', { state: { result: newEntry } });
 
         } catch (err) {
@@ -67,16 +74,21 @@ function Dashboard() {
         }
     };
 
-    const handleFileUploadSuccess = (data) => {
+    const handleFileUploadSuccess = async (data) => {
         setResult(data);
-        const history = JSON.parse(localStorage.getItem('synod_history') || '[]');
         const newEntry = {
-            id: Date.now(),
             date: new Date().toISOString(),
+            userId: user?.id || user?.email || 'anonymous',
             title: "File Analysis: " + ((data?.summary || "Uploaded file").slice(0, 30) + "..."),
             ...data
         };
-        localStorage.setItem('synod_history', JSON.stringify([newEntry, ...history].slice(0, 50)));
+        try {
+            const docRef = await addDoc(collection(db, "history"), newEntry);
+            newEntry.id = docRef.id;
+        } catch (fbErr) {
+            console.error("Firebase err:", fbErr);
+            newEntry.id = Date.now().toString();
+        }
         navigate('/analysis', { state: { result: newEntry } });
     };
 
