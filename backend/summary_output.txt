@@ -1,1 +1,4 @@
-unexpected indent (extractor_service.py, line 234)
+Input Words: 1884
+Summary Words: 82
+SUMMARY:
+This lecture introduces main themes from the session: DSC3108: Big Data Mining and Analytics Lecture 01 (BSCS_3:1) Fri 6th Sept 2024. Lecture: Fundamentals and Mining Data Analytics Predictive analytics Descriptive analytics Data Mining Techniques Architectures, storage. Use Cases: Real-time data processing Machine learning and artificial intelligence Interactive data analysis Big Data architectures NoSQL Databases Key-Value Stores: Store data as key-value pairs, high performance for simple data access. MapReduce: A programming model for processing large datasets in parallel across a cluster of computers.

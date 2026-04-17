@@ -90,6 +90,8 @@ class ExtractorService:
                 text = ExtractorService._extract_from_pptx(file_path)
             elif ext == '.txt':
                 text = ExtractorService._extract_from_txt(file_path)
+            elif ext in ('.png', '.jpg', '.jpeg'):
+                text = ExtractorService._extract_from_image(file_path)
             else:
                 raise ValueError(f"Unsupported file extension: {ext}")
             
@@ -276,4 +278,21 @@ class ExtractorService:
     def _extract_from_txt(file_path: str) -> str:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             return f.read()
+
+    @staticmethod
+    def _extract_from_image(file_path: str) -> str:
+        """Extract text from standalone image files using Tesseract OCR."""
+        if not OCR_AVAILABLE or not pytesseract:
+            raise RuntimeError("OCR (Tesseract) is not installed or available.")
+        
+        try:
+            with Image.open(file_path) as img:
+                # Basic preprocessing: convert to RGB if necessary for Tesseract
+                if img.mode not in ("RGB", "L"):
+                    img = img.convert("RGB")
+                
+                text = pytesseract.image_to_string(img, lang='eng')
+                return text.strip()
+        except Exception as e:
+            raise RuntimeError(f"Failed to OCR image {file_path}: {str(e)}")
 
