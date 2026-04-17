@@ -3,8 +3,10 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, X, CheckCircle2, AlertCircle, Loader2, FileUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE_URL } from '../config';
+import { useAuth } from '../context/AuthContext';
 
 const FileUploader = ({ onUploadSuccess, onError }) => {
+    const { token } = useAuth();
     const [files, setFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
 
@@ -39,10 +41,17 @@ const FileUploader = ({ onUploadSuccess, onError }) => {
 
             const response = await fetch(`${API_BASE_URL}/analyze-file`, {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData,
             });
 
             if (!response.ok) {
+                if (response.status === 429) {
+                    const data = await response.json();
+                    throw new Error(data.detail || 'Daily rate limit reached.');
+                }
                 throw new Error('Upload failed');
             }
 

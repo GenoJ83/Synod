@@ -34,7 +34,7 @@ function Dashboard() {
     const navigate = useNavigate();
     const location = useLocation();
     const { theme, toggleTheme } = useTheme();
-    const { user, logout } = useAuth();
+    const { user, token, logout } = useAuth();
 
 
 
@@ -47,7 +47,11 @@ function Dashboard() {
         setShowQuiz(false);
         setError('');
         try {
-            const response = await axios.post(`${API_BASE_URL}/analyze`, { text: textToAnalyze });
+            const response = await axios.post(
+                `${API_BASE_URL}/analyze`, 
+                { text: textToAnalyze },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
             const data = response.data;
             setResult(data);
 
@@ -68,7 +72,11 @@ function Dashboard() {
 
         } catch (err) {
             console.error(err);
-            setError('Failed to analyze content. Please ensure the backend is running.');
+            if (err.response?.status === 429) {
+                setError(err.response.data.detail || 'Daily rate limit reached (5 analyses per day).');
+            } else {
+                setError('Failed to analyze content. Please ensure the backend is running and you are logged in.');
+            }
         } finally {
             setLoading(false);
         }
