@@ -10,6 +10,7 @@ const QuizSection = ({ quiz }) => {
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
+    const [answeredTotal, setAnsweredTotal] = useState(0);
 
     const shuffleInPlace = (arr) => {
         for (let i = arr.length - 1; i > 0; i--) {
@@ -101,6 +102,7 @@ const QuizSection = ({ quiz }) => {
     const handleAnswer = (index) => {
         if (selectedAnswer !== null) return;
         setSelectedAnswer(index);
+        setAnsweredTotal(prev => prev + 1);
 
         if (index === displayQuestions[currentQuestion].correct) {
             setScore(prev => prev + 1);
@@ -121,6 +123,20 @@ const QuizSection = ({ quiz }) => {
         setSelectedAnswer(null);
         setShowResults(false);
         setScore(0);
+        setAnsweredTotal(0);
+    };
+
+    const endQuizEarly = () => {
+        setShowResults(true);
+    };
+
+    const downloadReport = () => {
+        const content = `Synod Analysis Assessment Report\n================================\nScore: ${score} / ${answeredTotal || displayQuestions.length} (${Math.round((score / Math.max(1, answeredTotal || displayQuestions.length)) * 100)}%)\n\nThank you for using Synod!`;
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `synod_assessment_report_${Date.now()}.txt`;
+        link.click();
     };
 
     if (showResults) {
@@ -139,12 +155,12 @@ const QuizSection = ({ quiz }) => {
                 <div className="flex justify-center gap-12 mb-12">
                     <div>
                         <p className="text-[10px] font-bold text-app-muted uppercase tracking-widest mb-1">Score</p>
-                        <p className="text-4xl font-bold text-blue-500">{Math.round((score / displayQuestions.length) * 100)}%</p>
+                        <p className="text-4xl font-bold text-blue-500">{Math.round((score / Math.max(1, answeredTotal || displayQuestions.length)) * 100)}%</p>
                     </div>
                     <div className="w-[1px] bg-app-border" />
                     <div>
                         <p className="text-[10px] font-bold text-app-muted uppercase tracking-widest mb-1">Correct</p>
-                        <p className="text-4xl font-bold">{score}/{displayQuestions.length}</p>
+                        <p className="text-4xl font-bold">{score}/{answeredTotal || displayQuestions.length}</p>
                     </div>
                 </div>
 
@@ -156,7 +172,7 @@ const QuizSection = ({ quiz }) => {
                         <RefreshCw className="w-4 h-4" />
                         Retake Assessment
                     </button>
-                    <button className="flex-1 py-4 bg-app-fg text-app-bg rounded-2xl font-bold shadow-xl hover:opacity-90 transition-all">
+                    <button onClick={downloadReport} className="flex-1 py-4 bg-app-fg text-app-bg rounded-2xl font-bold shadow-xl hover:opacity-90 transition-all">
                         Download Report
                     </button>
                 </div>
@@ -258,13 +274,21 @@ const QuizSection = ({ quiz }) => {
                                     "Excellent deduction. Onward." :
                                     "A learning opportunity. The correct path is clear now."}
                             </p>
-                            <button
-                                onClick={nextQuestion}
-                                className="px-8 py-3 bg-app-fg text-app-bg rounded-xl font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-all shadow-lg"
-                            >
-                                {currentQuestion === displayQuestions.length - 1 ? 'Finish Assessment' : 'Next Question'}
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={endQuizEarly}
+                                    className="px-6 py-3 border border-app-border rounded-xl font-bold text-sm hover:bg-app-card transition-all"
+                                >
+                                    End Early
+                                </button>
+                                <button
+                                    onClick={nextQuestion}
+                                    className="px-8 py-3 bg-app-fg text-app-bg rounded-xl font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-all shadow-lg"
+                                >
+                                    {currentQuestion === displayQuestions.length - 1 ? 'Finish Assessment' : 'Next Question'}
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
