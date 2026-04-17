@@ -130,7 +130,7 @@ const Login = () => {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
+                                    placeholder="Enter your password"
                                     className="w-full pl-10 pr-12 py-3 pro-input text-sm"
                                 />
                                 <button

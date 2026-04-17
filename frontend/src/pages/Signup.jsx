@@ -151,11 +151,7 @@ const Signup = () => {
                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                             </div>
-                            <div className="grid grid-cols-3 gap-2 mt-2 px-1">
-                                <div className="h-1 bg-blue-500 rounded-full" />
-                                <div className="h-1 bg-blue-500 rounded-full" />
-                                <div className="h-1 bg-app-border rounded-full" />
-                            </div>
+
                         </div>
 
                         <div className="flex items-start gap-3 px-1">

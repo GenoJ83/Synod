@@ -59,20 +59,7 @@ function ResultsDisplay({ result, startQuiz, children }) {
                                 <span className="text-xs font-bold text-emerald-500">{(result.metrics.compression_ratio * 100).toFixed(1)}%</span>
                             </div>
                         </div>
-                        {result.metrics?.coverage_score !== undefined && (
-                            <div className="flex flex-col gap-2">
-                                <span className="text-[10px] font-bold text-app-muted uppercase tracking-widest">Precision Range</span>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex-1 h-1.5 bg-app-card rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-blue-500 rounded-full"
-                                            style={{ width: `${Math.min(100, result.metrics.coverage_score * 100)}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-xs font-bold text-blue-500">{(result.metrics.coverage_score * 100).toFixed(1)}%</span>
-                                </div>
-                            </div>
-                        )}
+
                     </div>
                 )}
             </div>
