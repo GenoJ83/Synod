@@ -36,9 +36,11 @@ from app.nlp.notes_chat import (
 )
 from app.ingestion.extractor_service import ExtractorService
 from app.auth import router as auth_router
-
-# Initialize Database
-from app.database import engine, Base
+from app.auth.dependencies import get_current_user
+from sqlalchemy.orm import Session
+from fastapi import Depends
+from datetime import datetime
+from app.database import get_db, engine, Base
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Synod API")
@@ -138,14 +140,29 @@ class NotesChatResponse(BaseModel):
     reply: str
 
 
-def process_logic(text: str):
-    """Process text through the Gemini NLP pipeline natively."""
+def process_logic(text: str, user: any = None, db: Session = None):
+    """Process text through the Gemini NLP pipeline natively with rate limiting."""
     if not text:
         raise HTTPException(status_code=400, detail="Text is required")
     
-    if not text.strip():
-        raise HTTPException(status_code=400, detail="Text cannot be only whitespace")
-    
+    if user and db:
+        # Rate limiting logic
+        today = datetime.now().strftime("%Y-%m-%d")
+        if user.last_analysis_date == today:
+            if user.daily_analysis_count >= 5:
+                logger.warning(f"User {user.email} hit daily rate limit")
+                raise HTTPException(
+                    status_code=429, 
+                    detail="You have reached your daily limit of 5 lecture analyses. Please return tomorrow."
+                )
+            user.daily_analysis_count += 1
+        else:
+            user.last_analysis_date = today
+            user.daily_analysis_count = 1
+        
+        db.commit()
+        logger.info(f"User {user.email} analysis count: {user.daily_analysis_count}/5")
+
     text = ExtractorService.normalize_pipeline_text(text.strip())
     # Minimum words stripped to 0 to fix strict ingestion limits
     
@@ -272,10 +289,10 @@ async def chat_notes(request: NotesChatRequest):
 
 
 @app.post("/analyze", response_model=ProcessResponse)
-async def analyze_text(request: ProcessRequest):
+async def analyze_text(request: ProcessRequest, current_user: any = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
-        logger.info(f"Received analyze request with text length: {len(request.text)}")
-        return process_logic(request.text)
+        logger.info(f"Received analyze request from {current_user.email} with text length: {len(request.text)}")
+        return process_logic(request.text, user=current_user, db=db)
     except HTTPException:
         # Re-raise HTTPExceptions as-is
         raise
@@ -285,7 +302,7 @@ async def analyze_text(request: ProcessRequest):
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @app.post("/analyze-file", response_model=ProcessResponse)
-async def analyze_file(file: UploadFile = File(...)):
+async def analyze_file(file: UploadFile = File(...), current_user: any = Depends(get_current_user), db: Session = Depends(get_db)):
     file_location = None
     try:
         # Check file size
@@ -318,7 +335,7 @@ async def analyze_file(file: UploadFile = File(...)):
         os.remove(file_location)
         file_location = None  # Mark as cleaned up
         
-        return process_logic(text)
+        return process_logic(text, user=current_user, db=db)
         
     except HTTPException:
         # Re-raise HTTPExceptions as-is
