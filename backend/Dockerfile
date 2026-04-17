@@ -1,5 +1,5 @@
-# Use a Python 3.9 base image
-FROM python:3.9-slim
+# Use a Python 3.10 base image (needed for newer Spacy versions)
+FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -21,8 +21,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# Pre-download the embedding model to speed up Space startup
+# Pre-download models to speed up Space startup
 RUN python3 -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+RUN python3 -m spacy download en_core_web_sm
 
 # Copy the rest of the backend code
 COPY --chown=user:user . .

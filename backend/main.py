@@ -42,7 +42,24 @@ from fastapi import Depends
 from datetime import datetime
 from app.database import get_db, engine, Base
 from app.models import User
-Base.metadata.create_all(bind=engine)
+
+# Initialize database
+try:
+    logger.info("Initializing database...")
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database initialized successfully.")
+except Exception as e:
+    logger.error(f"Failed to initialize database: {str(e)}")
+    # If using SQLite, check if the directory is writable
+    if str(engine.url).startswith("sqlite"):
+        db_path = str(engine.url).replace("sqlite:///", "")
+        db_dir = os.path.dirname(os.path.abspath(db_path)) if os.path.isabs(db_path) else os.getcwd()
+        logger.error(f"SQLite DB Path: {db_path}")
+        logger.error(f"Directory {db_dir} writable: {os.access(db_dir, os.W_OK)}")
+        if os.path.exists(db_path):
+            logger.error(f"File {db_path} writable: {os.access(db_path, os.W_OK)}")
+    raise
+
 
 app = FastAPI(title="Synod API")
 
@@ -212,10 +229,10 @@ async def root():
     return {
         "message": "Welcome to Synod API",
         "device_info": {
-            "summarizer": summarizer.device if hasattr(summarizer, "device") else "mock",
             "extractor": extractor.device if hasattr(extractor, "device") else "mock"
         }
     }
+
 
 @app.get("/user/usage")
 def get_user_usage(user: User = Depends(get_current_user)):
@@ -379,4 +396,5 @@ async def analyze_file(file: UploadFile = File(...), current_user: any = Depends
                 logger.warning(f"Failed to cleanup file {file_location}: {cleanup_error}")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

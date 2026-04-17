@@ -19,3 +19,4 @@ httpx
 google-auth
 sqlalchemy
 groq
+passlib[bcrypt]
