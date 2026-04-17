@@ -146,7 +146,7 @@ def process_logic(text: str, user: any = None, db: Session = None):
         raise HTTPException(status_code=400, detail="Text is required")
     
     if user and db:
-        # Rate limiting logic
+        # Pre-check rate limit
         today = datetime.now().strftime("%Y-%m-%d")
         if user.last_analysis_date == today:
             if user.daily_analysis_count >= 5:
@@ -155,13 +155,6 @@ def process_logic(text: str, user: any = None, db: Session = None):
                     status_code=429, 
                     detail="You have reached your daily limit of 5 lecture analyses. Please return tomorrow."
                 )
-            user.daily_analysis_count += 1
-        else:
-            user.last_analysis_date = today
-            user.daily_analysis_count = 1
-        
-        db.commit()
-        logger.info(f"User {user.email} analysis count: {user.daily_analysis_count}/5")
 
     text = ExtractorService.normalize_pipeline_text(text.strip())
     # Minimum words stripped to 0 to fix strict ingestion limits
@@ -175,6 +168,18 @@ def process_logic(text: str, user: any = None, db: Session = None):
     try:
         # Single robust LLM call replacing sum, extraction, and quiz heuristics
         result = analyze_with_gemini(text, api_key)
+        
+        if user and db:
+            # Increment credit ONLY on success
+            today = datetime.now().strftime("%Y-%m-%d")
+            if user.last_analysis_date == today:
+                user.daily_analysis_count += 1
+            else:
+                user.last_analysis_date = today
+                user.daily_analysis_count = 1
+            db.commit()
+            logger.info(f"User {user.email} analysis count incremented: {user.daily_analysis_count}/5")
+
         quiz = result.get("quiz", {})
         
         return {
