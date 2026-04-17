@@ -115,11 +115,6 @@ function ConceptExplorer({
                                 }`}
                         >
                             {concept}
-                            {relevance > 0 && (
-                                <span className={`text-[8px] px-1 rounded ${relevance > 0.7 ? 'bg-emerald-500/20 text-emerald-500' : 'bg-blue-500/20 text-blue-500'}`}>
-                                    {(relevance * 100).toFixed(0)}%
-                                </span>
-                            )}
                         </button>
                     );
                 })}
@@ -138,12 +133,6 @@ function ConceptExplorer({
                             </div>
                             <div>
                                 <h4 className="text-base font-bold text-blue-400">{selectedConcept}</h4>
-                                {result.concept_details?.find((d) => d.term === selectedConcept) && (
-                                    <p className="text-[10px] text-app-muted font-bold uppercase">
-                                        Semantic confidence:{' '}
-                                        {(result.concept_details.find((d) => d.term === selectedConcept).relevance * 100).toFixed(1)}%
-                                    </p>
-                                )}
                             </div>
                         </div>
                         <button
