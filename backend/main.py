@@ -41,6 +41,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends
 from datetime import datetime
 from app.database import get_db, engine, Base
+from app.models import User
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Synod API")
