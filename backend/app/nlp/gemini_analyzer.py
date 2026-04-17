@@ -58,6 +58,8 @@ def analyze_with_gemini(text: str, api_key: str, model: str = "gemini-2.0-flash"
 
     with httpx.Client(timeout=timeout_s) as client:
         r = client.post(url, json=body)
+        if r.status_code >= 400:
+            logger.error(f"Gemini API Error {r.status_code}: {r.text}")
         r.raise_for_status()
         data = r.json()
 
