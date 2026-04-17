@@ -1006,7 +1006,7 @@ class Summarizer:
             return {"summary": text[:200] + "...", "metrics": {"compression_ratio": 0.0}}
 
     def generate_takeaways(
-        self, text: str, num_bullets: int = 7, extractor=None
+        self, text: str, num_bullets: int = 12, extractor=None
     ) -> List[str]:
         """
         Verbatim or tightly grounded bullets only: full source sentences first;
@@ -1024,7 +1024,7 @@ class Summarizer:
             mock_take = _filter_redundant_sentences(mock_take)[:num_bullets]
             return mock_take or ["Key point from the lecture (Mock)"]
 
-        ext = _takeaway_sentences_from_source(text, min_words=10)
+        ext = _takeaway_sentences_from_source(text, min_words=8)
         ext = [_finalize_takeaway_sentence(_fix_tokenization_artifacts(x)) for x in ext]
         ext = [x for x in ext if x and _takeaway_lexically_grounded(x, text, min_ratio=0.5)]
         ext = _filter_redundant_sentences(ext)
@@ -1063,7 +1063,7 @@ class Summarizer:
                 fin = _finalize_takeaway_sentence(point)
                 if not fin or fin.lower() in {x.lower() for x in out}:
                     continue
-                if not _takeaway_lexically_grounded(fin, text, min_ratio=0.62):
+                if not _takeaway_lexically_grounded(fin, text, min_ratio=0.45):
                     continue
                 if not _takeaway_semantically_close_to_source(fin, text, extractor):
                     continue
@@ -1079,7 +1079,7 @@ class Summarizer:
                 if (
                     fin
                     and fin.lower() not in {x.lower() for x in out}
-                    and _takeaway_lexically_grounded(fin, text, min_ratio=0.5)
+                    and _takeaway_lexically_grounded(fin, text, min_ratio=0.45)
                 ):
                     out.append(fin)
 
