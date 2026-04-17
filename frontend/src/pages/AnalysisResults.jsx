@@ -22,6 +22,11 @@ function AnalysisResults() {
     const [viewedConcepts, setViewedConcepts] = useState([]);
     const quizRef = useRef(null);
 
+    useEffect(() => {
+        console.log("AnalysisResults mounted. Received state:", location.state);
+        console.log("Extracted result:", result);
+    }, [location.state, result]);
+
     // Redirect to dashboard if no result is found in state
     useEffect(() => {
         if (!result) {

@@ -53,21 +53,28 @@ function Dashboard() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             const data = response.data;
-            setResult(data);
-
+            console.log("Analysis Success (Text):", data);
+            
             const newEntry = {
                 date: new Date().toISOString(),
                 userId: user?.uid || user?.email || 'anonymous',
                 title: textToAnalyze.slice(0, 50) + (textToAnalyze.length > 50 ? '...' : ''),
                 ...data
             };
-            try {
-                const docRef = await addDoc(collection(db, "history"), newEntry);
-                newEntry.id = docRef.id;
-            } catch (fbErr) {
-                console.error("Firebase err:", fbErr);
-                newEntry.id = Date.now().toString();
-            }
+
+            // Non-blocking history save
+            const saveToHistory = async () => {
+                try {
+                    console.log("Saving to history (Firestore)...");
+                    const docRef = await addDoc(collection(db, "history"), newEntry);
+                    console.log("Saved to history with ID:", docRef.id);
+                } catch (fbErr) {
+                    console.error("Firestore error (non-blocking):", fbErr);
+                }
+            };
+            saveToHistory();
+
+            console.log("Triggering navigation to /analysis with state:", newEntry);
             navigate('/analysis', { state: { result: newEntry } });
 
         } catch (err) {
@@ -83,20 +90,27 @@ function Dashboard() {
     };
 
     const handleFileUploadSuccess = async (data) => {
-        setResult(data);
+        console.log("Analysis Success (File):", data);
         const newEntry = {
             date: new Date().toISOString(),
             userId: user?.uid || user?.email || 'anonymous',
             title: "File Analysis: " + ((data?.summary || "Uploaded file").slice(0, 30) + "..."),
             ...data
         };
-        try {
-            const docRef = await addDoc(collection(db, "history"), newEntry);
-            newEntry.id = docRef.id;
-        } catch (fbErr) {
-            console.error("Firebase err:", fbErr);
-            newEntry.id = Date.now().toString();
-        }
+        
+        // Non-blocking history save
+        const saveToHistory = async () => {
+            try {
+                console.log("Saving to history (Firestore)...");
+                const docRef = await addDoc(collection(db, "history"), newEntry);
+                console.log("Saved to history with ID:", docRef.id);
+            } catch (fbErr) {
+                console.error("Firestore error (non-blocking):", fbErr);
+            }
+        };
+        saveToHistory();
+
+        console.log("Triggering navigation to /analysis with state:", newEntry);
         navigate('/analysis', { state: { result: newEntry } });
     };
 
