@@ -27,6 +27,7 @@ function Dashboard() {
     const [showQuiz, setShowQuiz] = useState(false);
     const [activeTab, setActiveTab] = useState('text'); // 'text' or 'file'
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [usage, setUsage] = useState({ daily_count: 0, daily_limit: 5 });
     const [selectedConcept, setSelectedConcept] = useState(null);
     const [viewedConcepts, setViewedConcepts] = useState([]);
 
@@ -35,6 +36,23 @@ function Dashboard() {
     const location = useLocation();
     const { theme, toggleTheme } = useTheme();
     const { user, token, logout } = useAuth();
+
+    useEffect(() => {
+        const fetchUsage = async () => {
+            if (token) {
+                try {
+                    const response = await axios.get(`${API_BASE_URL}/user/usage`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    setUsage(response.data);
+                } catch (err) {
+                    console.error("Failed to fetch usage:", err);
+                }
+            }
+        };
+        fetchUsage();
+        // Also refresh usage when an analysis completes
+    }, [token, result]);
 
 
 
@@ -178,8 +196,27 @@ function Dashboard() {
                                     title="Logout"
                                 >
                                     <LogOut className="w-3 h-3" />
-                                    <span>Logout</span>
+                                    <span>Logout Account</span>
                                 </button>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Usage Counter */}
+                    {sidebarOpen && (
+                        <div className="px-6 mb-4">
+                            <div className="p-4 bg-app-card border border-app-border rounded-xl">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-[10px] font-bold text-app-muted uppercase tracking-widest">Daily Limit</span>
+                                    <span className="text-[10px] font-bold text-app-fg">{usage.daily_count}/5</span>
+                                </div>
+                                <div className="h-1 bg-app-border rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-blue-500 transition-all duration-500" 
+                                        style={{ width: `${(usage.daily_count / 5) * 100}%` }}
+                                    />
+                                </div>
+                                <p className="text-[9px] text-app-muted mt-2 font-medium">Auto-resets daily.</p>
                             </div>
                         </div>
                     )}

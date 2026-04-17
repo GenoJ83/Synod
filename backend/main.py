@@ -212,6 +212,21 @@ async def root():
         }
     }
 
+@app.get("/user/usage")
+def get_user_usage(user: User = Depends(get_current_user)):
+    """Return the current user's daily analysis usage."""
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    # If the user hasn't analyzed today, the stored count is effectively 0 for the UI
+    count = user.daily_analysis_count if user.last_analysis_date == today else 0
+    
+    return {
+        "daily_count": count,
+        "daily_limit": 5,
+        "remaining": max(0, 5 - count),
+        "last_analysis": user.last_analysis_date
+    }
+
 @app.post("/explain-concept", response_model=ConceptExplanationResponse)
 async def explain_concept(request: ExplainConceptRequest):
     """Generate definition + lecture context for one concept (on demand)."""

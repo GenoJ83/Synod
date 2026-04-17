@@ -9,7 +9,6 @@ import History from './pages/History';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
-import AuthCallback from './pages/AuthCallback';
 import HowItWorks from './pages/HowItWorks';
 import Documentation from './pages/Documentation';
 import AnalysisResults from './pages/AnalysisResults';
@@ -50,7 +49,6 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
           </Routes>
         </Router>
       </AuthProvider>
