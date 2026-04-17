@@ -9,7 +9,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
 import { db } from '../firebase';
-import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc, limit } from 'firebase/firestore';
 
 const History = () => {
     const [history, setHistory] = useState([]);
@@ -38,8 +38,12 @@ const History = () => {
                 );
                 
                 const snapshot = await getDocs(q);
-                console.log(`History: Found ${snapshot.size} records.`);
+                console.log(`History Diagnostic: Found ${snapshot.size} records for UID: ${lookupId}`);
                 
+                // Connectivity Check: see if there are ANY records in the collection at all
+                const checkAll = await getDocs(query(collection(db, "history"), limit(1)));
+                console.log(`History Connectivity Check: Database contains ${checkAll.empty ? '0' : 'some'} total across all users.`);
+
                 const items = snapshot.docs.map(docSnap => ({ 
                     id: docSnap.id, 
                     ...docSnap.data() 
