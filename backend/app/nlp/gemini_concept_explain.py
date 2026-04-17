@@ -55,7 +55,7 @@ def explain_concept_with_gemini(
     """
     concept = (concept or "").strip()
     snippet = (snippet or "").strip()
-    if not concept or not snippet:
+    if not concept:
         return None
 
     model = (model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")).strip()
@@ -63,13 +63,14 @@ def explain_concept_with_gemini(
 
     instruction = (
         "You help a student understand one key term from a lecture. "
-        "You will receive SOURCE_SNIPPET: excerpts from the lecture (may contain OCR noise).\n"
-        "Respond with a single JSON object only, keys exactly:\n"
-        '  "definition": string — 2 to 4 clear sentences. Use standard technical meaning where it fits the snippet; '
-        "do not contradict the snippet.\n"
-        '  "context": string — 1 or 2 short sentences that paraphrase or quote ONLY what the snippet says about this term. '
-        "If the snippet does not really discuss the term, use an empty string for context.\n"
-        "Do not invent citations, paper titles, or facts not supported by the snippet.\n"
+        "You will receive SOURCE_SNIPPET: excerpts from the lecture (may contain OCR noise).\n\n"
+        "Requirements:\n"
+        "1. DEFINITION: Provide a clear 2 to 4 sentence technical definition. If the SOURCE_SNIPPET "
+        "contains a specific local definition, prioritize it. If the snippet is empty or does not "
+        "provide a definition, use your own general expert knowledge of the term's standard technical meaning.\n"
+        "2. CONTEXT: Provide 1 or 2 short sentences quoting or paraphrasing ONLY what the snippet says "
+        "about the term. If the snippet does not discuss the term at all, return an EMPTY string for context.\n"
+        "3. FORMAT: Respond with a single JSON object only, keys exactly: \"definition\", \"context\".\n\n"
         f'CONCEPT: "{concept}"\n\nSOURCE_SNIPPET:\n"""{snippet}"""'
     )
 

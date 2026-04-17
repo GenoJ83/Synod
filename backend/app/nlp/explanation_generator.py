@@ -268,7 +268,7 @@ class ExplanationGenerator:
             contextual_use = f"Lecture context: {best_sent}"
         else:
             definition = self._get_general_explanation(
-                concept, "Key term identified based on semantic centrality in lecture."
+                concept, "Highlighted key term from the lecture material."
             )
             contextual_use = "No specific lecture example found."
 
