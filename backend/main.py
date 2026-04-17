@@ -170,6 +170,10 @@ def process_logic(text: str, user: any = None, db: Session = None):
         # Single robust LLM call replacing sum, extraction, and quiz heuristics
         result = analyze_with_gemini(text, api_key)
         
+        if "error" in result:
+            logger.error(f"Analysis failed (all providers): {result['error']}")
+            raise HTTPException(status_code=503, detail=result["error"])
+
         if user and db:
             # Increment credit ONLY on success
             today = datetime.now().strftime("%Y-%m-%d")

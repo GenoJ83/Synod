@@ -42,16 +42,17 @@ def analyze_with_cascade(text: str) -> Dict[str, Any]:
     
     # 1. Google Gemini (Primary - Most Tokens)
     if gemini_key:
-        cascade_configs.append(("gemini", "gemini-1.5-pro", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
-        cascade_configs.append(("gemini", "gemini-1.5-flash", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
+        cascade_configs.append(("gemini", "gemini-1.5-pro-latest", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
+        cascade_configs.append(("gemini", "gemini-1.5-flash-latest", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
     
     # 2. Groq (High Speed Fallback)
     if groq_key:
-        cascade_configs.append(("groq", "llama-3.1-70b-versatile", groq_key, "https://api.groq.com/openai/v1"))
+        cascade_configs.append(("groq", "llama-3.3-70b-versatile", groq_key, "https://api.groq.com/openai/v1"))
+        cascade_configs.append(("groq", "llama-3.1-8b-instant", groq_key, "https://api.groq.com/openai/v1"))
     
     # 3. OpenRouter (Universal Safety Net)
     if openrouter_key:
-        cascade_configs.append(("openrouter", "meta-llama/llama-3.1-8b-instruct:free", openrouter_key, "https://openrouter.ai/api/v1"))
+        cascade_configs.append(("openrouter", "google/gemini-flash-1.5-8b", openrouter_key, "https://openrouter.ai/api/v1"))
 
     if not cascade_configs:
         logger.error("No LLM API keys configured in .env (Gemini, Groq, or OpenRouter missing)")

@@ -31,23 +31,20 @@ const History = () => {
             const lookupId = user.uid || 'anonymous_user';
             console.log(`History: Fetching records for userId: ${lookupId}`);
             
+            console.log(`History: Attempting to query 'history' collection for userId: ${lookupId}...`);
             try {
-                const q = query(
-                    collection(db, "history"), 
-                    where("userId", "==", lookupId)
-                );
+                const historyRef = collection(db, "history");
+                const q = query(historyRef, where("userId", "==", lookupId));
                 
+                console.log("History: Awaiting Firestore response...");
                 const snapshot = await getDocs(q);
-                console.log(`History Diagnostic: Found ${snapshot.size} records for UID: ${lookupId}`);
+                console.log(`History: Response received! Found ${snapshot.size} records.`);
                 
-                // Connectivity Check: see if there are ANY records in the collection at all
-                const checkAll = await getDocs(query(collection(db, "history"), limit(1)));
-                console.log(`History Connectivity Check: Database contains ${checkAll.empty ? '0' : 'some'} total across all users.`);
-
-                const items = snapshot.docs.map(docSnap => ({ 
-                    id: docSnap.id, 
-                    ...docSnap.data() 
-                }));
+                const items = snapshot.docs.map(docSnap => {
+                    const data = docSnap.data();
+                    return { id: docSnap.id, ...data };
+                });
+                console.log("History: Data mapping complete.");
                 
                 items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
                 setHistory(items);
