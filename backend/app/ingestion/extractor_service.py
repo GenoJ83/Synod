@@ -230,7 +230,7 @@ class ExtractorService:
         text = re.sub(r'\n{3,}', '\n\n', text) # Allow double newlines but not triple+
         return text.strip()
 
-@staticmethod
+    @staticmethod
     def _extract_from_pdf(file_path: str) -> str:
         text = ""
         ocr_text = ""
