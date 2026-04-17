@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Optional
@@ -224,14 +225,82 @@ def process_logic(text: str, user: any = None, db: Session = None):
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    return {
-        "message": "Welcome to Synod API",
-        "device_info": {
-            "extractor": extractor.device if hasattr(extractor, "device") else "mock"
-        }
-    }
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Synod.ai | API Node</title>
+        <link rel="icon" type="image/svg+xml" href="/favicon.ico">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+        <style>
+            body { font-family: 'Outfit', sans-serif; background: #09090b; color: #fafafa; }
+            .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+            .gradient-text { background: linear-gradient(135deg, #60a5fa 0%, #a855f7 50%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+            .animate-blob { animation: blob 7s infinite; }
+            @keyframes blob {
+                0% { transform: translate(0px, 0px) scale(1); }
+                33% { transform: translate(30px, -50px) scale(1.1); }
+                66% { transform: translate(-20px, 20px) scale(0.9); }
+                100% { transform: translate(0px, 0px) scale(1); }
+            }
+        </style>
+    </head>
+    <body class="min-h-screen flex items-center justify-center overflow-hidden">
+        <div class="fixed top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div class="fixed top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div class="fixed -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        
+        <div class="glass p-12 rounded-[2.5rem] max-w-xl w-full text-center relative z-10 shadow-2xl">
+            <div class="mb-8 inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/20">
+                <svg viewBox="0 0 24 24" fill="none" class="w-10 h-10 text-white" stroke="currentColor" stroke-width="2">
+                    <path d="M9.5 2A1.5 1.5 0 0 0 8 3.5c0 .3.1.6.3.8-.1.2-.3.4-.3.7a1.5 1.5 0 0 0 1.5 1.5c.3 0 .6-.1.8-.3.2.1.4.3.7.3h.1a1.5 1.5 0 0 0 1.5-1.5c0-.3-.1-.6-.3-.8.1-.2.3-.4.3-.7a1.5 1.5 0 0 0-1.5-1.5h-1.1Zm2 6a4 4 0 0 0-4 4c0 1.1.4 2.1 1.1 2.9-.1.2-.1.4-.1.6 0 1.1.9 2 2 2h1a2 2 0 1 0 0-4h-1a1.5 1.5 0 0 1-1.5-1.5c0-.8.7-1.5 1.5-1.5h.5a1.5 1.5 0 0 1 0 3h-.5" />
+                    <path d="M12 18.5a1.5 1.5 0 0 1-1.5 1.5c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5Z" />
+                    <path d="M12 13V9" />
+                    <path d="M12 6a4 4 0 0 1 4 4c0 1.1-.4 2.1-1.1 2.9.1.2.1.4.1.6 0 1.1-.9 2-2 2h-1a2 2 0 1 1 0-4h1a1.5 1.5 0 0 0 1.5-1.5c0-.8-.7-1.5-1.5-1.5h-.5a1.5 1.5 0 0 0 0 3h.5" />
+                </svg>
+            </div>
+            
+            <h1 class="text-5xl font-extrabold mb-4 tracking-tight">
+                <span class="gradient-text">Synod.ai</span>
+            </h1>
+            <p class="text-zinc-400 text-lg mb-10 font-medium">Intelligence Engine v2026.4 is Active</p>
+            
+            <div class="grid grid-cols-2 gap-4 text-left">
+                <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Status</p>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <span class="text-sm font-bold text-emerald-400">Operational</span>
+                    </div>
+                </div>
+                <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Models</p>
+                    <span class="text-sm font-bold text-blue-400">Gemini 3.1 & 2.5</span>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-8 border-t border-white/10">
+                <p class="text-xs text-zinc-500 font-medium tracking-wide">
+                    © 2026 Synod Assistants | Advanced Lecture Synthesis
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    icon_path = Path("brain-icon.svg")
+    if icon_path.exists():
+        return FileResponse(icon_path)
+    return HTTPException(status_code=404)
 
 
 @app.get("/user/usage")
