@@ -40,28 +40,35 @@ class ExplanationGenerator:
     Uses context analysis to provide educational explanations.
     """
     
-    # Common educational concept categories and their general explanations
-    CONCEPT_CATEGORIES = {&#10;        # Technology & AI&#10;        "machine learning": "Machine Learning (ML) is a subset of artificial intelligence that enables computers to learn patterns from data without being explicitly programmed. Key types include supervised learning (labeled data), unsupervised learning (finding patterns), and reinforcement learning (trial-and-error). Common algorithms include decision trees, SVMs, and neural networks. ML powers recommendation systems, fraud detection, and predictive analytics.",&#10;        "deep learning": "Deep Learning is a specialized form of machine learning using multi-layered artificial neural networks to automatically learn hierarchical feature representations from raw data. It excels in unstructured data like images, audio, and text. Popular architectures include CNNs for vision, RNNs/LSTMs for sequences, and Transformers for language. Requires large datasets and compute power but achieves state-of-the-art performance.",&#10;        "neural network": "A Neural Network is a computational model inspired by biological brains, consisting of interconnected nodes (neurons) organized in layers. Each connection has a weight adjusted during training via backpropagation to minimize error. Activation functions introduce non-linearity. Deep networks (many layers) capture complex patterns. Used in classification, regression, generation, and reinforcement learning.",&#10;        "artificial intelligence": "Artificial Intelligence (AI) is the broad field of creating intelligent machines capable of performing tasks requiring human intelligence, such as visual perception, speech recognition, decision-making, and language translation. Includes symbolic AI (rule-based), machine learning (data-driven), and hybrid approaches. Ethical considerations include bias, transparency, and societal impact.",&#10;        "natural language processing": "Natural Language Processing (NLP) focuses on enabling computers to understand, interpret, generate, and manipulate human language. Core tasks include tokenization, POS tagging, NER, sentiment analysis, machine translation, and question answering. Modern NLP uses deep learning models like BERT, GPT, and T5 trained on massive corpora.",&#10;        # ... (rest unchanged for now, will expand in next edit)&#10;
-        # Technology & AI
-        "machine learning": "A method of teaching computers to learn from data without being explicitly programmed, enabling systems to improve performance on tasks through experience.",
-        "deep learning": "A subset of machine learning using artificial neural networks with multiple layers to learn representations of data.",
-        "neural network": "Computing systems inspired by biological neural networks, consisting of interconnected nodes that process information.",
-        "artificial intelligence": "The simulation of human intelligence in machines to perform tasks like reasoning, learning, and problem-solving.",
-        "natural language processing": "A field of AI that helps computers understand, interpret, and manipulate human language.",
-        "computer vision": "A field of AI that enables computers to interpret and understand visual information from the world.",
-        "transformer": "A deep learning architecture that uses self-attention mechanisms to process sequential data.",
-        "attention mechanism": "A technique in neural networks that allows models to focus on relevant parts of the input when processing sequences.",
-        "tokenization": "The process of breaking text into smaller units like words or subwords for processing.",
-        "embeddings": "Dense vector representations of words or concepts that capture semantic relationships.",
-        "sentiment analysis": "The process of determining the emotional tone or opinion expressed in text.",
-        "named entity recognition": "The task of identifying and classifying entities like names, organizations, and locations in text.",
-        "text summarization": "The process of creating a shorter version of a document while preserving key information.",
-        "question answering": "AI systems designed to extract or generate answers from given text or knowledge bases.",
-        "language model": "A model that predicts the probability of word sequences in language.",
-        "speech recognition": "Technology that converts spoken language into written text.",
-        "transfer learning": "A technique where a model trained on one task is repurposed for a related task.",
-        
+    # Common educational concept categories and their general explanations - EXPANDED
+    CONCEPT_CATEGORIES = {
+        # Technology & AI - Enhanced definitions
+        "machine learning": "Machine Learning (ML) is a subset of artificial intelligence that enables computers to learn patterns from data without being explicitly programmed. Key types include supervised learning (labeled data for prediction), unsupervised learning (finding hidden patterns), and reinforcement learning (trial-and-error optimization). Common algorithms: decision trees, SVMs, random forests, gradient boosting. Applications: recommendation systems, fraud detection, predictive maintenance, autonomous vehicles.",
+        "deep learning": "Deep Learning uses multi-layered neural networks (deep architectures) to automatically learn hierarchical feature representations from raw data. Excels in unstructured data (images, audio, text). Architectures: CNNs (vision), RNNs/LSTMs (sequences), Transformers (language/NLP). Requires GPUs, large datasets. State-of-the-art in computer vision (ImageNet), NLP (GPT/BERT), speech (Whisper). Challenges: interpretability, data requirements, overfitting.",
+        "neural network": "Artificial Neural Network (ANN): Computational model inspired by brain neurons. Layers: input, hidden, output. Neurons apply weights, bias, activation (ReLU, sigmoid, tanh). Training: forward pass, loss calculation, backpropagation, gradient descent. Deep networks capture complex hierarchies. Variants: feedforward, convolutional, recurrent. Used in classification, generation, control systems.",
+        "artificial intelligence": "AI aims to create intelligent agents performing tasks requiring human intelligence: perception, reasoning, learning, planning, NLP. Branches: symbolic (rules), connectionist (neural nets), statistical (probabilistic), evolutionary. Narrow AI (specific tasks), General AI (human-level), Super AI (surpass human). Ethics: bias mitigation, transparency, job displacement, existential risk.",
+        "natural language processing": "NLP enables computers to process human language. Pipeline: tokenization, stemming/lemmatization, POS tagging, NER, parsing, coreference. Tasks: sentiment, summarization, translation, QA, chatbots. Models: word2vec, BERT, GPT, T5. Challenges: ambiguity, context, multilingualism, low-resource languages. Applications: virtual assistants (Siri), search engines, content moderation.",
+        "computer vision": "CV gives computers 'sight': image/video understanding. Tasks: classification, detection (YOLO), segmentation (Mask R-CNN), tracking, generation (GANs). Features: edges, textures, objects via CNNs. Applications: medical imaging, autonomous driving, surveillance, AR/VR, defect detection. Datasets: ImageNet, COCO, OpenImages.",
+        "transformer": "Transformer (Vaswani 2017): Revolutionized sequence modeling with self-attention (parallelizable, captures long-range dependencies). Encoder-decoder architecture. Positional encodings + multi-head attention + feedforward + layer norm. Models: BERT (bidirectional), GPT (autoregressive), T5 (text-to-text). Powers modern NLP/Speech/Vision.",
+        # Add more detailed entries...
+        "attention mechanism": "Attention computes weighted sum of input representations based on relevance to current position/query. Softmax over similarity scores. Self-attention: input attends to itself. Multi-head: parallel attention subspaces. Key innovation: fixed context window, no recurrence. Enables Transformers.",
         # Data & Programming
+        "database": "Databases store/retrieve structured data efficiently. Relational (SQL: tables, keys, joins, ACID transactions) vs NoSQL (documents, graphs, key-value). Indexing (B-trees), normalization, sharding. SQL: SELECT/JOIN/GROUP BY. ORM: SQLAlchemy. Cloud: RDS, DynamoDB.",
+        "algorithm": "Finite sequence of operations solving problem. Analysis: time/space complexity (Big O). Types: search (binary), sort (quicksort O(n log n)), dynamic programming, greedy, divide-conquer. Data structures dictate algorithm choice.",
+        # Keep existing ones + add 10 more detailed
+        "gradient descent": "Optimization minimizing loss function by iteratively adjusting parameters opposite gradient direction. Variants: batch, stochastic (SGD), mini-batch. Learning rate, momentum, Adam optimizer. Learning rate scheduling, early stopping prevent divergence.",
+        "overfitting": "Model memorizes training data noise instead of general patterns. Signs: high train/low test accuracy. Prevention: regularization (L1/L2, dropout), early stopping, data augmentation, cross-validation, ensemble methods.",
+        "backpropagation": "Efficient algorithm computing gradients in neural networks via chain rule (reverse-mode autodiff). Forward pass computes predictions/loss, backward pass propagates error derivatives updating weights. Foundation of deep learning training.",
+        "loss function": "Quantifies model error. Regression: MSE, MAE. Classification: cross-entropy, hinge. Custom losses for specific tasks. Optimization target in training.",
+        "epoch": "One complete pass through entire training dataset. Multiple epochs enable learning. Monitor validation loss to detect overfitting.",
+        "batch size": "Number of training examples processed before parameter update. Tradeoff: large (stable gradients, memory), small (noisy but faster convergence). Typical: 32, 64, 128.",
+        "validation set": "Subset (20%) for hyperparameter tuning, model selection. Separate from training (learn parameters) and test (final evaluation). K-fold CV for small data.",
+        "feature engineering": "Create/transform input features improving model performance. Normalization/scaling, encoding categoricals (one-hot, embeddings), dimensionality reduction (PCA), interaction terms, domain-specific transformations.",
+        "cross validation": "Robust performance estimation dividing data k folds, training k-1, validating 1 (rotate). Average performance + std dev. Stratified for imbalanced classes.",
+        "activation function": "Introduces non-linearity enabling complex functions. Sigmoid (0-1 logistic), Tanh (-1 to 1), ReLU (max(0,x) fast), Leaky ReLU, Swish. Placement: after linear transformation.",
+        "convolutional neural network": "CNNs for grid-structured data (images). Convolution extracts local features (edges→shapes→objects), pooling reduces dimensions, fully-connected classification. Filters/kernels learn hierarchies. Transfer learning (ImageNet pre-trained).",
+        "batch normalization": "Normalizes layer inputs (mean 0, std 1) reducing internal covariate shift, accelerating training, regularization effect. Applied before activation.",
+        # Original entries preserved
         "database": "An organized collection of structured data stored electronically.",
         "algorithm": "A step-by-step procedure for solving a problem or accomplishing a task.",
         "data structure": "A way of organizing and storing data to enable efficient access and modification.",
@@ -242,12 +249,12 @@ class ExplanationGenerator:
 
         if best_sent:
             definition = self._get_general_explanation(concept, "Key term from the lecture.")
-            contextual_use = best_sent
+            contextual_use = f"Lecture context: {best_sent}"
         else:
             definition = self._get_general_explanation(
-                concept, "Key term identified based on semantic centrality."
+                concept, "Key term identified based on semantic centrality in lecture."
             )
-            contextual_use = ""
+            contextual_use = "No specific lecture example found."
 
         return {"term": concept, "definition": definition, "context": contextual_use}
 
@@ -344,3 +351,4 @@ if __name__ == "__main__":
         print(f"  Definition: {c['definition'][:150]}...")
         if c['context']:
             print(f"  Context: {c['context']}")
+
