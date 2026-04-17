@@ -20,3 +20,6 @@ google-auth
 sqlalchemy
 groq
 passlib[bcrypt]
+pytesseract
+pdf2image
+Pillow

@@ -2,6 +2,14 @@ import fitz  # PyMuPDF
 from pptx import Presentation
 import os
 import re
+try:
+    import pytesseract
+    from pdf2image import convert_from_path
+    from PIL import Image
+    OCR_AVAILABLE = True
+except ImportError:
+    OCR_AVAILABLE = False
+    pytesseract = None
 
 # Patterns for academic paper noise (appendices, figure OCR, citations)
 _ARXIV_PATTERN = re.compile(
@@ -222,13 +230,31 @@ class ExtractorService:
         text = re.sub(r'\n{3,}', '\n\n', text) # Allow double newlines but not triple+
         return text.strip()
 
-    @staticmethod
+@staticmethod
     def _extract_from_pdf(file_path: str) -> str:
         text = ""
+        ocr_text = ""
         with fitz.open(file_path) as doc:
-            for page in doc:
+            for page_num in range(len(doc)):
+                # Extract embedded text
+                page = doc[page_num]
                 text += page.get_text()
-        return text
+                
+                # OCR images if available
+                if OCR_AVAILABLE and pytesseract:
+                    try:
+                        import io
+                        images = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # Higher DPI
+                        img_data = images.tobytes("ppm")
+                        img = Image.open(io.BytesIO(img_data))
+                        ocr = pytesseract.image_to_string(img, lang='eng')
+                        ocr_text += ocr + "\n"
+                    except Exception as e:
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        logger.debug(f"OCR failed on page {page_num}: {e}")
+                        
+        return text + "\n\n--- OCR from images ---\n" + ocr_text.strip()
 
     @staticmethod
     def _extract_from_pptx(file_path: str) -> str:

@@ -12,9 +12,14 @@ ENV PYTHONUNBUFFERED=1 \
 RUN useradd -m -u 1000 user
 WORKDIR /home/user/app
 
-# Install system dependencies
+# Install system dependencies (OCR)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    poppler-utils \
+    libtesseract-dev \
+    libleptonica-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install dependencies
