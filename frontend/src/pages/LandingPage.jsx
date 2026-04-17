@@ -184,7 +184,7 @@ const LandingPage = () => {
                         <a href="#" className="hover:text-app-fg transition-colors">Terms</a>
                         <a href="#" className="hover:text-app-fg transition-colors">Contact</a>
                     </div>
-                    <p className="text-xs font-medium">© 2026 Synod Systems. Built for precision.</p>
+                    <p className="text-xs font-medium">© 2026 Synod Systems. All rights reserved.</p>
                 </div>
             </footer>
         </div>
