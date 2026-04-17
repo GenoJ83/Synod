@@ -3,22 +3,49 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import User
-from .jwt_handler import verify_access_token
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+import os
+
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")
 
 security = HTTPBearer()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     token = credentials.credentials
-    payload = verify_access_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
-    email = payload.get("email")
-    if not email:
-        raise HTTPException(status_code=401, detail="Invalid token structure")
+    try:
+        # Verify the Firebase ID token
+        decoded_token = id_token.verify_firebase_token(
+            token, 
+            google_requests.Request(), 
+            audience=FIREBASE_PROJECT_ID
+        )
         
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
+        email = decoded_token.get("email")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token: missing email")
+            
+        # Check if user exists in local DB, if not, create them (sync)
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            from .security import get_password_hash
+            import secrets
+            
+            # Create a "shadow" user in the local DB to track rate limits
+            user = User(
+                email=email,
+                full_name=decoded_token.get("name", email.split('@')[0]),
+                hashed_password=get_password_hash(secrets.token_urlsafe(16)),
+                is_active=True
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            
+        return user
         
-    return user
+    except ValueError as e:
+        # Token is invalid or expired
+        raise HTTPException(status_code=401, detail=f"Invalid or expired token: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
