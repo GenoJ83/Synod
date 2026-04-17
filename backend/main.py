@@ -265,8 +265,8 @@ async def explain_concept(request: ExplainConceptRequest):
         baseline = explanation_gen.generate_concept_detail(concept, text, extractor=extractor)
         if _gemini_enabled():
             api_key = (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
-            snippet = explanation_gen.gather_grounding_snippet(concept, text, extractor)
-            if api_key and snippet.strip():
+            if api_key:
+                snippet = explanation_gen.gather_grounding_snippet(concept, text, extractor)
 
                 def _gemini_call():
                     return explain_concept_with_gemini(
