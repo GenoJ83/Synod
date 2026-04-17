@@ -173,7 +173,7 @@ function Dashboard() {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 <header className="h-16 border-b border-app-border bg-app-bg/50 backdrop-blur-md flex items-center justify-between px-8 z-10">
-                    <h2 className="text-sm font-bold text-app-muted uppercase tracking-widest">Active Workspace</h2>
+                    <h2 className="text-sm font-bold text-app-muted uppercase tracking-widest">{user?.name || user?.email || 'User'}'s Active Workspace</h2>
                     <div className="flex items-center gap-4">
                         <button
                             onClick={toggleTheme}
@@ -201,8 +201,8 @@ function Dashboard() {
                             {/* Input Section */}
                             <div className="transition-all duration-500 w-full max-w-4xl">
                                 <div className="mb-10 text-left">
-                                    <h1 className="text-4xl font-bold tracking-tight mb-4">Lecture Analysis</h1>
-                                    <p className="text-zinc-500 text-lg">Input your course materials to extract intelligence.</p>
+                                    <h1 className="text-4xl font-bold tracking-tight mb-4">Welcome back, {user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Scholar'}.</h1>
+                                    <p className="text-zinc-500 text-lg">Input your course materials below to extract intelligence for this session.</p>
                                 </div>
 
                                 <AnalysisInput
