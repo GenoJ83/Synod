@@ -1,10 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Brain, Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight, CheckCircle2 } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL } from '../config';
+import { auth } from '../firebase';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const Signup = () => {
     const [name, setName] = useState('');
@@ -14,7 +9,7 @@ const Signup = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
-    const { login, isAuthenticated } = useAuth();
+    const { isAuthenticated } = useAuth();
 
     React.useEffect(() => {
         if (isAuthenticated) {
@@ -22,32 +17,33 @@ const Signup = () => {
         }
     }, [isAuthenticated, navigate]);
 
-    const handleOAuth = (provider) => {
-        // Redirect to backend OAuth endpoint
-        window.location.href = `${API_BASE_URL}/auth/${provider}/login`;
+    const handleOAuth = async (provider) => {
+        setLoading(true);
+        try {
+            let authProvider;
+            if (provider === 'google') authProvider = new GoogleAuthProvider();
+            else if (provider === 'github') authProvider = new GithubAuthProvider();
+            
+            await signInWithPopup(auth, authProvider);
+            navigate('/dashboard');
+        } catch (error) {
+            console.error('OAuth error:', error);
+            alert(error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSignup = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, full_name: name }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Registration failed');
-            }
-
-            const data = await response.json();
-            login(data.user, data.token);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(userCredential.user, { displayName: name });
             navigate('/dashboard');
         } catch (error) {
             console.error('Signup error:', error);
-            alert(error.message); // Simple alert for now, could be better UI
+            alert(error.message);
         } finally {
             setLoading(false);
         }
