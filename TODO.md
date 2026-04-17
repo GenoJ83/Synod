@@ -1,16 +1,23 @@
-# OCR Implementation Plan - Progress Tracker
+# Landing Page Cleanup Plan - Progress Tracker
 
 ## Information Gathered:
-- Current extraction: PyMuPDF (PDF text only), python-pptx (text shapes only) - no image OCR.
-- Files to edit: backend/app/ingestion/extractor_service.py (add OCR logic), requirements.txt (+ pytesseract pdf2image), Dockerfile (+ tesseract poppler).
+- LandingPage.jsx (frontend/src/pages/): Hero (video+text), Features Matrix, How It Works (4-steps), Quiz Types.
+- Congested: Too many sections, large hero video, dense grids.
+- App.jsx routes '/' to LandingPage.
 
-## Pending Steps:
-- [x] Step 1: Update requirements.txt + Dockerfile for OCR deps
-- [x] Step 2: Implement OCR in extractor_service.py (PDF images → Tesseract)
-- [x] Step 3: Test extraction on image-heavy PDF
-- [ ] Step 4: Commit/push
+## Plan:
+1. Hero: Shorten subtitle, remove demo mockup, bigger CTA.
+2. Remove Quiz Types section (redundant with How It Works).
+3. Features: Reduce text, bigger icons.
+4. Spacing: More whitespace, taller sections.
+5. Mobile: Better responsive.
 
-## Completed:
-- Step 1: Added pytesseract pdf2image Pillow, system deps (tesseract poppler)
-- Step 2: OCR logic in _extract_from_pdf (PyMuPDF pixmap → Tesseract), graceful fallback
-- Step 3: Files staged, ready for commit/push
+## Dependent Files:
+- frontend/src/pages/LandingPage.jsx (main)
+- frontend/src/App.css (if needed)
+
+## Followup steps:
+- Commit/push frontend.
+- Test on Vercel (synod-phi.vercel.app).
+
+Confirm plan before editing?

@@ -84,7 +84,7 @@ const LandingPage = () => {
                                 <span className="text-app-muted">Lecture Synthesis.</span>
                             </h1>
                             <p className="text-app-muted text-xl md:text-2xl max-w-xl mb-12 leading-relaxed">
-                                Synod extracts core knowledge from lecture materials, providing instant summaries and automated assessments for serious students.
+                                AI-powered lecture analysis. Instant summaries, concept extraction, and knowledge testing.
                             </p>
                             <div className="flex items-center gap-6">
                                 <button
@@ -94,9 +94,9 @@ const LandingPage = () => {
                                     Start Analysis
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
-                                <div className="text-sm font-medium text-app-muted">
-                                    No credit card required. <br />Free for students.
-                                </div>
+                            <div className="text-sm font-bold text-app-muted uppercase tracking-wider">
+                                Free tier available
+                            </div>
                             </div>
                         </motion.div>
 
@@ -104,57 +104,29 @@ const LandingPage = () => {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
-                            className="hidden lg:block relative"
                         >
-                            <div className="bg-app-card border border-app-border rounded-2xl p-4 shadow-2xl">
-                                <div className="flex items-center gap-2 mb-4 px-2">
-                                    <div className="w-3 h-3 rounded-full bg-app-border" />
-                                    <div className="w-3 h-3 rounded-full bg-app-border" />
-                                    <div className="w-3 h-3 rounded-full bg-app-border" />
-                                </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="col-span-2 space-y-4">
-                                        <div className="h-4 bg-app-border rounded w-3/4" />
-                                        <div className="h-4 bg-app-border rounded w-1/2" />
-                                        <div className="h-32 bg-app-card rounded-xl" />
-                                        <div className="h-4 bg-app-border rounded w-2/3" />
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div className="h-24 bg-app-card rounded-xl" />
-                                        <div className="h-24 bg-app-card rounded-xl" />
-                                    </div>
-                                </div>
-                            </div>
-                            {/* Floating Decoration */}
-                            <div className="absolute -bottom-10 -left-10 bg-app-bg border border-app-border p-6 rounded-2xl shadow-xl flex items-center gap-4 max-w-xs animate-bounce" style={{ animationDuration: '4s' }}>
-                                <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-500">
-                                    <BarChart3 className="w-6 h-6" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-xs font-bold text-app-muted uppercase tracking-widest">Accuracy</p>
-                                    <p className="text-lg font-bold">99.4% NLP Precision</p>
-                                </div>
-                            </div>
+                            {/* Right side empty for breathing room */}
+                            <div className="h-[600px] flex items-center justify-center" />
                         </motion.div>
                     </div>
                 </section>
 
                 {/* Features Matrix */}
-                <section className="py-24 px-8 bg-app-card/20">
+                <section className="py-32 px-8 bg-app-card/20">
                     <div className="max-w-[1600px] mx-auto">
-                        <div className="grid md:grid-cols-4 gap-12">
+                        <div className="grid md:grid-cols-4 gap-16">
                             {[
-                                { icon: Search, title: "Universal Search", text: "Index and search through all your lecture history instantly." },
-                                { icon: Globe, title: "Multi-Format", text: "Support for PDF, PPTX, and TXT documents. Effortless ingestion." },
-                                { icon: Clock, title: "Save Time", text: "Reduce study hours by 60% with AI-driven summaries." },
-                                { icon: BookOpen, title: "Knowledge Graphs", text: "Extract concepts and link them for deeper mental models." }
+                                { icon: Search, title: "Universal Search", text: "Find anything instantly across all your lecture notes." },
+                                { icon: Globe, title: "Multi-Format", text: "PDF, PPTX, TXT. OCR for images." },
+                                { icon: Clock, title: "Save Time", text: "60% faster study with AI summaries." },
+                                { icon: BookOpen, title: "Knowledge Graphs", text: "Interactive concept maps with explanations." }
                             ].map((f, i) => (
                                 <div key={i} className="group">
-                                    <div className="w-10 h-10 bg-app-card border border-app-border rounded-lg flex items-center justify-center text-app-muted mb-6 group-hover:bg-app-fg group-hover:text-app-bg transition-all">
-                                        <f.icon className="w-5 h-5" />
+                                    <div className="w-16 h-16 bg-app-card border border-app-border rounded-xl flex items-center justify-center text-app-muted mb-8 group-hover:bg-app-fg group-hover:text-app-bg transition-all">
+                                        <f.icon className="w-8 h-8" />
                                     </div>
-                                    <h3 className="text-sm font-bold uppercase tracking-widest mb-3">{f.title}</h3>
-                                    <p className="text-app-muted text-sm leading-relaxed">{f.text}</p>
+                                    <h3 className="text-lg font-bold mb-4">{f.title}</h3>
+                                    <p className="text-app-muted leading-relaxed">{f.text}</p>
                                 </div>
                             ))}
                         </div>
@@ -162,33 +134,33 @@ const LandingPage = () => {
                 </section>
 
                 {/* How It Works */}
-                <section id="how-it-works" className="py-24 px-8">
+                <section id="how-it-works" className="py-32 px-8">
                     <div className="max-w-[1600px] mx-auto">
-                        <div className="text-center mb-16">
-                            <h2 className="text-4xl font-bold mb-4">How It Works</h2>
-                            <p className="text-app-muted text-lg max-w-2xl mx-auto">
-                                Upload your lecture materials and get instant analysis with interactive quizzes
+                        <div className="text-center mb-20">
+                            <h2 className="text-5xl font-bold mb-6">How It Works</h2>
+                            <p className="text-app-muted text-xl max-w-2xl mx-auto">
+                                Four simple steps from upload to mastery
                             </p>
                         </div>
-                        <div className="grid md:grid-cols-4 gap-8">
+                        <div className="grid md:grid-cols-4 gap-12">
                             {[
-                                { step: "01", title: "Upload Content", text: "Paste lecture text or upload PDF, DOCX, or TXT files.", icon: FileText },
-                                { step: "02", title: "AI Analysis", text: "Our NLP extracts key concepts and generates summaries.", icon: Brain },
-                                { step: "03", title: "Learn Concepts", text: "Click any concept for explanations with lecture context.", icon: BookOpen },
-                                { step: "04", title: "Test Knowledge", text: "Take quizzes with 30+ questions to verify understanding.", icon: BarChart3 }
+                                { step: "01", title: "Upload", text: "PDFs, PPTX, images with OCR.", icon: FileText },
+                                { step: "02", title: "Analyze", text: "Extract concepts + summaries.", icon: Brain },
+                                { step: "03", title: "Learn", text: "Interactive explanations.", icon: BookOpen },
+                                { step: "04", title: "Test", text: "29 questions to verify.", icon: BarChart3 }
                             ].map((item, i) => (
                                 <div key={i} className="relative">
-                                    <div className="bg-app-card border border-app-border rounded-2xl p-6 h-full">
-                                        <div className="text-[10px] font-bold text-blue-500 mb-4">{item.step}</div>
-                                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 mb-4">
-                                            <item.icon className="w-6 h-6" />
+                                    <div className="bg-app-card border border-app-border rounded-3xl p-8 h-full hover:shadow-2xl transition-all">
+                                        <div className="text-lg font-bold text-blue-500 mb-6">{item.step}</div>
+                                        <div className="w-20 h-20 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 mb-6">
+                                            <item.icon className="w-10 h-10" />
                                         </div>
-                                        <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-                                        <p className="text-app-muted text-sm">{item.text}</p>
+                                        <h3 className="text-2xl font-bold mb-4">{item.title}</h3>
+                                        <p className="text-app-muted text-lg">{item.text}</p>
                                     </div>
                                     {i < 3 && (
-                                        <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 text-app-muted">
-                                            <ChevronRight className="w-5 h-5" />
+                                        <div className="hidden md:block absolute top-1/2 -right-6 transform -translate-y-1/2 text-app-muted">
+                                            <ChevronRight className="w-6 h-6" />
                                         </div>
                                     )}
                                 </div>
@@ -197,34 +169,6 @@ const LandingPage = () => {
                     </div>
                 </section>
 
-                {/* Quiz Types */}
-                <section id="quiz-types" className="py-24 px-8 bg-app-card/20">
-                    <div className="max-w-[1600px] mx-auto">
-                        <div className="text-center mb-16">
-                            <h2 className="text-4xl font-bold mb-4">Comprehensive Testing</h2>
-                            <p className="text-app-muted text-lg max-w-2xl mx-auto">
-                                Four question types test both recall and comprehension
-                            </p>
-                        </div>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {[
-                                { type: "Fill-in-Blank", count: "8", desc: "Recall key terms from context", color: "blue" },
-                                { type: "Multiple Choice", count: "8", desc: "Identify correct concepts", color: "green" },
-                                { type: "True/False", count: "8", desc: "Verify factual understanding", color: "purple" },
-                                { type: "Comprehension", count: "5", desc: "Understand relationships", color: "orange" }
-                            ].map((quiz, i) => (
-                                <div key={i} className="bg-app-card border border-app-border rounded-xl p-6 text-center">
-                                    <div className={`text-4xl font-bold text-${quiz.color}-500 mb-2`}>{quiz.count}</div>
-                                    <div className="text-sm font-bold uppercase tracking-wider mb-1">{quiz.type}</div>
-                                    <div className="text-app-muted text-xs">{quiz.desc}</div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="text-center mt-8">
-                            <p className="text-app-muted">Total: <span className="text-blue-500 font-bold">~29 questions</span> per analysis</p>
-                        </div>
-                    </div>
-                </section>
             </main>
 
             <footer className="py-20 px-8 border-t border-app-border text-app-muted">
