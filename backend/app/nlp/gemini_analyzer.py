@@ -22,7 +22,7 @@ def _parse_json_object(raw: str) -> Dict[str, Any]:
         logger.error(f"Failed to decode LLM JSON: {str(e)} | Raw snippet: {t[:200]}...")
         return {}
 
-def analyze_with_gemini(text: str, api_key: str, model: str = "gemini-1.5-flash", timeout_s: float = 60.0) -> Dict[str, Any]:
+def analyze_with_gemini(text: str, api_key: str, model: str = "gemini-2.5-flash", timeout_s: float = 60.0) -> Dict[str, Any]:
     """Fallback compatible wrapper for the original Gemini logic."""
     # This will be replaced by the cascade logic below, but kept as a signature if needed by main.py
     return analyze_with_cascade(text)
@@ -42,8 +42,8 @@ def analyze_with_cascade(text: str) -> Dict[str, Any]:
     
     # 1. Google Gemini (Primary - Most Tokens)
     if gemini_key:
-        cascade_configs.append(("gemini", "gemini-1.5-pro-latest", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
-        cascade_configs.append(("gemini", "gemini-1.5-flash-latest", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
+        cascade_configs.append(("gemini", "gemini-3.1-pro", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
+        cascade_configs.append(("gemini", "gemini-2.5-flash", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
     
     # 2. Groq (High Speed Fallback)
     if groq_key:
