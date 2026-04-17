@@ -628,7 +628,7 @@ def _takeaway_semantically_close_to_source(
         return True
 
 
-def _finalize_takeaway_sentence(s: str, min_words: int = 9, max_words: int = 52) -> Optional[str]:
+def _finalize_takeaway_sentence(s: str, min_words: int = 8, max_words: int = 52) -> Optional[str]:
     """Keep only bullets that already end as real sentences; do not invent punctuation or trim semantics."""
     s = re.sub(r"\s+", " ", (s or "").strip())
     s = re.sub(r"\s+([.!?])", r"\1", s)
@@ -1026,7 +1026,7 @@ class Summarizer:
 
         ext = _takeaway_sentences_from_source(text, min_words=8)
         ext = [_finalize_takeaway_sentence(_fix_tokenization_artifacts(x)) for x in ext]
-        ext = [x for x in ext if x and _takeaway_lexically_grounded(x, text, min_ratio=0.5)]
+        ext = [x for x in ext if x and _takeaway_lexically_grounded(x, text, min_ratio=0.45)]
         ext = _filter_redundant_sentences(ext)
         out: List[str] = list(ext[:num_bullets])
 
