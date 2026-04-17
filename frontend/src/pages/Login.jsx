@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-// Trigger HMR after auth integration
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Brain, Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL } from '../config';
+import { auth } from '../firebase';
+import { signInWithEmailAndPassword, GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -14,7 +14,7 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
-    const { login, isAuthenticated } = useAuth();
+    const { isAuthenticated } = useAuth();
 
     React.useEffect(() => {
         if (isAuthenticated) {
@@ -22,28 +22,28 @@ const Login = () => {
         }
     }, [isAuthenticated, navigate]);
 
-    const handleOAuth = (provider) => {
-        // Redirect to backend OAuth endpoint
-        window.location.href = `${API_BASE_URL}/auth/${provider}/login`;
+    const handleOAuth = async (provider) => {
+        setLoading(true);
+        try {
+            let authProvider;
+            if (provider === 'google') authProvider = new GoogleAuthProvider();
+            else if (provider === 'github') authProvider = new GithubAuthProvider();
+            
+            await signInWithPopup(auth, authProvider);
+            navigate('/dashboard');
+        } catch (error) {
+            console.error('OAuth error:', error);
+            alert(error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Login failed');
-            }
-
-            const data = await response.json();
-            login(data.user, data.token);
+            await signInWithEmailAndPassword(auth, email, password);
             navigate('/dashboard');
         } catch (error) {
             console.error('Login error:', error);

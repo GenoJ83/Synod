@@ -1,3 +1,10 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Brain, Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
 import { auth } from '../firebase';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from 'firebase/auth';
 
