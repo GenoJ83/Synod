@@ -1,0 +1,17 @@
+
+.DS_Store
+backend/trained_models/
+backend/.venv/
+backend/__pycache__/
+frontend/node_modules/
+frontend/dist/
+*.pyc
+*.pyo
+*.pyd
+.env
+backend/.env
+frontend/.env
+**/__pycache__/
+.ipynb_checkpoints/
+data/uploads/*
+!data/uploads/.gitkeep
