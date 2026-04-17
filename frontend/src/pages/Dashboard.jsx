@@ -57,7 +57,7 @@ function Dashboard() {
             
             const newEntry = {
                 date: new Date().toISOString(),
-                userId: user?.uid || user?.email || 'anonymous',
+                userId: user?.uid || 'anonymous_user',
                 title: textToAnalyze.slice(0, 50) + (textToAnalyze.length > 50 ? '...' : ''),
                 ...data
             };
@@ -93,7 +93,7 @@ function Dashboard() {
         console.log("Analysis Success (File):", data);
         const newEntry = {
             date: new Date().toISOString(),
-            userId: user?.uid || user?.email || 'anonymous',
+            userId: user?.uid || 'anonymous_user',
             title: "File Analysis: " + ((data?.summary || "Uploaded file").slice(0, 30) + "..."),
             ...data
         };

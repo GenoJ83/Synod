@@ -4,6 +4,7 @@ import os
 import re
 from typing import Dict, Any, List
 import httpx
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -55,19 +56,35 @@ def analyze_with_gemini(text: str, api_key: str, model: str = "gemini-flash-late
         },
     }
 
-    with httpx.Client(timeout=timeout_s) as client:
-        r = client.post(url, json=body)
-        if r.status_code >= 400:
-            logger.error(f"Gemini API Error {r.status_code}: {r.text}")
-        r.raise_for_status()
-        data = r.json()
+    max_retries = 3
+    retry_delay = 2.0  # Initial delay in seconds
 
-    try:
-        parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-        text_out = "".join(p.get("text", "") for p in parts if isinstance(p, dict))
-    except Exception as e:
-        logger.error(f"Gemini output parsing failed: {str(e)}")
-        text_out = "{}"
+    for attempt in range(max_retries):
+        try:
+            with httpx.Client(timeout=timeout_s) as client:
+                r = client.post(url, json=body)
+                if r.status_code >= 400:
+                    logger.error(f"Gemini API Error {r.status_code} (Attempt {attempt + 1}/{max_retries}): {r.text}")
+                    # Retry on 503 (Server Busy) or 429 (Rate Limit)
+                    if (r.status_code == 503 or r.status_code == 429) and attempt < max_retries - 1:
+                        logger.info(f"Retrying Gemini API in {retry_delay}s...")
+                        time.sleep(retry_delay)
+                        retry_delay *= 2  # Exponential backoff
+                        continue
+                        
+                r.raise_for_status()
+                data = r.json()
+                
+                parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+                text_out = "".join(p.get("text", "") for p in parts if isinstance(p, dict))
+                return _parse_json_object(text_out)
+                
+        except (httpx.HTTPStatusError, httpx.RequestError) as e:
+            if attempt == max_retries - 1:
+                logger.error(f"Gemini API final attempt failed: {str(e)}")
+                raise
+            logger.info(f"Connection error. Retrying Gemini API in {retry_delay}s...")
+            time.sleep(retry_delay)
+            retry_delay *= 2
 
-    res = _parse_json_object(text_out)
-    return res
+    return {}

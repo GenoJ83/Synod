@@ -21,16 +21,34 @@ const History = () => {
 
     useEffect(() => {
         const fetchHistory = async () => {
-            if (!user) { setLoadingHistory(false); return; }
+            if (!user) { 
+                console.log("History: User not logged in, clearing list.");
+                setLoadingHistory(false); 
+                return; 
+            }
+            
             setLoadingHistory(true);
+            const lookupId = user.uid || 'anonymous_user';
+            console.log(`History: Fetching records for userId: ${lookupId}`);
+            
             try {
-                const q = query(collection(db, "history"), where("userId", "==", user.uid || user.email || 'anonymous'));
+                const q = query(
+                    collection(db, "history"), 
+                    where("userId", "==", lookupId)
+                );
+                
                 const snapshot = await getDocs(q);
-                const items = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+                console.log(`History: Found ${snapshot.size} records.`);
+                
+                const items = snapshot.docs.map(docSnap => ({ 
+                    id: docSnap.id, 
+                    ...docSnap.data() 
+                }));
+                
                 items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
                 setHistory(items);
             } catch (e) {
-                console.error('Error loading history:', e);
+                console.error('History: Error loading Firestore data:', e);
             } finally {
                 setLoadingHistory(false);
             }
