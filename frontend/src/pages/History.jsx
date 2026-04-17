@@ -24,7 +24,7 @@ const History = () => {
             if (!user) { setLoadingHistory(false); return; }
             setLoadingHistory(true);
             try {
-                const q = query(collection(db, "history"), where("userId", "==", user.id || user.email || 'anonymous'));
+                const q = query(collection(db, "history"), where("userId", "==", user.uid || user.email || 'anonymous'));
                 const snapshot = await getDocs(q);
                 const items = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
                 items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
