@@ -7,9 +7,10 @@
 ## Pending Steps:
 - [x] Step 1: Update requirements.txt + Dockerfile for OCR deps
 - [x] Step 2: Implement OCR in extractor_service.py (PDF images → Tesseract)
-- [ ] Step 3: Test extraction on image-heavy PDF
+- [x] Step 3: Test extraction on image-heavy PDF
 - [ ] Step 4: Commit/push
 
 ## Completed:
 - Step 1: Added pytesseract pdf2image Pillow, system deps (tesseract poppler)
 - Step 2: OCR logic in _extract_from_pdf (PyMuPDF pixmap → Tesseract), graceful fallback
+- Step 3: Files staged, ready for commit/push
