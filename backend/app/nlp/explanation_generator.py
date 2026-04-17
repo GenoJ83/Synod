@@ -102,6 +102,19 @@ class ExplanationGenerator:
         "dry principle": "Don't Repeat Yourself - a principle of software development aimed at reducing repetition of information of all kinds.",
         "kiss principle": "Keep It Simple, Stupid - a design principle which states that most systems work best if they are kept simple rather than made complicated.",
         "software construction": "The detailed creation of working, meaningful software through a combination of coding, verification, unit testing, and debugging.",
+        "data structure": "A specialized format for organizing, processing, retrieving and storing data. Common types include arrays, linked lists, stacks, queues, trees (binary, AVL, B-trees), and hash tables. Choice depends on complexity of operations (insertion, deletion, search).",
+        "big o notation": "Mathematical notation describing the limiting behavior of a function when the argument tends towards a particular value or infinity. In CS, it's used to classify algorithms according to how their run time or space requirements grow as the input size grows (e.g., O(1) constant, O(log n) logarithmic, O(n) linear, O(n^2) quadratic).",
+        "operating system": "Software that manages computer hardware and software resources and provides common services for computer programs. Key functions: process management, memory management, file systems, device I/O, security, and user interface. Examples: Linux, Windows, macOS, Android.",
+        "virtual memory": "A memory management technique that provides an idealized abstraction of the storage resources that are actually available on a given machine. It creates the illusion of a larger main memory by using disk space, involving paging, segmentation, and address translation via MMU.",
+        "deadlock": "A state in which each member of a group is waiting for another member, including itself, to take action, such as sending a message or more commonly releasing a lock. Four conditions (Coffman): Mutual Exclusion, Hold and Wait, No Preemption, Circular Wait.",
+        "rest api": "Representational State Transfer (REST) is an architectural style for providing standards between computer systems on the web. Uses HTTP methods (GET, POST, PUT, DELETE), is stateless, and typically returns JSON or XML.",
+        "microservices": "An architectural style that structures an application as a collection of services that are highly maintainable, testable, loosely coupled, independently deployable, and organized around business capabilities.",
+        "docker": "A set of platform as a service products that use OS-level virtualization to deliver software in packages called containers. Containers are isolated from one another and bundle their own software, libraries and configuration files.",
+        "version control": "A system that records changes to a file or set of files over time so that you can recall specific versions later (e.g., Git). Enables collaboration, branching, merging, and tracking history.",
+        "cache": "A hardware or software component that stores data so that future requests for that data can be served faster. Types: L1/L2/L3 CPU cache, web cache (CDN), database cache (Redis/Memcached). Principle: Locality of Reference.",
+        "recursion relation": "An equation that recursively defines a sequence or multidimensional array of values. In algorithm analysis, used to express the time complexity of recursive algorithms (e.g., T(n) = 2T(n/2) + O(n) for Merge Sort). Solved via Master Theorem.",
+        "cloud computing": "On-demand availability of computer system resources, especially data storage and computing power, without direct active management by the user. Models: IaaS, PaaS, SaaS. Providers: AWS, Google Cloud, Azure.",
+        "cybersecurity": "Protection of computer systems and networks from information disclosure, theft of or damage to their hardware, software, or electronic data, as well as from the disruption or misdirection of the services they provide.",
     }
     
     def __init__(self):
@@ -123,11 +136,14 @@ class ExplanationGenerator:
                     sent_embs = extractor.model.encode(sentences, convert_to_tensor=True)
                     scores = util.cos_sim(concept_emb, sent_embs).cpu().numpy().flatten()
                     ranked = scores.argsort()[::-1]
-                    for ri in ranked[:12]:
-                        if scores[ri] < 0.38:
+                    for ri in ranked[:16]: # Increased scan depth
+                        if scores[ri] < 0.35: # Lowered threshold slightly for better coverage
                             break
                         cand = sentences[int(ri)].strip()
                         if _is_assignment_context_blob(cand):
+                            continue
+                        # Avoid items that are likely just slide titles/names
+                        if len(cand.split()) < 7 and (cand.isupper() or ":" in cand):
                             continue
                         specific_context = cand
                         break
