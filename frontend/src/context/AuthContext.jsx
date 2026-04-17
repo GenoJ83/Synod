@@ -1,100 +1,50 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
+import { auth } from '../firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [token, setToken] = useState(() => {
-        return localStorage.getItem('synod_token') || null;
-    });
+    const [token, setToken] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Verify token on mount
     useEffect(() => {
-        const verifyToken = async () => {
-            const storedToken = localStorage.getItem('synod_token');
-            if (!storedToken) {
-                setLoading(false);
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ token: storedToken }),
+        // Listen for Firebase auth state changes
+        const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+            if (fbUser) {
+                // User is signed in
+                const idToken = await fbUser.getIdToken();
+                setUser({
+                    uid: fbUser.uid,
+                    email: fbUser.email,
+                    name: fbUser.displayName || fbUser.email.split('@')[0],
+                    picture: fbUser.photoURL
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setUser(data.user);
-                    setToken(storedToken);
-                } else {
-                    // Token invalid, clear it
-                    localStorage.removeItem('synod_token');
-                    setToken(null);
-                    setUser(null);
-                }
-            } catch (error) {
-                console.error('Token verification failed:', error);
-                localStorage.removeItem('synod_token');
-                setToken(null);
+                setToken(idToken);
+                localStorage.setItem('synod_token', idToken);
+            } else {
+                // User is signed out
                 setUser(null);
-            } finally {
-                setLoading(false);
+                setToken(null);
+                localStorage.removeItem('synod_token');
             }
-        };
+            setLoading(false);
+        });
 
-        verifyToken();
+        return () => unsubscribe();
     }, []);
 
-    const login = (userData, authToken) => {
-        // Traditional email/password login
-        setUser(userData);
-        if (authToken) {
-            setToken(authToken);
-            localStorage.setItem('synod_token', authToken);
-        }
-    };
-
-    const loginWithToken = async (jwtToken) => {
-        // Login with JWT token from OAuth callback
+    const logout = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ token: jwtToken }),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setUser(data.user);
-                setToken(jwtToken);
-                localStorage.setItem('synod_token', jwtToken);
-            } else {
-                throw new Error('Token verification failed');
-            }
+            await signOut(auth);
         } catch (error) {
-            console.error('Login with token failed:', error);
-            throw error;
+            console.error('Logout error:', error);
         }
-    };
-
-    const logout = () => {
-        setUser(null);
-        setToken(null);
-        localStorage.removeItem('synod_token');
     };
 
     const isAuthenticated = !!user;
 
-    // Don't return null during loading - this causes blank screen
-    // Instead, render children with loading state
     if (loading) {
         return (
             <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -104,7 +54,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ user, token, login, loginWithToken, logout, isAuthenticated }}>
+        <AuthContext.Provider value={{ user, token, logout, isAuthenticated }}>
             {children}
         </AuthContext.Provider>
     );
