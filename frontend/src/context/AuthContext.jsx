@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+// Auth context for Firebase authentication
 import { API_BASE_URL } from '../config';
 import { auth, getRedirectResult, onAuthStateChanged, logout } from '../firebase';
 
