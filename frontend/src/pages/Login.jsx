@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Brain, Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
-import { auth } from '../firebase';
-import { signInWithEmailAndPassword, GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from 'firebase/auth';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -14,40 +13,31 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
-    const { isAuthenticated } = useAuth();
-
-    React.useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/dashboard');
-        }
-    }, [isAuthenticated, navigate]);
 
     const handleOAuth = async (provider) => {
-        setLoading(true);
-        try {
-            let authProvider;
-            if (provider === 'google') authProvider = new GoogleAuthProvider();
-            else if (provider === 'github') authProvider = new GithubAuthProvider();
-            
-            await signInWithPopup(auth, authProvider);
-            navigate('/dashboard');
-        } catch (error) {
-            console.error('OAuth error:', error);
-            alert(error.message);
-        } finally {
-            setLoading(false);
-        }
+        const redirectUri = `${API_BASE_URL}/auth/${provider}/login`;
+        window.location.href = redirectUri;
     };
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            navigate('/dashboard');
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await response.json();
+            if (response.ok) {
+                localStorage.setItem('token', data.token);
+                navigate('/dashboard');
+            } else {
+                alert(data.detail || 'Login failed');
+            }
         } catch (error) {
             console.error('Login error:', error);
-            alert(error.message);
+            alert('Login failed. Please check your connection.');
         } finally {
             setLoading(false);
         }
@@ -162,14 +152,14 @@ const Login = () => {
                     <div className="mt-8 flex flex-col items-center gap-4">
                         <div className="flex items-center gap-4 w-full text-app-muted">
                             <div className="h-[1px] bg-app-border flex-1" />
-                            <span className="text-[10px] uppercase font-bold tracking-widest shrink-0">Supported Methods</span>
+                            <span className="text-[10px] uppercase font-bold tracking-widest shrink-0">or continue with</span>
                             <div className="h-[1px] bg-app-border flex-1" />
                         </div>
                         <div className="flex gap-4">
                             <button
                                 onClick={() => handleOAuth('google')}
-                                className="w-12 h-12 border border-app-border rounded-xl bg-app-card/50 flex items-center justify-center hover:bg-app-card hover:border-app-muted transition-all active:scale-95"
-                                title="Continue with Google"
+                                className="w-12 h-12 border border-app-border rounded-xl bg-app-card/50 flex items-center justify-center hover:bg-app-card hover:border-app-muted transition-all active:scale-95 shadow-md"
+                                title="Continue with Google (select account)"
                             >
                                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -180,7 +170,7 @@ const Login = () => {
                             </button>
                             <button
                                 onClick={() => handleOAuth('github')}
-                                className="w-12 h-12 border border-app-border rounded-xl bg-app-card/50 flex items-center justify-center hover:bg-app-card hover:border-app-muted transition-all active:scale-95"
+                                className="w-12 h-12 border border-app-border rounded-xl bg-app-card/50 flex items-center justify-center hover:bg-app-card hover:border-app-muted transition-all active:scale-95 shadow-md"
                                 title="Continue with GitHub"
                             >
                                 <svg className="w-5 h-5" viewBox="0 0 24 24">
