@@ -16,10 +16,19 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
 const githubProvider = new GithubAuthProvider();
 
-export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
-export const signInWithGithub = () => signInWithPopup(auth, githubProvider);
+export const signInWithGoogle = () => {
+  return signInWithPopup(auth, googleProvider);
+};
+
+export const signInWithGithub = () => {
+  return signInWithPopup(auth, githubProvider);
+};
 export const registerWithEmail = (email, password) => createUserWithEmailAndPassword(auth, email, password);
 export const loginWithEmail = (email, password) => signInWithEmailAndPassword(auth, email, password);
 export const logout = () => signOut(auth);
