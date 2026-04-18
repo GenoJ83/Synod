@@ -104,9 +104,7 @@ const Signup = () => {
                 className="w-full max-w-md relative z-10 py-12"
             >
                 <div className="flex flex-col items-center mb-10">
-                    <div className="w-16 h-16 bg-app-fg rounded-[2rem] flex items-center justify-center mb-6 shadow-2xl">
-                        <Brain className="w-8 h-8 text-app-bg" />
-                    </div>
+                    <img src="/logo.png" alt="Synod" className="w-16 h-16 mb-6 rounded-xl" />
                     <h1 className="text-3xl font-bold tracking-tight mb-2">Create Account</h1>
                     <p className="text-app-muted text-center font-medium">Join 5,000+ students using Synod.</p>
                 </div>
