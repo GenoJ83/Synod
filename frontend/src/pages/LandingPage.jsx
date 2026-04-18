@@ -13,9 +13,7 @@ const LandingPage = () => {
             <header className="fixed top-0 w-full z-50 border-b border-app-border bg-app-bg/80 backdrop-blur-md">
                 <div className="max-w-[1600px] mx-auto px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-app-fg rounded flex items-center justify-center">
-                            <Brain className="w-5 h-5 text-app-bg" />
-                        </div>
+                        <img src="/logo.png" alt="Synod" className="w-10 h-10 rounded-lg" />
                         <span className="text-xl font-bold tracking-tight">Synod</span>
                         <span className="text-[8px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-bold uppercase tracking-tighter">v2.0</span>
                     </div>
