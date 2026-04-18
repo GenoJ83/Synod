@@ -10,12 +10,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID") or os.getenv("FIREBASE_PROJECT_ID", "synod-3ce73")
 
 security = HTTPBearer()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     token = credentials.credentials
+    
+    logger.info(f"Firebase project ID: {FIREBASE_PROJECT_ID}")
     
     try:
         decoded_token = id_token.verify_firebase_token(
@@ -41,6 +43,12 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             db.add(user)
             db.commit()
             db.refresh(user)
+            
+        # Ensure missing attributes have defaults
+        if not hasattr(user, 'last_analysis_date') or user.last_analysis_date is None:
+            user.last_analysis_date = ""
+        if not hasattr(user, 'daily_analysis_count') or user.daily_analysis_count is None:
+            user.daily_analysis_count = 0
             
         return user
         

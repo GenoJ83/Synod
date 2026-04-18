@@ -48,6 +48,18 @@ from app.models import User
 try:
     logger.info("Initializing database...")
     Base.metadata.create_all(bind=engine)
+    
+    # Add missing columns to existing tables if needed
+    from sqlalchemy import text
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN last_analysis_date VARCHAR DEFAULT ''"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN daily_analysis_count INTEGER DEFAULT 0"))
+            conn.commit()
+            logger.info("Database migration: added missing columns")
+    except Exception as e:
+        logger.info(f"Database columns check: {str(e)}")
+    
     logger.info("Database initialized successfully.")
 except Exception as e:
     logger.error(f"Failed to initialize database: {str(e)}")
@@ -179,19 +191,19 @@ def process_logic(text: str, user: any = None, db: Session = None):
         raise HTTPException(status_code=400, detail="Text is required")
     
     if user and db:
-        # Pre-check rate limit
         today = datetime.now().strftime("%Y-%m-%d")
-        last_date = user.last_analysis_date or ""
-        if last_date == today:
-            if user.daily_analysis_count >= DAILY_ANALYSIS_LIMIT:
-                logger.warning(f"User {user.email} hit daily rate limit")
+        user_date = getattr(user, 'last_analysis_date', '') or ''
+        
+        if user_date == today:
+            current_count = getattr(user, 'daily_analysis_count', 0) or 0
+            if current_count >= DAILY_ANALYSIS_LIMIT:
+                logger.warning(f"User {getattr(user, 'email', 'unknown')} hit daily rate limit")
                 raise HTTPException(
                     status_code=429, 
                     detail=f"You have reached your daily limit of {DAILY_ANALYSIS_LIMIT} lecture analyses. Please return tomorrow."
                 )
 
     text = ExtractorService.normalize_pipeline_text(text.strip())
-    
     logger.info(f"Processing text of length: {len(text)} characters via Gemini")
     
     api_key = (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
@@ -207,14 +219,16 @@ def process_logic(text: str, user: any = None, db: Session = None):
 
         if user and db:
             today = datetime.now().strftime("%Y-%m-%d")
-            last_date = user.last_analysis_date or ""
-            if last_date == today:
-                user.daily_analysis_count += 1
+            user_date = getattr(user, 'last_analysis_date', '') or ''
+            
+            if user_date == today:
+                current_count = getattr(user, 'daily_analysis_count', 0) or 0
+                setattr(user, 'daily_analysis_count', current_count + 1)
             else:
                 user.last_analysis_date = today
                 user.daily_analysis_count = 1
             db.commit()
-            logger.info(f"User {user.email} analysis count incremented: {user.daily_analysis_count}/{DAILY_ANALYSIS_LIMIT}")
+            logger.info(f"User {getattr(user, 'email', 'unknown')} analysis count incremented")
 
         quiz = result.get("quiz", {})
         
@@ -319,21 +333,28 @@ async def favicon():
 @app.get("/user/usage")
 def get_user_usage(user: User = Depends(get_current_user)):
     """Return the current user's daily analysis usage."""
-    today = datetime.now().strftime("%Y-%m-%d")
-    
-    # If the user hasn't analyzed today, the stored count is effectively 0 for the UI
-    count = 0
     try:
-        count = user.daily_analysis_count if user.last_analysis_date == today else 0
-    except Exception:
-        pass
-    
-    return {
-        "daily_count": count,
-        "daily_limit": DAILY_ANALYSIS_LIMIT,
-        "remaining": max(0, DAILY_ANALYSIS_LIMIT - count),
-        "last_analysis": user.last_analysis_date or ""
-    }
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        user_date = getattr(user, 'last_analysis_date', '') or ''
+        count = 0
+        if user_date == today:
+            count = getattr(user, 'daily_analysis_count', 0) or 0
+        
+        return {
+            "daily_count": count,
+            "daily_limit": DAILY_ANALYSIS_LIMIT,
+            "remaining": max(0, DAILY_ANALYSIS_LIMIT - count),
+            "last_analysis": user_date
+        }
+    except Exception as e:
+        logger.error(f"Usage endpoint error: {str(e)}")
+        return {
+            "daily_count": 0,
+            "daily_limit": DAILY_ANALYSIS_LIMIT,
+            "remaining": DAILY_ANALYSIS_LIMIT,
+            "last_analysis": ""
+        }
 
 @app.post("/explain-concept", response_model=ConceptExplanationResponse)
 async def explain_concept(request: ExplainConceptRequest):
@@ -416,33 +437,22 @@ async def chat_notes(request: NotesChatRequest):
         raise HTTPException(status_code=500, detail="Chat failed.") from e
 
 
-@app.post("/analyze", response_model=ProcessResponse)
+@app.post("/analyze")
 async def analyze_text(request: ProcessRequest, current_user: any = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
         logger.info(f"Received analyze request from {current_user.email} with text length: {len(request.text)}")
         return process_logic(request.text, user=current_user, db=db)
     except HTTPException:
-        # Re-raise HTTPExceptions as-is
         raise
     except Exception as e:
         logger.error(f"Error in /analyze endpoint: {str(e)}")
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/analyze-file", response_model=ProcessResponse)
 async def analyze_file(file: UploadFile = File(...), current_user: any = Depends(get_current_user), db: Session = Depends(get_db)):
-    file_location = None
     try:
-        # Check file size
-        file.file.seek(0, 2)  # Seek to end
-        file_size = file.file.tell()  # Get position (file size)
-        file.file.seek(0)  # Reset to beginning
-        
-        if file_size > MAX_FILE_SIZE:
-            logger.warning(f"File too large: {file_size} bytes (max: {MAX_FILE_SIZE})")
-            raise HTTPException(status_code=413, detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB")
-        
-        logger.info(f"Received analyze-file request for: {file.filename} ({file_size} bytes)")
+        logger.info(f"Received analyze-file request from {current_user.email}")
         
         # Save uploaded file
         file_location = UPLOAD_DIR / file.filename
@@ -466,20 +476,17 @@ async def analyze_file(file: UploadFile = File(...), current_user: any = Depends
         return process_logic(text, user=current_user, db=db)
         
     except HTTPException:
-        # Re-raise HTTPExceptions as-is
         raise
     except Exception as e:
         logger.error(f"Error in /analyze-file endpoint: {str(e)}")
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"File processing error: {str(e)}")
+        raise HTTPException(status_code=500, detail="File processing error")
     finally:
-        # Ensure cleanup in case of error
         if file_location and os.path.exists(file_location):
             try:
                 os.remove(file_location)
-                logger.info(f"Cleaned up uploaded file: {file_location}")
-            except Exception as cleanup_error:
-                logger.warning(f"Failed to cleanup file {file_location}: {cleanup_error}")
+            except Exception:
+                pass
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
