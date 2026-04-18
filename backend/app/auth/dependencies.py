@@ -28,14 +28,10 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         # Check if user exists in local DB, if not, create them (sync)
         user = db.query(User).filter(User.email == email).first()
         if not user:
-            from .security import get_password_hash
-            import secrets
-            
-            # Create a "shadow" user in the local DB to track rate limits
             user = User(
                 email=email,
                 full_name=decoded_token.get("name", email.split('@')[0]),
-                hashed_password=get_password_hash(secrets.token_urlsafe(16)),
+                # No shadow password - Firebase handles auth
                 is_active=True
             )
             db.add(user)

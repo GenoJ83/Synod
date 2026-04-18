@@ -64,11 +64,15 @@ except Exception as e:
 
 app = FastAPI(title="Synod API")
 
+# Validate JWT_SECRET at startup
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET or len(JWT_SECRET) < 32:
+    logger.error("JWT_SECRET missing or too short (<32 chars). Set in .env")
+    raise ValueError("JWT_SECRET required for production")
+
 # Session middleware for OAuth (required by Authlib)
 from starlette.middleware.sessions import SessionMiddleware
-
-# Prioritize JWT_SECRET, fallback to SESSION_SECRET, then a dev default
-SESSION_SECRET = os.getenv("JWT_SECRET", os.getenv("SESSION_SECRET", "session_development_secret_key_123"))
+SESSION_SECRET = JWT_SECRET  # Reuse secure JWT secret
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
 # Enable CORS for React development
