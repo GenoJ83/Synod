@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
-import { auth, getRedirectResult, onAuthStateChanged, signOut } from 'firebase';
+import { auth, getRedirectResult, onAuthStateChanged, signOut } from '../firebase';
 
 const AuthContext = createContext();
 
