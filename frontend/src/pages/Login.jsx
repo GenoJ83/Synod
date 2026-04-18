@@ -3,25 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Brain, Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { loginWithEmail, signInWithGoogle, signInWithGithub, onAuthStateChanged, getIdToken } from '../firebase';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { loginWithEmail, signInWithGoogle, signInWithGithub, auth, onAuthStateChanged } from '../firebase';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [authLoading, setAuthLoading] = useState(true);
+    const [initialAuthCheck, setInitialAuthCheck] = useState(true);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged((user) => {
             if (user) {
-                navigate('/dashboard');
+                navigate('/dashboard', { replace: true });
             } else {
-                setAuthLoading(false);
+                setInitialAuthCheck(false);
             }
         });
         return () => unsubscribe();
@@ -37,9 +35,10 @@ const Login = () => {
             }
         } catch (error) {
             console.error('OAuth error:', error);
-            alert('Authentication failed. Please try again.');
-        } finally {
             setLoading(false);
+            if (error.code !== 'auth/popup-closed-by-user') {
+                alert('Authentication failed. Please try again.');
+            }
         }
     };
 
@@ -48,19 +47,18 @@ const Login = () => {
         setLoading(true);
         try {
             await loginWithEmail(email, password);
-            navigate('/dashboard');
+            navigate('/dashboard', { replace: true });
         } catch (error) {
             console.error('Login error:', error);
+            setLoading(false);
             const message = error.code === 'auth/invalid-credential' 
                 ? 'Invalid email or password'
                 : 'Login failed. Please check your connection.';
             alert(message);
-        } finally {
-            setLoading(false);
         }
     };
 
-    if (authLoading) {
+    if (initialAuthCheck) {
         return (
             <div className="min-h-screen bg-app-bg flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />

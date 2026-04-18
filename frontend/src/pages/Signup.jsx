@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Brain, Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { registerWithEmail, signInWithGoogle, signInWithGithub, onAuthStateChanged, getIdToken } from '../firebase';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { registerWithEmail, signInWithGoogle, signInWithGithub, onAuthStateChanged } from '../firebase';
 
 const Signup = () => {
     const [name, setName] = useState('');
@@ -13,13 +11,16 @@ const Signup = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [initialAuthCheck, setInitialAuthCheck] = useState(true);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged((user) => {
             if (user) {
-                navigate('/dashboard');
+                navigate('/dashboard', { replace: true });
+            } else {
+                setInitialAuthCheck(false);
             }
         });
         return () => unsubscribe();
@@ -35,9 +36,10 @@ const Signup = () => {
             }
         } catch (error) {
             console.error('OAuth error:', error);
-            alert('Authentication failed. Please try again.');
-        } finally {
             setLoading(false);
+            if (error.code !== 'auth/popup-closed-by-user') {
+                alert('Authentication failed. Please try again.');
+            }
         }
     };
 
@@ -46,19 +48,26 @@ const Signup = () => {
         setLoading(true);
         try {
             await registerWithEmail(email, password);
-            navigate('/dashboard');
+            navigate('/dashboard', { replace: true });
         } catch (error) {
             console.error('Signup error:', error);
+            setLoading(false);
             const message = error.code === 'auth/email-already-in-use' 
                 ? 'Email already registered'
                 : error.code === 'auth/weak-password'
                 ? 'Password should be at least 6 characters'
                 : 'Signup failed. Please try again.';
             alert(message);
-        } finally {
-            setLoading(false);
         }
     };
+
+    if (initialAuthCheck) {
+        return (
+            <div className="min-h-screen bg-app-bg flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-app-bg text-app-fg font-sans selection:bg-blue-500/30 transition-colors duration-300 flex flex-col items-center justify-center p-6 relative overflow-hidden">
