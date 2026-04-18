@@ -51,7 +51,6 @@ try:
     logger.info("Database initialized successfully.")
 except Exception as e:
     logger.error(f"Failed to initialize database: {str(e)}")
-    # If using SQLite, check if the directory is writable
     if str(engine.url).startswith("sqlite"):
         db_path = str(engine.url).replace("sqlite:///", "")
         db_dir = os.path.dirname(os.path.abspath(db_path)) if os.path.isabs(db_path) else os.getcwd()
@@ -69,6 +68,11 @@ JWT_SECRET = os.getenv("JWT_SECRET")
 if not JWT_SECRET or len(JWT_SECRET) < 32:
     logger.error("JWT_SECRET missing or too short (<32 chars). Set in .env")
     raise ValueError("JWT_SECRET required for production")
+
+# Check Firebase config
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")
+if not FIREBASE_PROJECT_ID:
+    logger.warning("FIREBASE_PROJECT_ID not set in .env - authentication may fail")
 
 # Session middleware for OAuth (required by Authlib)
 from starlette.middleware.sessions import SessionMiddleware
@@ -177,7 +181,8 @@ def process_logic(text: str, user: any = None, db: Session = None):
     if user and db:
         # Pre-check rate limit
         today = datetime.now().strftime("%Y-%m-%d")
-        if user.last_analysis_date == today:
+        last_date = user.last_analysis_date or ""
+        if last_date == today:
             if user.daily_analysis_count >= DAILY_ANALYSIS_LIMIT:
                 logger.warning(f"User {user.email} hit daily rate limit")
                 raise HTTPException(
@@ -186,7 +191,6 @@ def process_logic(text: str, user: any = None, db: Session = None):
                 )
 
     text = ExtractorService.normalize_pipeline_text(text.strip())
-    # Minimum words stripped to 0 to fix strict ingestion limits
     
     logger.info(f"Processing text of length: {len(text)} characters via Gemini")
     
@@ -195,7 +199,6 @@ def process_logic(text: str, user: any = None, db: Session = None):
         raise HTTPException(status_code=500, detail="Gemini API Key missing or not set in backend .env")
         
     try:
-        # Single robust LLM call replacing sum, extraction, and quiz heuristics
         result = analyze_with_gemini(text, api_key)
         
         if "error" in result:
@@ -203,9 +206,9 @@ def process_logic(text: str, user: any = None, db: Session = None):
             raise HTTPException(status_code=503, detail=result["error"])
 
         if user and db:
-            # Increment credit ONLY on success
             today = datetime.now().strftime("%Y-%m-%d")
-            if user.last_analysis_date == today:
+            last_date = user.last_analysis_date or ""
+            if last_date == today:
                 user.daily_analysis_count += 1
             else:
                 user.last_analysis_date = today
@@ -319,13 +322,17 @@ def get_user_usage(user: User = Depends(get_current_user)):
     today = datetime.now().strftime("%Y-%m-%d")
     
     # If the user hasn't analyzed today, the stored count is effectively 0 for the UI
-    count = user.daily_analysis_count if user.last_analysis_date == today else 0
+    count = 0
+    try:
+        count = user.daily_analysis_count if user.last_analysis_date == today else 0
+    except Exception:
+        pass
     
     return {
         "daily_count": count,
         "daily_limit": DAILY_ANALYSIS_LIMIT,
         "remaining": max(0, DAILY_ANALYSIS_LIMIT - count),
-        "last_analysis": user.last_analysis_date
+        "last_analysis": user.last_analysis_date or ""
     }
 
 @app.post("/explain-concept", response_model=ConceptExplanationResponse)

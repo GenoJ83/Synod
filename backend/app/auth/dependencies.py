@@ -6,6 +6,9 @@ from ..models import User
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")
 
@@ -13,8 +16,8 @@ security = HTTPBearer()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     token = credentials.credentials
+    
     try:
-        # Verify the Firebase ID token
         decoded_token = id_token.verify_firebase_token(
             token, 
             google_requests.Request(), 
@@ -25,14 +28,15 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         if not email:
             raise HTTPException(status_code=401, detail="Invalid token: missing email")
             
-        # Check if user exists in local DB, if not, create them (sync)
         user = db.query(User).filter(User.email == email).first()
+        
         if not user:
             user = User(
                 email=email,
                 full_name=decoded_token.get("name", email.split('@')[0]),
-                # No shadow password - Firebase handles auth
-                is_active=True
+                is_active=True,
+                last_analysis_date="",
+                daily_analysis_count=0
             )
             db.add(user)
             db.commit()
@@ -41,7 +45,8 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         return user
         
     except ValueError as e:
-        # Token is invalid or expired
-        raise HTTPException(status_code=401, detail=f"Invalid or expired token: {str(e)}")
+        logger.warning(f"Token verification failed: {str(e)}")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
+        logger.error(f"Authentication error: {str(e)}")
+        raise HTTPException(status_code=401, detail="Authentication failed")
