@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Brain, Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL } from '../config';
-import { auth } from '../firebase';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from 'firebase/auth';
+import { registerWithEmail, signInWithGoogle, signInWithGithub, onAuthStateChanged, getIdToken } from '../firebase';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const Signup = () => {
     const [name, setName] = useState('');
@@ -16,26 +15,27 @@ const Signup = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
-    const { isAuthenticated } = useAuth();
 
-    React.useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/dashboard');
-        }
-    }, [isAuthenticated, navigate]);
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged((user) => {
+            if (user) {
+                navigate('/dashboard');
+            }
+        });
+        return () => unsubscribe();
+    }, [navigate]);
 
     const handleOAuth = async (provider) => {
         setLoading(true);
         try {
-            let authProvider;
-            if (provider === 'google') authProvider = new GoogleAuthProvider();
-            else if (provider === 'github') authProvider = new GithubAuthProvider();
-            
-            await signInWithPopup(auth, authProvider);
-            navigate('/dashboard');
+            if (provider === 'google') {
+                await signInWithGoogle();
+            } else {
+                await signInWithGithub();
+            }
         } catch (error) {
             console.error('OAuth error:', error);
-            alert(error.message);
+            alert('Authentication failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -45,12 +45,16 @@ const Signup = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            await updateProfile(userCredential.user, { displayName: name });
+            await registerWithEmail(email, password);
             navigate('/dashboard');
         } catch (error) {
             console.error('Signup error:', error);
-            alert(error.message);
+            const message = error.code === 'auth/email-already-in-use' 
+                ? 'Email already registered'
+                : error.code === 'auth/weak-password'
+                ? 'Password should be at least 6 characters'
+                : 'Signup failed. Please try again.';
+            alert(message);
         } finally {
             setLoading(false);
         }

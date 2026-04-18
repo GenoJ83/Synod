@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
 import { auth } from '../firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut, getIdToken } from 'firebase/auth';
 
 const AuthContext = createContext();
 
@@ -11,10 +11,8 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Listen for Firebase auth state changes
         const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
             if (fbUser) {
-                // User is signed in
                 const idToken = await fbUser.getIdToken();
                 setUser({
                     uid: fbUser.uid,
@@ -23,12 +21,14 @@ export const AuthProvider = ({ children }) => {
                     picture: fbUser.photoURL
                 });
                 setToken(idToken);
-                localStorage.setItem('synod_token', idToken);
+                localStorage.setItem('firebaseToken', idToken);
             } else {
-                // User is signed out
+                const storedToken = localStorage.getItem('firebaseToken');
+                if (storedToken) {
+                    localStorage.removeItem('firebaseToken');
+                }
                 setUser(null);
                 setToken(null);
-                localStorage.removeItem('synod_token');
             }
             setLoading(false);
         });
@@ -39,6 +39,7 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         try {
             await signOut(auth);
+            localStorage.removeItem('firebaseToken');
         } catch (error) {
             console.error('Logout error:', error);
         }

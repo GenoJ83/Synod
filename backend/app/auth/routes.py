@@ -1,12 +1,11 @@
 """
-Authentication Routes for OAuth and JWT
+Authentication Routes for Firebase Auth
 """
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
-import httpx
 import secrets
 
 from .oauth import oauth
@@ -18,6 +17,66 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")
+
+
+# --- Firebase Auth ---
+
+class FirebaseAuthRequest(BaseModel):
+    token: str
+
+
+@router.post("/firebase")
+async def firebase_auth(request: FirebaseAuthRequest):
+    """Verify Firebase ID token and sync user to database."""
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+    
+    try:
+        decoded_token = id_token.verify_firebase_token(
+            request.token,
+            google_requests.Request(),
+            audience=FIREBASE_PROJECT_ID
+        )
+        
+        email = decoded_token.get("email")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token: missing email")
+        
+        from ..database import SessionLocal
+        from ..models import User
+        from .security import get_password_hash
+        
+        db = SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.email == email).first()
+            if not db_user:
+                db_user = User(
+                    email=email,
+                    full_name=decoded_token.get("name", email.split('@')[0]),
+                    hashed_password=get_password_hash(secrets.token_urlsafe(16)),
+                    is_active=True
+                )
+                db.add(db_user)
+                db.commit()
+                db.refresh(db_user)
+        finally:
+            db.close()
+        
+        user_data = {
+            "email": email,
+            "name": decoded_token.get("name", email.split('@')[0]),
+            "picture": decoded_token.get("picture"),
+            "provider": "firebase"
+        }
+        
+        jwt_token = create_access_token(user_data)
+        return {"token": jwt_token, "user": user_data}
+        
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Auth error: {str(e)}")
 
 
 # --- Google OAuth ---

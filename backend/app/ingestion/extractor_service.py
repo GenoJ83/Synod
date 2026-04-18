@@ -2,6 +2,12 @@ import fitz  # PyMuPDF
 from pptx import Presentation
 import os
 import re
+import logging
+logger = logging.getLogger(__name__)
+
+# Track OCR failures for monitoring
+_OCR_FAILURE_COUNT = 0
+_OCR_FAILURES = []
 try:
     import pytesseract
     from pdf2image import convert_from_path
@@ -10,6 +16,29 @@ try:
 except ImportError:
     OCR_AVAILABLE = False
     pytesseract = None
+
+# Magic bytes for file type validation
+_MAGIC_BYTES = {
+    '.pdf': b'%PDF',
+    '.png': b'\x89PNG',
+    '.jpg': b'\xff\xd8\xff',
+    '.jpeg': b'\xff\xd8\xff',
+    '.pptx': b'PK\x03\x04',  # PPTX is a ZIP container
+}
+
+def _validate_file_magic(file_path: str) -> bool:
+    """Validate file using magic bytes instead of just extension."""
+    ext = os.path.splitext(file_path)[1].lower()
+    magic = _MAGIC_BYTES.get(ext)
+    if not magic:
+        return True  # Unknown extension, allow
+    
+    try:
+        with open(file_path, 'rb') as f:
+            header = f.read(len(magic))
+            return header.startswith(magic)
+    except Exception:
+        return False
 
 # Patterns for academic paper noise (appendices, figure OCR, citations)
 _ARXIV_PATTERN = re.compile(
@@ -83,6 +112,11 @@ class ExtractorService:
     @staticmethod
     def extract_text(file_path: str) -> str:
         ext = os.path.splitext(file_path)[1].lower()
+        
+        # Validate file magic bytes
+        if not _validate_file_magic(file_path):
+            raise ValueError(f"Invalid file type for extension: {ext}")
+        
         try:
             if ext == '.pdf':
                 text = ExtractorService._extract_from_pdf(file_path)
@@ -252,9 +286,11 @@ class ExtractorService:
                         ocr = pytesseract.image_to_string(img, lang='eng')
                         ocr_text += ocr + "\n"
                     except Exception as e:
-                        import logging
-                        logger = logging.getLogger(__name__)
-                        logger.debug(f"OCR failed on page {page_num}: {e}")
+                        global _OCR_FAILURE_COUNT, _OCR_FAILURES
+                        _OCR_FAILURE_COUNT += 1
+                        _OCR_FAILURES.append({"page": page_num, "error": str(e)})
+                        if _OCR_FAILURE_COUNT <= 5:  # Log first 5 failures
+                            logger.warning(f"OCR failed on page {page_num}: {e}")
                         
         return text + "\n\n--- OCR from images ---\n" + ocr_text.strip()
 
@@ -294,5 +330,18 @@ class ExtractorService:
                 text = pytesseract.image_to_string(img, lang='eng')
                 return text.strip()
         except Exception as e:
+            global _OCR_FAILURE_COUNT, _OCR_FAILURES
+            _OCR_FAILURE_COUNT += 1
+            _OCR_FAILURES.append({"file": file_path, "error": str(e)})
+            logger.warning(f"Image OCR failed for {file_path}: {e}")
             raise RuntimeError(f"Failed to OCR image {file_path}: {str(e)}")
+
+
+def get_extraction_stats() -> dict:
+    """Return OCR statistics for monitoring."""
+    return {
+        "ocr_failure_count": _OCR_FAILURE_COUNT,
+        "recent_failures": _OCR_FAILURES[-10:] if _OCR_FAILURES else [],
+        "ocr_available": OCR_AVAILABLE
+    }
 

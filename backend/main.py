@@ -72,7 +72,10 @@ if not JWT_SECRET or len(JWT_SECRET) < 32:
 
 # Session middleware for OAuth (required by Authlib)
 from starlette.middleware.sessions import SessionMiddleware
-SESSION_SECRET = JWT_SECRET  # Reuse secure JWT secret
+SESSION_SECRET = os.getenv("SESSION_SECRET")
+if not SESSION_SECRET:
+    SESSION_SECRET = JWT_SECRET + "_fallback"  # Fallback only if not set
+    logger.warning("SESSION_SECRET not set, using fallback - should be configured for production")
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
 # Enable CORS for React development
@@ -110,6 +113,9 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # File size limits (in bytes)
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB limit
+
+# Rate limiting configuration
+DAILY_ANALYSIS_LIMIT = int(os.getenv("DAILY_ANALYSIS_LIMIT", "5"))
 
 class ProcessRequest(BaseModel):
     text: str
@@ -172,11 +178,11 @@ def process_logic(text: str, user: any = None, db: Session = None):
         # Pre-check rate limit
         today = datetime.now().strftime("%Y-%m-%d")
         if user.last_analysis_date == today:
-            if user.daily_analysis_count >= 5:
+            if user.daily_analysis_count >= DAILY_ANALYSIS_LIMIT:
                 logger.warning(f"User {user.email} hit daily rate limit")
                 raise HTTPException(
                     status_code=429, 
-                    detail="You have reached your daily limit of 5 lecture analyses. Please return tomorrow."
+                    detail=f"You have reached your daily limit of {DAILY_ANALYSIS_LIMIT} lecture analyses. Please return tomorrow."
                 )
 
     text = ExtractorService.normalize_pipeline_text(text.strip())
@@ -205,7 +211,7 @@ def process_logic(text: str, user: any = None, db: Session = None):
                 user.last_analysis_date = today
                 user.daily_analysis_count = 1
             db.commit()
-            logger.info(f"User {user.email} analysis count incremented: {user.daily_analysis_count}/5")
+            logger.info(f"User {user.email} analysis count incremented: {user.daily_analysis_count}/{DAILY_ANALYSIS_LIMIT}")
 
         quiz = result.get("quiz", {})
         
@@ -317,8 +323,8 @@ def get_user_usage(user: User = Depends(get_current_user)):
     
     return {
         "daily_count": count,
-        "daily_limit": 5,
-        "remaining": max(0, 5 - count),
+        "daily_limit": DAILY_ANALYSIS_LIMIT,
+        "remaining": max(0, DAILY_ANALYSIS_LIMIT - count),
         "last_analysis": user.last_analysis_date
     }
 

@@ -1,39 +1,37 @@
 import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, GithubAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase for Firestore only (no auth config)
 const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Proxy auth to backend (no API key leak)
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider();
 
-export const signInWithPopup = (provider) => {
-  window.location.href = `${API_BASE}/auth/${provider}/login`;
+export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
+export const signInWithGithub = () => signInWithPopup(auth, githubProvider);
+export const registerWithEmail = (email, password) => createUserWithEmailAndPassword(auth, email, password);
+export const loginWithEmail = (email, password) => signInWithEmailAndPassword(auth, email, password);
+export const logout = () => signOut(auth);
+
+export const getIdToken = async () => {
+  const user = auth.currentUser;
+  if (user) {
+    return user.getIdToken();
+  }
+  return null;
 };
 
-export const signInWithEmailAndPassword = async (email, password) => {
-  const response = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.detail || 'Login failed');
-  localStorage.setItem('token', data.token);
-  return data;
-};
-
-export const auth = {
-  currentUser: null,
-  onAuthStateChanged: (cb) => {
-    const token = localStorage.getItem('token');
-    cb(token ? { uid: 'proxy-user' } : null);
-  },
-  signOut: () => localStorage.removeItem('token'),
+export const onAuthStateChanged = (callback) => {
+  return auth.onAuthStateChanged(callback);
 };

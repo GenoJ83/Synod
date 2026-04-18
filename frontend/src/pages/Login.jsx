@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Brain, Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { loginWithEmail, signInWithGoogle, signInWithGithub, onAuthStateChanged, getIdToken } from '../firebase';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -11,37 +12,61 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [authLoading, setAuthLoading] = useState(true);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
 
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged((user) => {
+            if (user) {
+                navigate('/dashboard');
+            } else {
+                setAuthLoading(false);
+            }
+        });
+        return () => unsubscribe();
+    }, [navigate]);
+
     const handleOAuth = async (provider) => {
-        const redirectUri = `${API_BASE_URL}/auth/${provider}/login`;
-        window.location.href = redirectUri;
+        setLoading(true);
+        try {
+            if (provider === 'google') {
+                await signInWithGoogle();
+            } else {
+                await signInWithGithub();
+            }
+        } catch (error) {
+            console.error('OAuth error:', error);
+            alert('Authentication failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
-            const data = await response.json();
-            if (response.ok) {
-                localStorage.setItem('token', data.token);
-                navigate('/dashboard');
-            } else {
-                alert(data.detail || 'Login failed');
-            }
+            await loginWithEmail(email, password);
+            navigate('/dashboard');
         } catch (error) {
             console.error('Login error:', error);
-            alert('Login failed. Please check your connection.');
+            const message = error.code === 'auth/invalid-credential' 
+                ? 'Invalid email or password'
+                : 'Login failed. Please check your connection.';
+            alert(message);
         } finally {
             setLoading(false);
         }
     };
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen bg-app-bg flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-app-bg text-app-fg font-sans selection:bg-blue-500/30 transition-colors duration-300 flex flex-col items-center justify-center p-6 relative overflow-hidden">
