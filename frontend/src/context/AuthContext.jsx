@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
-import { auth } from '../firebase';
-import { onAuthStateChanged, signOut, getIdToken } from 'firebase/auth';
+import { auth, getRedirectResult, onAuthStateChanged, signOut } from 'firebase';
 
 const AuthContext = createContext();
 
@@ -11,29 +10,50 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-            if (fbUser) {
-                const idToken = await fbUser.getIdToken();
-                setUser({
-                    uid: fbUser.uid,
-                    email: fbUser.email,
-                    name: fbUser.displayName || fbUser.email.split('@')[0],
-                    picture: fbUser.photoURL
-                });
-                setToken(idToken);
-                localStorage.setItem('firebaseToken', idToken);
-            } else {
-                const storedToken = localStorage.getItem('firebaseToken');
-                if (storedToken) {
-                    localStorage.removeItem('firebaseToken');
+        const initAuth = async () => {
+            try {
+                const result = await getRedirectResult(auth);
+                if (result) {
+                    const idToken = await result.user.getIdToken();
+                    setUser({
+                        uid: result.user.uid,
+                        email: result.user.email,
+                        name: result.user.displayName || result.user.email.split('@')[0],
+                        picture: result.user.photoURL
+                    });
+                    setToken(idToken);
+                    localStorage.setItem('firebaseToken', idToken);
                 }
-                setUser(null);
-                setToken(null);
+            } catch (error) {
+                console.error('Redirect result error:', error);
             }
-            setLoading(false);
-        });
 
-        return () => unsubscribe();
+            const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+                if (fbUser) {
+                    const idToken = await fbUser.getIdToken();
+                    setUser({
+                        uid: fbUser.uid,
+                        email: fbUser.email,
+                        name: fbUser.displayName || fbUser.email.split('@')[0],
+                        picture: fbUser.photoURL
+                    });
+                    setToken(idToken);
+                    localStorage.setItem('firebaseToken', idToken);
+                } else {
+                    const storedToken = localStorage.getItem('firebaseToken');
+                    if (storedToken) {
+                        localStorage.removeItem('firebaseToken');
+                    }
+                    setUser(null);
+                    setToken(null);
+                }
+                setLoading(false);
+            });
+
+            return () => unsubscribe();
+        };
+
+        initAuth();
     }, []);
 
     const logout = async () => {

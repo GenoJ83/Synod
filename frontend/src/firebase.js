@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, GithubAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithRedirect, signOut } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -20,18 +20,15 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
-const githubProvider = new GithubAuthProvider();
-
 export const signInWithGoogle = () => {
-  return signInWithPopup(auth, googleProvider);
+  return signInWithRedirect(auth, googleProvider);
 };
 
-export const signInWithGithub = () => {
-  return signInWithPopup(auth, githubProvider);
-};
 export const registerWithEmail = (email, password) => createUserWithEmailAndPassword(auth, email, password);
 export const loginWithEmail = (email, password) => signInWithEmailAndPassword(auth, email, password);
 export const logout = () => signOut(auth);
+
+export const getRedirectResult = () => getRedirectResult(auth);
 
 export const getIdToken = async () => {
   const user = auth.currentUser;

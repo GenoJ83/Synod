@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Brain, Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { loginWithEmail, signInWithGoogle, signInWithGithub, auth, onAuthStateChanged } from '../firebase';
+import { loginWithEmail, signInWithGoogle, onAuthStateChanged } from '../firebase';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -12,6 +12,7 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [initialAuthCheck, setInitialAuthCheck] = useState(true);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
@@ -25,14 +26,16 @@ const Login = () => {
         return () => unsubscribe();
     }, [navigate]);
 
+    useEffect(() => {
+        if (searchParams.get('signedIn') === '1') {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [searchParams, navigate]);
+
     const handleOAuth = async (provider) => {
         setLoading(true);
         try {
-            if (provider === 'google') {
-                await signInWithGoogle();
-            } else {
-                await signInWithGithub();
-            }
+            await signInWithGoogle();
         } catch (error) {
             console.error('OAuth error:', error);
             setLoading(false);
