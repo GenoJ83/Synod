@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
-import { auth, getRedirectResult, onAuthStateChanged, signOut } from '../firebase';
+import { auth, getRedirectResult, onAuthStateChanged, logout } from '../firebase';
 
 const AuthContext = createContext();
 
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
                 console.error('Redirect result error:', error);
             }
 
-            const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+            const unsubscribe = onAuthStateChanged(async (fbUser) => {
                 if (fbUser) {
                     const idToken = await fbUser.getIdToken();
                     setUser({
@@ -56,9 +56,9 @@ export const AuthProvider = ({ children }) => {
         initAuth();
     }, []);
 
-    const logout = async () => {
+    const handleLogout = async () => {
         try {
-            await signOut(auth);
+            await logout();
             localStorage.removeItem('firebaseToken');
         } catch (error) {
             console.error('Logout error:', error);
@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ user, token, logout, isAuthenticated }}>
+        <AuthContext.Provider value={{ user, token, logout: handleLogout, isAuthenticated }}>
             {children}
         </AuthContext.Provider>
     );
