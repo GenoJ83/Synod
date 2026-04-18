@@ -8,6 +8,15 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+# Try importing local summarizer as final fallback
+_summarizer = None
+try:
+    from app.nlp.summarizer import Summarizer
+    _summarizer = Summarizer(model_name="sshleifer/distilbart-cnn-12-6")
+    logger.info("Local distilbart summarizer loaded as fallback")
+except Exception as e:
+    logger.warning(f"Could not load local summarizer: {e}")
+
 def _parse_json_object(raw: str) -> Dict[str, Any]:
     t = (raw or "").strip()
     if not t:
@@ -98,6 +107,28 @@ def analyze_with_cascade(text: str) -> Dict[str, Any]:
             continue # Try next model in cascade
 
     logger.error("All LLM providers in the cascade failed.")
+    
+    # Final fallback: use local distilbart summarizer
+    if _summarizer:
+        logger.warning("Falling back to local distilbart summarizer")
+        try:
+            summary = _summarizer.summarize(text[:50000])  # Limit text for local model
+            return {
+                "summary": summary if summary else "Summary unavailable",
+                "takeaways": [],
+                "concepts": [],
+                "concept_details": [],
+                "quiz": {
+                    "fill_in_the_blanks": [],
+                    "mcqs": [],
+                    "true_false": [],
+                    "comprehension": []
+                },
+                "fallback_used": "distilbart"
+            }
+        except Exception as e:
+            logger.error(f"Local summarizer also failed: {e}")
+    
     return {"error": "AI Synthesis currently unavailable across all providers. Please try again later."}
 
 def _call_gemini(model: str, key: str, base_url: str, prompt: str) -> Optional[Dict[str, Any]]:
