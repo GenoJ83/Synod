@@ -24,6 +24,8 @@ export const AuthProvider = ({ children }) => {
                     });
                     setToken(idToken);
                     localStorage.setItem('firebaseToken', idToken);
+                    setLoading(false);
+                    return;
                 }
             } catch (error) {
                 console.error('Redirect result error:', error);
@@ -77,7 +79,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ user, token, logout: handleLogout, isAuthenticated }}>
+        <AuthContext.Provider value={{ user, token, logout: handleLogout, isAuthenticated, loading }}>
             {children}
         </AuthContext.Provider>
     );
