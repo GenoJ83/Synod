@@ -181,9 +181,7 @@ const LandingPage = () => {
             <footer className="py-20 px-8 border-t border-app-border text-app-muted">
                 <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
                     <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 bg-app-card rounded flex items-center justify-center">
-                            <Brain className="w-4 h-4" />
-                        </div>
+                        <img src="/logo.png" alt="Synod" className="w-6 h-6 rounded" />
                         <span className="font-bold text-app-fg">Synod</span>
                     </div>
                     <div className="flex gap-10 text-xs font-bold uppercase tracking-widest">

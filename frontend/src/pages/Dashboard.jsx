@@ -147,9 +147,7 @@ function Dashboard() {
                 sidebarOpen ? "w-64" : "w-20"
             )}>
                 <div className="p-6 flex items-center gap-3">
-                    <div className="w-8 h-8 bg-app-fg rounded flex items-center justify-center shrink-0">
-                        <Brain className="w-5 h-5 text-app-bg" />
-                    </div>
+                    <img src="/logo.png" alt="Synod" className="w-8 h-8 rounded-lg shrink-0" />
                     {sidebarOpen && <span className="font-bold tracking-tight text-xl">Synod</span>}
                 </div>
 

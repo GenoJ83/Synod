@@ -67,9 +67,7 @@ const HowItWorks = () => {
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-app-fg rounded flex items-center justify-center">
-                                <Brain className="w-5 h-5 text-app-bg" />
-                            </div>
+                            <img src="/logo.png" alt="Synod" className="w-8 h-8 rounded-lg" />
                             <span className="text-xl font-bold tracking-tight">Synod</span>
                         </div>
                     </div>
