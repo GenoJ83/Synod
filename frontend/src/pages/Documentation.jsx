@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { BookOpen, FileText, BarChart3, ArrowLeft, Link2, Shield, Mail } from 'lucide-react';
+import { BookOpen, FileText, BarChart3, ArrowLeft, Link2, Shield, Mail, Lightbulb } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const Documentation = () => {
@@ -27,7 +27,7 @@ const Documentation = () => {
         },
         {
             title: "Concepts & Explanations",
-            icon: Brain,
+            icon: Lightbulb,
             items: [
                 { text: "Viewing extracted concepts", link: "#" },
                 { text: "Reading explanations", link: "#" },
