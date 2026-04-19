@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { loginWithEmail, signInWithGoogle, onAuthStateChanged, getRedirectResult } from '../firebase';
+import { useAuth } from '../context/AuthContext';
+import { loginWithEmail, signInWithGoogle } from '../firebase';
 import SEO from '../components/SEO';
 
 const Login = () => {
@@ -11,33 +12,16 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [initialAuthCheck, setInitialAuthCheck] = useState(true);
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { theme, toggleTheme } = useTheme();
+    const { isAuthenticated, loading: authLoading } = useAuth();
 
     useEffect(() => {
-        const handleRedirectResult = async () => {
-            try {
-                const result = await getRedirectResult();
-                if (result?.user) {
-                    navigate('/dashboard', { replace: true });
-                    return;
-                }
-            } catch (error) {
-                console.error('Redirect result error:', error);
-            }
-            const unsubscribe = onAuthStateChanged((user) => {
-                if (user) {
-                    navigate('/dashboard', { replace: true });
-                } else {
-                    setInitialAuthCheck(false);
-                }
-            });
-            return () => unsubscribe();
-        };
-        handleRedirectResult();
-    }, [navigate]);
+        if (!authLoading && isAuthenticated) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [isAuthenticated, authLoading, navigate]);
 
     useEffect(() => {
         if (searchParams.get('signedIn') === '1') {
@@ -74,7 +58,7 @@ const Login = () => {
         }
     };
 
-    if (initialAuthCheck) {
+    if (authLoading) {
         return (
             <div className="min-h-screen bg-app-bg flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
