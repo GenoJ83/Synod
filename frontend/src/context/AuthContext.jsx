@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 // Auth context for Firebase authentication
 import { API_BASE_URL } from '../config';
-import { auth, getRedirectResult, onAuthStateChanged, logout } from '../firebase';
+import { getRedirectResult, onAuthStateChanged, logout } from '../firebase';
 
 const AuthContext = createContext();
 
@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const initAuth = async () => {
             try {
-                const result = await getRedirectResult(auth);
+                const result = await getRedirectResult();
                 if (result) {
                     const idToken = await result.user.getIdToken();
                     setUser({
