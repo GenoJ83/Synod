@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { loginWithEmail, signInWithGoogle, onAuthStateChanged } from '../firebase';
+import { loginWithEmail, signInWithGoogle, onAuthStateChanged, getRedirectResult } from '../firebase';
 import SEO from '../components/SEO';
 
 const Login = () => {
@@ -17,14 +17,26 @@ const Login = () => {
     const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged((user) => {
-            if (user) {
-                navigate('/dashboard', { replace: true });
-            } else {
-                setInitialAuthCheck(false);
+        const handleRedirectResult = async () => {
+            try {
+                const result = await getRedirectResult();
+                if (result?.user) {
+                    navigate('/dashboard', { replace: true });
+                    return;
+                }
+            } catch (error) {
+                console.error('Redirect result error:', error);
             }
-        });
-        return () => unsubscribe();
+            const unsubscribe = onAuthStateChanged((user) => {
+                if (user) {
+                    navigate('/dashboard', { replace: true });
+                } else {
+                    setInitialAuthCheck(false);
+                }
+            });
+            return () => unsubscribe();
+        };
+        handleRedirectResult();
     }, [navigate]);
 
     useEffect(() => {
