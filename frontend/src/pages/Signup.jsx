@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { registerWithEmail, signInWithGoogle, onAuthStateChanged } from '../firebase';
+import SEO from '../components/SEO';
 
 const Signup = () => {
     const [name, setName] = useState('');
@@ -73,7 +74,15 @@ const Signup = () => {
     }
 
     return (
-        <div className="min-h-screen bg-app-bg text-app-fg font-sans selection:bg-blue-500/30 transition-colors duration-300 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <>
+            <SEO 
+                title="Sign Up - Synod.ai"
+                description="Create your free Synod.ai account. Join thousands of students using AI-powered lecture analysis to extract concepts, generate summaries, and test knowledge."
+                keywords="signup, sign up, create account, register, student account"
+                ogTitle="Join Synod.ai - Start Learning Smarter"
+                ogDescription="Create your free account and transform lecture materials into interactive learning experiences."
+            />
+            <div className="min-h-screen bg-app-bg text-app-fg font-sans selection:bg-blue-500/30 transition-colors duration-300 flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Background Decoration */}
             <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
             <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-purple-500/10 blur-[120px] rounded-full pointer-events-none" />
@@ -220,7 +229,8 @@ const Signup = () => {
                     Synod uses bank-grade encryption to protect your lecture data.
                 </p>
             </motion.div>
-        </div>
+            </div>
+        </>
     );
 };
 

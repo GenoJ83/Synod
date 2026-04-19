@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -15,9 +16,10 @@ import AnalysisResults from './pages/AnalysisResults';
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router>
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
@@ -50,9 +52,10 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
           </Routes>
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 

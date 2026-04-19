@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Brain, BookOpen, FileText, BarChart3, ArrowLeft, Link2, Shield, Mail } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const Documentation = () => {
     const navigate = useNavigate();
@@ -45,7 +46,15 @@ const Documentation = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-app-bg text-app-fg font-sans">
+        <>
+            <SEO 
+                title="Documentation - Synod.ai"
+                description="Complete documentation for Synod.ai. Learn how to use AI-powered lecture analysis, extract concepts, generate summaries, and create interactive quizzes."
+                keywords="documentation, help, guide, tutorial, how to use"
+                ogTitle="Documentation - Synod.ai"
+                ogDescription="Complete guide to using Synod.ai's AI-powered lecture analysis platform."
+            />
+            <div className="min-h-screen bg-app-bg text-app-fg font-sans">
             <header className="h-16 border-b border-app-border bg-app-bg/80 backdrop-blur-md sticky top-0 z-50">
                 <div className="max-w-[1600px] mx-auto px-8 h-full flex items-center justify-between">
                     <div className="flex items-center gap-6">
@@ -150,7 +159,8 @@ const Documentation = () => {
                     </a>
                 </div>
             </main>
-        </div>
+            </div>
+        </>
     );
 };
 

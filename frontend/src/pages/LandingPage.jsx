@@ -3,13 +3,22 @@ import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { Brain, Search, BookOpen, Clock, FileText, ChevronRight, BarChart3, Globe, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import SEO from '../components/SEO';
 
 const LandingPage = () => {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
 
     return (
-        <div className="min-h-screen bg-app-bg text-app-fg font-sans selection:bg-blue-500/30 transition-colors duration-300">
+        <>
+            <SEO 
+                title="Synod.ai - Intelligent Lecture Synthesis"
+                description="AI-powered lecture analysis. Extract concepts, generate summaries, and test knowledge instantly. Transform your study materials into interactive learning experiences."
+                keywords="AI lecture analysis, study tool, concept extraction, PDF summarization, student learning, knowledge graphs, AI tutoring"
+                ogTitle="Synod.ai - Intelligent Lecture Synthesis"
+                ogDescription="Transform lecture materials into interactive knowledge graphs and quizzes. Get instant summaries and test your understanding."
+            />
+            <div className="min-h-screen bg-app-bg text-app-fg font-sans selection:bg-blue-500/30 transition-colors duration-300">
             <header className="fixed top-0 w-full z-50 border-b border-app-border bg-app-bg/80 backdrop-blur-md">
                 <div className="max-w-[1600px] mx-auto px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -186,6 +195,7 @@ const LandingPage = () => {
                 </div>
             </footer>
         </div>
+        </>
     );
 };
 

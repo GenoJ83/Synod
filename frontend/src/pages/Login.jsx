@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Sun, Moon, ChevronRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { loginWithEmail, signInWithGoogle, onAuthStateChanged } from '../firebase';
+import SEO from '../components/SEO';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -70,7 +71,15 @@ const Login = () => {
     }
 
     return (
-        <div className="min-h-screen bg-app-bg text-app-fg font-sans selection:bg-blue-500/30 transition-colors duration-300 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <>
+            <SEO 
+                title="Login - Synod.ai"
+                description="Log in to your Synod.ai account to continue analyzing lecture materials and generating interactive study content."
+                keywords="login, sign in, account access"
+                ogTitle="Login to Synod.ai"
+                ogDescription="Continue your knowledge synthesis journey with AI-powered lecture analysis."
+            />
+            <div className="min-h-screen bg-app-bg text-app-fg font-sans selection:bg-blue-500/30 transition-colors duration-300 flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Background Decoration */}
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 blur-[120px] rounded-full pointer-events-none" />
@@ -201,7 +210,8 @@ const Login = () => {
                     <span className="text-app-fg cursor-pointer hover:underline">Terms of Service</span> and <span className="text-app-fg cursor-pointer hover:underline">Privacy Policy</span>.
                 </p>
             </motion.div>
-        </div>
+            </div>
+        </>
     );
 };
 

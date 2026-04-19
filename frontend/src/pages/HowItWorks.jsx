@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { Brain, Search, BookOpen, Clock, FileText, ChevronRight, BarChart3, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import SEO from '../components/SEO';
 
 const HowItWorks = () => {
     const navigate = useNavigate();
@@ -47,7 +48,15 @@ const HowItWorks = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-app-bg text-app-fg font-sans">
+        <>
+            <SEO 
+                title="How It Works - Synod.ai"
+                description="Learn how Synod.ai transforms lecture materials into interactive learning experiences. Upload, analyze, learn concepts, and test your knowledge in 4 simple steps."
+                keywords="how it works, tutorial, lecture analysis, AI learning, study guide"
+                ogTitle="How It Works - Synod.ai"
+                ogDescription="Transform lecture materials into interactive knowledge graphs and quizzes in 4 simple steps."
+            />
+            <div className="min-h-screen bg-app-bg text-app-fg font-sans">
             <header className="h-16 border-b border-app-border bg-app-bg/80 backdrop-blur-md sticky top-0 z-50">
                 <div className="max-w-[1600px] mx-auto px-8 h-full flex items-center justify-between">
                     <div className="flex items-center gap-6">
@@ -149,7 +158,8 @@ const HowItWorks = () => {
                     </button>
                 </div>
             </main>
-        </div>
+            </div>
+        </>
     );
 };
 
