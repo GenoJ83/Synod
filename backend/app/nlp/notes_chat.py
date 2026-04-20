@@ -120,20 +120,7 @@ def notes_chat_with_cascade(
     
     # Check each provider from environment
     gemini_key = (os.getenv("GOOGLE_API_KEY") or "").strip()
-    groq_key = (os.getenv("GROQ_API_KEY") or "").strip()
-    openrouter_key = (os.getenv("OPENROUTER_API_KEY") or "").strip()
-    
-    # If explicit api_key provided, use only that (for backward compatibility)
-    if api_key:
-        providers = [("gemini", model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash"), api_key, "https://generativelanguage.googleapis.com/v1beta")]
-    else:
-        # Try all configured providers in order
-        if gemini_key:
-            providers.append(("gemini", "gemini-2.5-flash", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
-        if groq_key:
-            providers.append(("groq", "llama-3.3-70b-versatile", groq_key, "https://api.groq.com/openai/v1"))
-        if openrouter_key:
-            providers.append(("openrouter", "google/gemini-flash-1.5-8b", openrouter_key, "https://openrouter.ai/api/v1"))
+    groq_key = (os.getenv("GROQ_API_KEY") or "").strip()\n    openrouter_key = (os.getenv("OPENROUTER_API_KEY") or "").strip()\n    anthropic_key = (os.getenv("ANTHROPIC_API_KEY") or "").strip()\n    \n    # If explicit api_key provided, use only that (for backward compatibility)\n    if api_key:\n        providers = [("gemini", model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash"), api_key, "https://generativelanguage.googleapis.com/v1beta")]\n    else:\n        # Try all configured providers in order\n        if gemini_key:\n            providers.append(("gemini", "gemini-2.5-flash", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))\n        if groq_key:\n            providers.append(("groq", "llama-3.3-70b-versatile", groq_key, "https://api.groq.com/openai/v1"))\n        if openrouter_key:\n            providers.append(("openrouter", "google/gemini-flash-1.5-8b", openrouter_key, "https://openrouter.ai/api/v1"))\n        if anthropic_key:\n            providers.append(("anthropic", "claude-3.5-sonnet-20240620", anthropic_key, "https://api.anthropic.com/v1"))
     
     if not providers:
         raise RuntimeError("No LLM API keys configured for notes chat (set GOOGLE_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY)")
@@ -166,27 +153,7 @@ def notes_chat_with_cascade(
         logger.info("Trying notes chat with %s (%s)...", provider, model_name)
         
         # Prepare request based on provider
-        if provider == "gemini":
-            url = f"{_GEMINI_URL.format(model=model_name)}?key={key}"
-            body = {
-                "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "temperature": 0.4,
-                    "maxOutputTokens": 2048,
-                },
-            }
-        else:
-            url = f"{base_url}/chat/completions"
-            headers = {
-                "Authorization": f"Bearer {key}",
-                "Content-Type": "application/json"
-            }
-            body = {
-                "model": model_name,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.4,
-                "max_tokens": 2048,
-            }
+                if provider == "gemini":\n                    url = f"{_GEMINI_URL.format(model=model_name)}?key={key}"\n                    body = {\n                        "contents": [{"role": "user", "parts": [{"text": prompt}]}],\n                        "generationConfig": {\n                            "temperature": 0.4,\n                            "maxOutputTokens": 2048,\n                        },\n                    }\n                elif provider == "anthropic":\n                    url = f"{base_url}/messages"\n                    headers = {\n                        "x-api-key": key,\n                        "anthropic-version": "2023-06-01",\n                        "Content-Type": "application/json"\n                    }\n                    body = {\n                        "model": model_name,\n                        "max_tokens": 2048,\n                        "temperature": 0.4,\n                        "messages": [{"role": "user", "content": prompt}]\n                    }\n                else:\n                    url = f"{base_url}/chat/completions"\n                    headers = {\n                        "Authorization": f"Bearer {key}",\n                        "Content-Type": "application/json"\n                    }\n                    body = {\n                        "model": model_name,\n                        "messages": [{"role": "user", "content": prompt}],\n                        "temperature": 0.4,\n                        "max_tokens": 2048,\n                    }
         
         # Retry logic per provider
         max_retries = 3
@@ -202,12 +169,7 @@ def notes_chat_with_cascade(
                 r.raise_for_status()
                 data = r.json()
                 
-                # Success! Parse and return
-                if provider == "gemini":
-                    parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-                    text_out = "".join(p.get("text", "") for p in parts if isinstance(p, dict))
-                else:
-                    text_out = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                # Success! Parse and return\n                if provider == "gemini":\n                    parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])\n                    text_out = "".join(p.get("text", "") for p in parts if isinstance(p, dict))\n                elif provider == "anthropic":\n                    text_out = data.get("content", [{}])[0].get("text", "")\n                else:\n                    text_out = data.get("choices", [{}])[0].get("message", {}).get("content", "")
                 
                 text_out = (text_out or "").strip()
                 if text_out:
