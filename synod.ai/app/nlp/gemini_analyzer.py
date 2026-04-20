@@ -30,7 +30,7 @@ def analyze_with_gemini(text: str, api_key: str, model: str = "gemini-1.5-flash"
 def analyze_with_cascade(text: str) -> Dict[str, Any]:
     """
     Tries multiple LLM providers in sequence to ensure 100% reliability on free tiers.
-    Order: Gemini 1.5 Pro -> Gemini 1.5 Flash -> Groq Llama 3.1 -> OpenRouter Free
+    Order: Gemini 1.5 Pro -> Gemini 1.5 Flash -> Groq Llama 3.3 -> OpenRouter Free
     """
     gemini_key = (os.getenv("GOOGLE_API_KEY") or "").strip()
     groq_key = (os.getenv("GROQ_API_KEY") or "").strip()
@@ -42,8 +42,8 @@ def analyze_with_cascade(text: str) -> Dict[str, Any]:
     
     # 1. Google Gemini (Primary - Most Tokens)
     if gemini_key:
-        cascade_configs.append(("gemini", "gemini-1.5-pro-latest", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
-        cascade_configs.append(("gemini", "gemini-1.5-flash-latest", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
+        cascade_configs.append(("gemini", "gemini-1.5-pro", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
+        cascade_configs.append(("gemini", "gemini-1.5-flash", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
     
     # 2. Groq (High Speed Fallback)
     if groq_key:
