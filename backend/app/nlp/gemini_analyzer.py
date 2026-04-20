@@ -129,7 +129,7 @@ def analyze_with_cascade(text: str) -> Dict[str, Any]:
         except Exception as e:
             logger.error(f"Local summarizer also failed: {e}")
     
-    return {"error": "AI Synthesis currently unavailable across all providers. Please try again later."}
+    return {"error": "AI synthesis is temporarily unavailable. Please try again later."}
 
 def _call_gemini(model: str, key: str, base_url: str, prompt: str) -> Optional[Dict[str, Any]]:
     url = f"{base_url}/models/{model}:generateContent?key={key}"
@@ -173,10 +173,7 @@ def _call_gemini(model: str, key: str, base_url: str, prompt: str) -> Optional[D
         except httpx.HTTPStatusError as e:
             # For non-retried status codes (e.g., 400, 401, 403), fail immediately
             status_code = e.response.status_code if e.response else "unknown"
-            url_str = str(e.request.url) if e.request else "unknown URL"
-            if key in url_str:
-                url_str = url_str.replace(key, "API_KEY_REDACTED")
-            log_msg = f"Gemini HTTP error {status_code}: {e} - URL: {url_str}"
+            log_msg = f"Gemini HTTP error {status_code} on model {model}"
             logger.error(log_msg)
             raise Exception(log_msg) from e
         except Exception as e:
@@ -238,10 +235,7 @@ def _call_openai_compatible(provider: str, model: str, key: str, base_url: str, 
         except httpx.HTTPStatusError as e:
             # For non-retried status codes, fail immediately
             status_code = e.response.status_code if e.response else "unknown"
-            url_str = str(e.request.url) if e.request else "unknown URL"
-            if key in url_str:
-                url_str = url_str.replace(key, "API_KEY_REDACTED")
-            log_msg = f"{provider} HTTP error {status_code}: {e} - URL: {url_str}"
+            log_msg = f"{provider} HTTP error {status_code} on model {model}"
             logger.error(log_msg)
             raise Exception(log_msg) from e
         except Exception as e:

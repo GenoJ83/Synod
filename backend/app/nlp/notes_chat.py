@@ -249,4 +249,10 @@ def notes_chat_with_cascade(
                 break
     
     # If we get here, all providers failed
-    raise RuntimeError(f"All LLM providers failed. Last error: {last_error}")
+    # Sanitize error: never expose API keys or full URLs to the caller
+    safe_error = str(last_error)
+    # Redact anything that looks like a key= query param
+    safe_error = re.sub(r"key=[A-Za-z0-9_\-]+", "key=[REDACTED]", safe_error)
+    # If a full URL is still in the message, strip it entirely
+    safe_error = re.sub(r"https?://\S+", "[provider URL redacted]", safe_error)
+    raise RuntimeError(f"AI assistant temporarily unavailable. Please try again in a moment.")
