@@ -122,6 +122,7 @@ def notes_chat_with_cascade(
     gemini_key = (os.getenv("GOOGLE_API_KEY") or "").strip()
     groq_key = (os.getenv("GROQ_API_KEY") or "").strip()
     openrouter_key = (os.getenv("OPENROUTER_API_KEY") or "").strip()
+    anthropic_key = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
     
     # If explicit api_key provided, use only that (for backward compatibility)
     if api_key:
@@ -134,9 +135,11 @@ def notes_chat_with_cascade(
             providers.append(("groq", "llama-3.3-70b-versatile", groq_key, "https://api.groq.com/openai/v1"))
         if openrouter_key:
             providers.append(("openrouter", "google/gemini-flash-1.5-8b", openrouter_key, "https://openrouter.ai/api/v1"))
+        if anthropic_key:
+            providers.append(("anthropic", "claude-3-5-haiku-20241022", anthropic_key, "https://api.anthropic.com"))
     
     if not providers:
-        raise RuntimeError("No LLM API keys configured for notes chat (set GOOGLE_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY)")
+        raise RuntimeError("No LLM API keys configured for notes chat (set GOOGLE_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY, or ANTHROPIC_API_KEY)")
 
     hint = (summary_hint or "").strip()
     hint_block = ""
@@ -175,6 +178,18 @@ def notes_chat_with_cascade(
                     "maxOutputTokens": 2048,
                 },
             }
+        elif provider == "anthropic":
+            url = f"{base_url}/v1/messages"
+            headers = {
+                "x-api-key": key,
+                "anthropic-version": "2023-06-01",
+                "Content-Type": "application/json"
+            }
+            body = {
+                "model": model_name,
+                "max_tokens": 2048,
+                "messages": [{"role": "user", "content": prompt}]
+            }
         else:
             url = f"{base_url}/chat/completions"
             headers = {
@@ -197,6 +212,8 @@ def notes_chat_with_cascade(
                 with httpx.Client(timeout=timeout_s) as client:
                     if provider == "gemini":
                         r = client.post(url, json=body)
+                    elif provider == "anthropic":
+                        r = client.post(url, headers=headers, json=body)
                     else:
                         r = client.post(url, headers=headers, json=body)
                 r.raise_for_status()
@@ -206,6 +223,8 @@ def notes_chat_with_cascade(
                 if provider == "gemini":
                     parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
                     text_out = "".join(p.get("text", "") for p in parts if isinstance(p, dict))
+                elif provider == "anthropic":
+                    text_out = data.get("content", [{}])[0].get("text", "")
                 else:
                     text_out = data.get("choices", [{}])[0].get("message", {}).get("content", "")
                 
