@@ -1,15 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, Loader2 } from 'lucide-react';
 import { API_BASE_URL } from '../../config';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Grounded tutor chat: POST /chat/notes with source_text from the current analysis.
  */
 function NotesChatPanel({ sourceText, summary }) {
+    const { token } = useAuth();
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState('');
+    const [remainingChats, setRemainingChats] = useState<number | null>(null);
     const bottomRef = useRef(null);
 
     useEffect(() => {
@@ -31,9 +34,14 @@ function NotesChatPanel({ sourceText, summary }) {
         setLoading(true);
 
         try {
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const res = await fetch(`${API_BASE_URL}/chat/notes`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify({
                     source_text: sourceText,
                     message: q,
@@ -41,6 +49,13 @@ function NotesChatPanel({ sourceText, summary }) {
                     summary_hint: summary || '',
                 }),
             });
+
+            // Extract remaining chats from header if present
+            const remainingHeader = res.headers.get('x-chat-remaining');
+            if (remainingHeader) {
+                setRemainingChats(parseInt(remainingHeader, 10));
+            }
+
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
                 const d = data.detail;
@@ -66,6 +81,11 @@ function NotesChatPanel({ sourceText, summary }) {
             <div className="flex items-center gap-3 mb-3 text-emerald-500">
                 <MessageCircle className="w-5 h-5" />
                 <h3 className="text-xs font-bold uppercase tracking-widest">Study assistant</h3>
+                {remainingChats !== null && (
+                    <span className="ml-auto text-[10px] bg-emerald-500/10 px-2 py-1 rounded-full">
+                        {remainingChats}/5 chats left today
+                    </span>
+                )}
             </div>
             <p className="text-[11px] text-app-muted mb-4 leading-relaxed">
                 Ask questions about this upload. Answers are grounded in your notes and the summary.

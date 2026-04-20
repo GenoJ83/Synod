@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Optional
@@ -8,8 +9,10 @@ import asyncio
 import uvicorn
 import logging
 import traceback
+import hashlib
 from pathlib import Path
 from dotenv import load_dotenv
+from datetime import datetime, timezone, date
 
 # Configure logging
 logging.basicConfig(
@@ -41,16 +44,27 @@ from sqlalchemy.orm import Session
 from fastapi import Depends
 from datetime import datetime
 from app.database import get_db, engine, Base
-from app.models import User
+from app.models import User, DocumentChatUsage
 
 # Initialize database
 try:
     logger.info("Initializing database...")
     Base.metadata.create_all(bind=engine)
+    
+    # Add missing columns to existing tables if needed
+    from sqlalchemy import text
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN last_analysis_date VARCHAR DEFAULT ''"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN daily_analysis_count INTEGER DEFAULT 0"))
+            conn.commit()
+            logger.info("Database migration: added missing columns")
+    except Exception as e:
+        logger.info(f"Database columns check: {str(e)}")
+    
     logger.info("Database initialized successfully.")
 except Exception as e:
     logger.error(f"Failed to initialize database: {str(e)}")
-    # If using SQLite, check if the directory is writable
     if str(engine.url).startswith("sqlite"):
         db_path = str(engine.url).replace("sqlite:///", "")
         db_dir = os.path.dirname(os.path.abspath(db_path)) if os.path.isabs(db_path) else os.getcwd()
@@ -63,11 +77,23 @@ except Exception as e:
 
 app = FastAPI(title="Synod API")
 
+# Validate JWT_SECRET at startup
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET or len(JWT_SECRET) < 32:
+    logger.error("JWT_SECRET missing or too short (<32 chars). Set in .env")
+    raise ValueError("JWT_SECRET required for production")
+
+# Check Firebase config
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")
+if not FIREBASE_PROJECT_ID:
+    logger.warning("FIREBASE_PROJECT_ID not set in .env - authentication may fail")
+
 # Session middleware for OAuth (required by Authlib)
 from starlette.middleware.sessions import SessionMiddleware
-
-# Prioritize JWT_SECRET, fallback to SESSION_SECRET, then a dev default
-SESSION_SECRET = os.getenv("JWT_SECRET", os.getenv("SESSION_SECRET", "session_development_secret_key_123"))
+SESSION_SECRET = os.getenv("SESSION_SECRET")
+if not SESSION_SECRET:
+    SESSION_SECRET = JWT_SECRET + "_fallback"  # Fallback only if not set
+    logger.warning("SESSION_SECRET not set, using fallback - should be configured for production")
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
 # Enable CORS for React development
@@ -105,6 +131,9 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # File size limits (in bytes)
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB limit
+
+# Rate limiting configuration
+DAILY_ANALYSIS_LIMIT = int(os.getenv("DAILY_ANALYSIS_LIMIT", "5"))
 
 class ProcessRequest(BaseModel):
     text: str
@@ -164,19 +193,19 @@ def process_logic(text: str, user: any = None, db: Session = None):
         raise HTTPException(status_code=400, detail="Text is required")
     
     if user and db:
-        # Pre-check rate limit
         today = datetime.now().strftime("%Y-%m-%d")
-        if user.last_analysis_date == today:
-            if user.daily_analysis_count >= 5:
-                logger.warning(f"User {user.email} hit daily rate limit")
+        user_date = getattr(user, 'last_analysis_date', '') or ''
+        
+        if user_date == today:
+            current_count = getattr(user, 'daily_analysis_count', 0) or 0
+            if current_count >= DAILY_ANALYSIS_LIMIT:
+                logger.warning(f"User {getattr(user, 'email', 'unknown')} hit daily rate limit")
                 raise HTTPException(
                     status_code=429, 
-                    detail="You have reached your daily limit of 5 lecture analyses. Please return tomorrow."
+                    detail=f"You have reached your daily limit of {DAILY_ANALYSIS_LIMIT} lecture analyses. Please return tomorrow."
                 )
 
     text = ExtractorService.normalize_pipeline_text(text.strip())
-    # Minimum words stripped to 0 to fix strict ingestion limits
-    
     logger.info(f"Processing text of length: {len(text)} characters via Gemini")
     
     api_key = (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
@@ -184,7 +213,6 @@ def process_logic(text: str, user: any = None, db: Session = None):
         raise HTTPException(status_code=500, detail="Gemini API Key missing or not set in backend .env")
         
     try:
-        # Single robust LLM call replacing sum, extraction, and quiz heuristics
         result = analyze_with_gemini(text, api_key)
         
         if "error" in result:
@@ -192,15 +220,17 @@ def process_logic(text: str, user: any = None, db: Session = None):
             raise HTTPException(status_code=503, detail=result["error"])
 
         if user and db:
-            # Increment credit ONLY on success
             today = datetime.now().strftime("%Y-%m-%d")
-            if user.last_analysis_date == today:
-                user.daily_analysis_count += 1
+            user_date = getattr(user, 'last_analysis_date', '') or ''
+            
+            if user_date == today:
+                current_count = getattr(user, 'daily_analysis_count', 0) or 0
+                setattr(user, 'daily_analysis_count', current_count + 1)
             else:
                 user.last_analysis_date = today
                 user.daily_analysis_count = 1
             db.commit()
-            logger.info(f"User {user.email} analysis count incremented: {user.daily_analysis_count}/5")
+            logger.info(f"User {getattr(user, 'email', 'unknown')} analysis count incremented")
 
         quiz = result.get("quiz", {})
         
@@ -224,30 +254,109 @@ def process_logic(text: str, user: any = None, db: Session = None):
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    return {
-        "message": "Welcome to Synod API",
-        "device_info": {
-            "extractor": extractor.device if hasattr(extractor, "device") else "mock"
-        }
-    }
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Synod.ai | API Node</title>
+        <link rel="icon" type="image/svg+xml" href="/favicon.ico">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+        <style>
+            body { font-family: 'Outfit', sans-serif; background: #09090b; color: #fafafa; }
+            .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+            .gradient-text { background: linear-gradient(135deg, #60a5fa 0%, #a855f7 50%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+            .animate-blob { animation: blob 7s infinite; }
+            @keyframes blob {
+                0% { transform: translate(0px, 0px) scale(1); }
+                33% { transform: translate(30px, -50px) scale(1.1); }
+                66% { transform: translate(-20px, 20px) scale(0.9); }
+                100% { transform: translate(0px, 0px) scale(1); }
+            }
+        </style>
+    </head>
+    <body class="min-h-screen flex items-center justify-center overflow-hidden">
+        <div class="fixed top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div class="fixed top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div class="fixed -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        
+        <div class="glass p-12 rounded-[2.5rem] max-w-xl w-full text-center relative z-10 shadow-2xl">
+            <div class="mb-8 inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/20">
+                <svg viewBox="0 0 24 24" fill="none" class="w-10 h-10 text-white" stroke="currentColor" stroke-width="2">
+                    <path d="M9.5 2A1.5 1.5 0 0 0 8 3.5c0 .3.1.6.3.8-.1.2-.3.4-.3.7a1.5 1.5 0 0 0 1.5 1.5c.3 0 .6-.1.8-.3.2.1.4.3.7.3h.1a1.5 1.5 0 0 0 1.5-1.5c0-.3-.1-.6-.3-.8.1-.2.3-.4.3-.7a1.5 1.5 0 0 0-1.5-1.5h-1.1Zm2 6a4 4 0 0 0-4 4c0 1.1.4 2.1 1.1 2.9-.1.2-.1.4-.1.6 0 1.1.9 2 2 2h1a2 2 0 1 0 0-4h-1a1.5 1.5 0 0 1-1.5-1.5c0-.8.7-1.5 1.5-1.5h.5a1.5 1.5 0 0 1 0 3h-.5" />
+                    <path d="M12 18.5a1.5 1.5 0 0 1-1.5 1.5c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5Z" />
+                    <path d="M12 13V9" />
+                    <path d="M12 6a4 4 0 0 1 4 4c0 1.1-.4 2.1-1.1 2.9.1.2.1.4.1.6 0 1.1-.9 2-2 2h-1a2 2 0 1 1 0-4h1a1.5 1.5 0 0 0 1.5-1.5c0-.8-.7-1.5-1.5-1.5h-.5a1.5 1.5 0 0 0 0 3h.5" />
+                </svg>
+            </div>
+            
+            <h1 class="text-5xl font-extrabold mb-4 tracking-tight">
+                <span class="gradient-text">Synod.ai</span>
+            </h1>
+            <p class="text-zinc-400 text-lg mb-10 font-medium">Intelligence Engine v2026.4 is Active</p>
+            
+            <div class="grid grid-cols-2 gap-4 text-left">
+                <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Status</p>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <span class="text-sm font-bold text-emerald-400">Operational</span>
+                    </div>
+                </div>
+                <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Models</p>
+                    <span class="text-sm font-bold text-blue-400">Gemini 3.1 & 2.5</span>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-8 border-t border-white/10">
+                <p class="text-xs text-zinc-500 font-medium tracking-wide">
+                    © 2026 Synod Assistants | Advanced Lecture Synthesis
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    icon_path = Path("brain-icon.svg")
+    if icon_path.exists():
+        return FileResponse(icon_path)
+    return HTTPException(status_code=404)
 
 
 @app.get("/user/usage")
 def get_user_usage(user: User = Depends(get_current_user)):
     """Return the current user's daily analysis usage."""
-    today = datetime.now().strftime("%Y-%m-%d")
-    
-    # If the user hasn't analyzed today, the stored count is effectively 0 for the UI
-    count = user.daily_analysis_count if user.last_analysis_date == today else 0
-    
-    return {
-        "daily_count": count,
-        "daily_limit": 5,
-        "remaining": max(0, 5 - count),
-        "last_analysis": user.last_analysis_date
-    }
+    try:
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        user_date = getattr(user, 'last_analysis_date', '') or ''
+        count = 0
+        if user_date == today:
+            count = getattr(user, 'daily_analysis_count', 0) or 0
+        
+        return {
+            "daily_count": count,
+            "daily_limit": DAILY_ANALYSIS_LIMIT,
+            "remaining": max(0, DAILY_ANALYSIS_LIMIT - count),
+            "last_analysis": user_date
+        }
+    except Exception as e:
+        logger.error(f"Usage endpoint error: {str(e)}")
+        return {
+            "daily_count": 0,
+            "daily_limit": DAILY_ANALYSIS_LIMIT,
+            "remaining": DAILY_ANALYSIS_LIMIT,
+            "last_analysis": ""
+        }
 
 @app.post("/explain-concept", response_model=ConceptExplanationResponse)
 async def explain_concept(request: ExplainConceptRequest):
@@ -265,8 +374,8 @@ async def explain_concept(request: ExplainConceptRequest):
         baseline = explanation_gen.generate_concept_detail(concept, text, extractor=extractor)
         if _gemini_enabled():
             api_key = (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
-            snippet = explanation_gen.gather_grounding_snippet(concept, text, extractor)
-            if api_key and snippet.strip():
+            if api_key:
+                snippet = explanation_gen.gather_grounding_snippet(concept, text, extractor)
 
                 def _gemini_call():
                     return explain_concept_with_gemini(
@@ -285,7 +394,11 @@ async def explain_concept(request: ExplainConceptRequest):
 
 
 @app.post("/chat/notes", response_model=NotesChatResponse)
-async def chat_notes(request: NotesChatRequest):
+async def chat_notes(
+    request: NotesChatRequest, 
+    current_user: any = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
     """
     Tutor-style Q&A grounded in the student's uploaded notes (requires Gemini API key).
     """
@@ -303,6 +416,36 @@ async def chat_notes(request: NotesChatRequest):
     if len(text) < 50:
         raise HTTPException(status_code=400, detail="Notes text is too short after normalization.")
 
+    # --- Rate limiting: 5 chats per document per user per day ---
+    # Compute document hash from normalized text (first 10000 chars + length)
+    doc_for_hash = text[:10000].strip()
+    doc_hash = hashlib.sha256(doc_for_hash.encode("utf-8")).hexdigest()
+    
+    today_utc = datetime.now(timezone.utc).date()
+    
+    usage = db.query(DocumentChatUsage).filter(
+        DocumentChatUsage.user_id == current_user.id,
+        DocumentChatUsage.document_hash == doc_hash,
+        DocumentChatUsage.date == today_utc
+    ).first()
+    
+    if usage and usage.chat_count >= 5:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Daily limit reached for this document. You've used {usage.chat_count}/5 chats today. Try again tomorrow or start a new analysis."
+        )
+    
+    # Track usage (create if doesn't exist, will increment after success)
+    if not usage:
+        usage = DocumentChatUsage(
+            user_id=current_user.id,
+            document_hash=doc_hash,
+            date=today_utc,
+            chat_count=0
+        )
+        db.add(usage)
+        db.flush()  # Get ID without committing yet
+
     api_key = (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
     hint = (request.summary_hint or "").strip()
 
@@ -319,44 +462,45 @@ async def chat_notes(request: NotesChatRequest):
 
     try:
         reply = await asyncio.to_thread(_run)
-        return NotesChatResponse(reply=reply)
+        # Increment usage count on success
+        usage.chat_count += 1
+        db.commit()
+        
+        # Create response with remaining chats header
+        from fastapi.responses import JSONResponse
+        remaining = max(0, 5 - usage.chat_count)
+        response = JSONResponse(content={"reply": reply})
+        response.headers["X-Chat-Remaining"] = str(remaining)
+        return response
     except RuntimeError as e:
+        db.rollback()
         raise HTTPException(status_code=503, detail=str(e)) from e
     except HTTPException:
+        db.rollback()
         raise
     except Exception as e:
+        db.rollback()
         logger.error("chat/notes: %s", e)
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail="Chat failed.") from e
 
 
-@app.post("/analyze", response_model=ProcessResponse)
+@app.post("/analyze")
 async def analyze_text(request: ProcessRequest, current_user: any = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
         logger.info(f"Received analyze request from {current_user.email} with text length: {len(request.text)}")
         return process_logic(request.text, user=current_user, db=db)
     except HTTPException:
-        # Re-raise HTTPExceptions as-is
         raise
     except Exception as e:
         logger.error(f"Error in /analyze endpoint: {str(e)}")
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/analyze-file", response_model=ProcessResponse)
 async def analyze_file(file: UploadFile = File(...), current_user: any = Depends(get_current_user), db: Session = Depends(get_db)):
-    file_location = None
     try:
-        # Check file size
-        file.file.seek(0, 2)  # Seek to end
-        file_size = file.file.tell()  # Get position (file size)
-        file.file.seek(0)  # Reset to beginning
-        
-        if file_size > MAX_FILE_SIZE:
-            logger.warning(f"File too large: {file_size} bytes (max: {MAX_FILE_SIZE})")
-            raise HTTPException(status_code=413, detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB")
-        
-        logger.info(f"Received analyze-file request for: {file.filename} ({file_size} bytes)")
+        logger.info(f"Received analyze-file request from {current_user.email}")
         
         # Save uploaded file
         file_location = UPLOAD_DIR / file.filename
@@ -380,20 +524,17 @@ async def analyze_file(file: UploadFile = File(...), current_user: any = Depends
         return process_logic(text, user=current_user, db=db)
         
     except HTTPException:
-        # Re-raise HTTPExceptions as-is
         raise
     except Exception as e:
         logger.error(f"Error in /analyze-file endpoint: {str(e)}")
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"File processing error: {str(e)}")
+        raise HTTPException(status_code=500, detail="File processing error")
     finally:
-        # Ensure cleanup in case of error
         if file_location and os.path.exists(file_location):
             try:
                 os.remove(file_location)
-                logger.info(f"Cleaned up uploaded file: {file_location}")
-            except Exception as cleanup_error:
-                logger.warning(f"Failed to cleanup file {file_location}: {cleanup_error}")
+            except Exception:
+                pass
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))

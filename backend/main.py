@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
@@ -9,8 +9,10 @@ import asyncio
 import uvicorn
 import logging
 import traceback
+import hashlib
 from pathlib import Path
 from dotenv import load_dotenv
+from datetime import datetime, timezone, date
 
 # Configure logging
 logging.basicConfig(
@@ -42,7 +44,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends
 from datetime import datetime
 from app.database import get_db, engine, Base
-from app.models import User
+from app.models import User, DocumentChatUsage
 
 # Initialize database
 try:
@@ -392,7 +394,11 @@ async def explain_concept(request: ExplainConceptRequest):
 
 
 @app.post("/chat/notes", response_model=NotesChatResponse)
-async def chat_notes(request: NotesChatRequest):
+async def chat_notes(
+    request: NotesChatRequest, 
+    current_user: any = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
     """
     Tutor-style Q&A grounded in the student's uploaded notes (requires Gemini API key).
     """
@@ -410,6 +416,36 @@ async def chat_notes(request: NotesChatRequest):
     if len(text) < 50:
         raise HTTPException(status_code=400, detail="Notes text is too short after normalization.")
 
+    # --- Rate limiting: 5 chats per document per user per day ---
+    # Compute document hash from normalized text (first 10000 chars + length)
+    doc_for_hash = text[:10000].strip()
+    doc_hash = hashlib.sha256(doc_for_hash.encode("utf-8")).hexdigest()
+    
+    today_utc = datetime.now(timezone.utc).date()
+    
+    usage = db.query(DocumentChatUsage).filter(
+        DocumentChatUsage.user_id == current_user.id,
+        DocumentChatUsage.document_hash == doc_hash,
+        DocumentChatUsage.date == today_utc
+    ).first()
+    
+    if usage and usage.chat_count >= 5:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Daily limit reached for this document. You've used {usage.chat_count}/5 chats today. Try again tomorrow or start a new analysis."
+        )
+    
+    # Track usage (create if doesn't exist, will increment after success)
+    if not usage:
+        usage = DocumentChatUsage(
+            user_id=current_user.id,
+            document_hash=doc_hash,
+            date=today_utc,
+            chat_count=0
+        )
+        db.add(usage)
+        db.flush()  # Get ID without committing yet
+
     api_key = (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
     hint = (request.summary_hint or "").strip()
 
@@ -426,12 +462,24 @@ async def chat_notes(request: NotesChatRequest):
 
     try:
         reply = await asyncio.to_thread(_run)
-        return NotesChatResponse(reply=reply)
+        # Increment usage count on success
+        usage.chat_count += 1
+        db.commit()
+        
+        # Create response with remaining chats header
+        from fastapi.responses import JSONResponse
+        remaining = max(0, 5 - usage.chat_count)
+        response = JSONResponse(content={"reply": reply})
+        response.headers["X-Chat-Remaining"] = str(remaining)
+        return response
     except RuntimeError as e:
+        db.rollback()
         raise HTTPException(status_code=503, detail=str(e)) from e
     except HTTPException:
+        db.rollback()
         raise
     except Exception as e:
+        db.rollback()
         logger.error("chat/notes: %s", e)
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail="Chat failed.") from e
