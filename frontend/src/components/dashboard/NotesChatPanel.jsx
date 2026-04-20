@@ -10,7 +10,7 @@ function NotesChatPanel({ sourceText, summary }) {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState('');
-    const [remainingChats, setRemainingChats] = useState<number | null>(null);
+    const [remainingChats, setRemainingChats] = useState(null);
     const bottomRef = useRef(null);
 
     useEffect(() => {
