@@ -9,8 +9,6 @@ import NotesChatPanel from '../components/dashboard/NotesChatPanel';
 import QuizSection from '../components/QuizSection';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
 
 function AnalysisResults() {
     const location = useLocation();
@@ -40,8 +38,6 @@ function AnalysisResults() {
 
     const startQuiz = () => {
         setShowQuiz(true);
-        setQuizCompleted(false);
-        setQuizScoreData(null);
         setTimeout(() => {
             quizRef.current?.scrollIntoView({ behavior: 'smooth' });
         }, 100);

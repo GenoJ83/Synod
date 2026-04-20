@@ -14,7 +14,6 @@ import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/fire
 const History = () => {
     const [history, setHistory] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [loadingHistory, setLoadingHistory] = useState(true);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const { user, logout } = useAuth();
@@ -23,20 +22,15 @@ const History = () => {
         const fetchHistory = async () => {
             if (!user) { 
                 console.log("History: User not logged in, clearing list.");
-                setLoadingHistory(false); 
                 return; 
             }
             
-            setLoadingHistory(true);
             const lookupId = user.uid || 'anonymous_user';
             console.log(`History: Fetching records for userId: ${lookupId}`);
             
-            console.log(`History: Attempting to query 'history' collection for userId: ${lookupId}...`);
             try {
                 const historyRef = collection(db, "history");
                 const q = query(historyRef, where("userId", "==", lookupId));
-                
-                console.log("History: Awaiting Firestore response...");
                 const snapshot = await getDocs(q);
                 console.log(`History: Response received! Found ${snapshot.size} records.`);
                 
@@ -50,8 +44,6 @@ const History = () => {
                 setHistory(items);
             } catch (e) {
                 console.error('History: Error loading Firestore data:', e);
-            } finally {
-                setLoadingHistory(false);
             }
         };
         fetchHistory();

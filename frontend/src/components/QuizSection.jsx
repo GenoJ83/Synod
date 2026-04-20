@@ -11,9 +11,11 @@ const QuizSection = ({ quiz, onQuizComplete }) => {
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
     const [answeredTotal, setAnsweredTotal] = useState(0);
-    const [answers, setAnswers] = useState([]); // Track user answers
+    const [answers, setAnswers] = useState([]);
 
-    const shuffleInPlace = (arr) => {
+    // Helper to shuffle an array (Fisher-Yates)
+    const shuffleArray = (array) => {
+        const arr = [...array];
         for (let i = arr.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -21,24 +23,24 @@ const QuizSection = ({ quiz, onQuizComplete }) => {
         return arr;
     };
 
-    /** Round-robin across types so the deck mixes MCQ, blanks, T/F, and comprehension. */
-    const interleaveByType = (mcqQ, fibQ, tfQ, compQ) => {
-        const pools = [mcqQ, fibQ, tfQ, compQ].map((p) => [...p]);
-        const out = [];
-        let guard = 0;
-        const max = mcqQ.length + fibQ.length + tfQ.length + compQ.length + 10;
-        while (pools.some((p) => p.length > 0) && guard < max) {
-            for (const pool of pools) {
-                if (pool.length > 0) out.push(pool.shift());
-            }
-            guard += 1;
-        }
-        return shuffleInPlace(out);
-    };
-
     // Combine all question types into a single quiz array
     const quizData = React.useMemo(() => {
         if (!quiz) return [];
+        
+        const interleaveByType = (mcqQ, fibQ, tfQ, compQ) => {
+            const pools = [mcqQ, fibQ, tfQ, compQ].map((p) => [...p]);
+            const out = [];
+            let guard = 0;
+            const max = mcqQ.length + fibQ.length + tfQ.length + compQ.length + 10;
+            while (pools.some((p) => p.length > 0) && guard < max) {
+                for (const pool of pools) {
+                    if (pool.length > 0) out.push(pool.shift());
+                }
+                guard += 1;
+            }
+            return out;
+        };
+
         const mcqs = quiz.mcqs || [];
         const fibs = quiz.fill_in_the_blanks || [];
         const trueFalse = quiz.true_false || [];
@@ -95,7 +97,7 @@ const QuizSection = ({ quiz, onQuizComplete }) => {
     }, [quiz]);
     React.useEffect(() => {
         if (quizData.length > 0 && !shuffledQuestions) {
-            setShuffledQuestions(shuffleInPlace([...quizData]));
+            setShuffledQuestions(shuffleArray(quizData));
         }
     }, [quizData, shuffledQuestions]);
     
