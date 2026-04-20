@@ -1,13 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, Loader2 } from 'lucide-react';
 import { API_BASE_URL } from '../../config';
-import { useAuth } from '../../context/AuthContext';
 
 /**
  * Grounded tutor chat: POST /chat/notes with source_text from the current analysis.
  */
 function NotesChatPanel({ sourceText, summary }) {
-    const { token } = useAuth();
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -34,14 +32,9 @@ function NotesChatPanel({ sourceText, summary }) {
         setLoading(true);
 
         try {
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-
             const res = await fetch(`${API_BASE_URL}/chat/notes`, {
                 method: 'POST',
-                headers,
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     source_text: sourceText,
                     message: q,

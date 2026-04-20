@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
@@ -61,6 +62,19 @@ try:
             logger.info("Database migration: added missing columns")
     except Exception as e:
         logger.info(f"Database columns check: {str(e)}")
+
+    # Migrate document_chat_usage: drop old table if it uses user_id so new schema (client_ip) is applied cleanly
+    try:
+        from sqlalchemy import text, inspect
+        with engine.connect() as conn:
+            inspector = inspect(engine)
+            cols = [c["name"] for c in inspector.get_columns("document_chat_usage")]
+            if "user_id" in cols and "client_ip" not in cols:
+                conn.execute(text("DROP TABLE IF EXISTS document_chat_usage"))
+                conn.commit()
+                logger.info("Database migration: dropped old document_chat_usage (user_id → client_ip)")
+    except Exception as e:
+        logger.info(f"document_chat_usage migration check: {str(e)}")
     
     logger.info("Database initialized successfully.")
 except Exception as e:
@@ -395,12 +409,13 @@ async def explain_concept(request: ExplainConceptRequest):
 
 @app.post("/chat/notes", response_model=NotesChatResponse)
 async def chat_notes(
-    request: NotesChatRequest, 
-    current_user: any = Depends(get_current_user), 
+    request: NotesChatRequest,
+    http_request: Request,
     db: Session = Depends(get_db)
 ):
     """
-    Tutor-style Q&A grounded in the student's uploaded notes (requires Gemini API key).
+    Tutor-style Q&A grounded in the student's uploaded notes.
+    No authentication required. Rate limited: 5 chats per document per IP per day.
     """
     if len(request.history) > 24:
         raise HTTPException(status_code=400, detail="At most 24 prior turns are supported.")
@@ -416,7 +431,11 @@ async def chat_notes(
     if len(text) < 50:
         raise HTTPException(status_code=400, detail="Notes text is too short after normalization.")
 
-    # --- Rate limiting: 5 chats per document per user per day ---
+    # --- Rate limiting: 5 chats per document per IP per day ---
+    # Get client IP (supports proxies via X-Forwarded-For)
+    forwarded_for = http_request.headers.get("X-Forwarded-For")
+    client_ip = forwarded_for.split(",")[0].strip() if forwarded_for else (http_request.client.host if http_request.client else "unknown")
+
     # Compute document hash from normalized text (first 10000 chars + length)
     doc_for_hash = text[:10000].strip()
     doc_hash = hashlib.sha256(doc_for_hash.encode("utf-8")).hexdigest()
@@ -424,7 +443,7 @@ async def chat_notes(
     today_utc = datetime.now(timezone.utc).date()
     
     usage = db.query(DocumentChatUsage).filter(
-        DocumentChatUsage.user_id == current_user.id,
+        DocumentChatUsage.client_ip == client_ip,
         DocumentChatUsage.document_hash == doc_hash,
         DocumentChatUsage.date == today_utc
     ).first()
@@ -438,7 +457,7 @@ async def chat_notes(
     # Track usage (create if doesn't exist, will increment after success)
     if not usage:
         usage = DocumentChatUsage(
-            user_id=current_user.id,
+            client_ip=client_ip,
             document_hash=doc_hash,
             date=today_utc,
             chat_count=0
