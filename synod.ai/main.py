@@ -31,7 +31,7 @@ from app.nlp.gemini_concept_explain import _gemini_enabled, explain_concept_with
 from app.nlp.gemini_analyzer import analyze_with_gemini
 from app.nlp.notes_chat import (
     build_retrieved_notes_context,
-    gemini_notes_chat_reply,
+    notes_chat_with_cascade,
     notes_chat_enabled,
 )
 from app.ingestion.extractor_service import ExtractorService
@@ -309,7 +309,7 @@ async def chat_notes(request: NotesChatRequest):
     def _run() -> str:
         ctx = build_retrieved_notes_context(text, request.message.strip(), extractor)
         hist = [{"role": t.role, "content": t.content} for t in request.history]
-        return gemini_notes_chat_reply(
+        return notes_chat_with_cascade(
             notes_context=ctx,
             summary_hint=hint,
             question=request.message.strip(),

@@ -101,18 +101,42 @@ def _format_history_block(history: List[Dict[str, str]]) -> str:
     return "\n\n".join(lines).strip()
 
 
-def gemini_notes_chat_reply(
+def notes_chat_with_cascade(
     *,
     notes_context: str,
     summary_hint: str,
     question: str,
     history: List[Dict[str, str]],
-    api_key: str,
+    api_key: Optional[str] = None,
     model: Optional[str] = None,
     timeout_s: float = 75.0,
 ) -> str:
-    model = (model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")).strip()
-    url = f"{_GEMINI_URL.format(model=model)}?key={api_key}"
+    """
+    Multi-provider cascade for notes chat.
+    If api_key is provided, uses only that provider. Otherwise tries all configured providers.
+    """
+    # Build provider configurations
+    providers = []
+    
+    # Check each provider from environment
+    gemini_key = (os.getenv("GOOGLE_API_KEY") or "").strip()
+    groq_key = (os.getenv("GROQ_API_KEY") or "").strip()
+    openrouter_key = (os.getenv("OPENROUTER_API_KEY") or "").strip()
+    
+    # If explicit api_key provided, use only that (for backward compatibility)
+    if api_key:
+        providers = [("gemini", model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash"), api_key, "https://generativelanguage.googleapis.com/v1beta")]
+    else:
+        # Try all configured providers in order
+        if gemini_key:
+            providers.append(("gemini", "gemini-2.5-flash", gemini_key, "https://generativelanguage.googleapis.com/v1beta"))
+        if groq_key:
+            providers.append(("groq", "llama-3.3-70b-versatile", groq_key, "https://api.groq.com/openai/v1"))
+        if openrouter_key:
+            providers.append(("openrouter", "google/gemini-flash-1.5-8b", openrouter_key, "https://openrouter.ai/api/v1"))
+    
+    if not providers:
+        raise RuntimeError("No LLM API keys configured for notes chat (set GOOGLE_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY)")
 
     hint = (summary_hint or "").strip()
     hint_block = ""
@@ -136,72 +160,93 @@ def gemini_notes_chat_reply(
         f"Student question:\n{question.strip()}"
     )
 
-    body: Dict[str, Any] = {
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.4,
-            "maxOutputTokens": 2048,
-        },
-    }
-
-    # Retry configuration
-    max_retries = 3
-    base_delay = 1.0  # seconds
-    last_exception = None
-
-    for attempt in range(max_retries + 1):
-        try:
-            with httpx.Client(timeout=timeout_s) as client:
-                r = client.post(url, json=body)
+    last_error = None
+    
+    for provider, model_name, key, base_url in providers:
+        logger.info("Trying notes chat with %s (%s)...", provider, model_name)
+        
+        # Prepare request based on provider
+        if provider == "gemini":
+            url = f"{_GEMINI_URL.format(model=model_name)}?key={key}"
+            body = {
+                "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.4,
+                    "maxOutputTokens": 2048,
+                },
+            }
+        else:
+            url = f"{base_url}/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json"
+            }
+            body = {
+                "model": model_name,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.4,
+                "max_tokens": 2048,
+            }
+        
+        # Retry logic per provider
+        max_retries = 3
+        base_delay = 1.0
+        
+        for attempt in range(max_retries + 1):
+            try:
+                with httpx.Client(timeout=timeout_s) as client:
+                    if provider == "gemini":
+                        r = client.post(url, json=body)
+                    else:
+                        r = client.post(url, headers=headers, json=body)
                 r.raise_for_status()
                 data = r.json()
-            break  # Success, exit retry loop
-        except httpx.HTTPStatusError as e:
-            last_exception = e
-            status_code = e.response.status_code if e.response else "unknown"
+                
+                # Success! Parse and return
+                if provider == "gemini":
+                    parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+                    text_out = "".join(p.get("text", "") for p in parts if isinstance(p, dict))
+                else:
+                    text_out = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                
+                text_out = (text_out or "").strip()
+                if text_out:
+                    return text_out
+                else:
+                    raise ValueError("Empty response from model")
+                    
+            except httpx.HTTPStatusError as e:
+                last_error = e
+                status_code = e.response.status_code if e.response else "unknown"
+                
+                # Redact API key from logs
+                url_str = str(e.request.url) if e.request else "unknown URL"
+                if key in url_str:
+                    url_str = url_str.replace(key, "API_KEY_REDACTED")
+                
+                logger.warning(
+                    "Notes chat %s HTTP error (attempt %d/%d): %s - %s",
+                    provider, attempt + 1, max_retries + 1, status_code, url_str
+                )
+                
+                # Retry on transient errors
+                if status_code in (429, 503, 500, 502, 504) and attempt < max_retries:
+                    delay = base_delay * (2 ** attempt) + (0.1 * attempt)
+                    logger.info("Retrying in %.1f seconds...", delay)
+                    time.sleep(delay)
+                    continue
+                else:
+                    # Non-retryable or max retries exceeded - try next provider
+                    break
             
-            # Redact API key from logs
-            url_str = str(e.request.url) if e.request else "unknown URL"
-            if api_key in url_str:
-                url_str = url_str.replace(api_key, "API_KEY_REDACTED")
-            
-            logger.warning(
-                "Notes chat HTTP error (attempt %d/%d): %s - %s",
-                attempt + 1,
-                max_retries + 1,
-                status_code,
-                url_str
-            )
-            
-            # Only retry on specific transient status codes
-            if status_code in (503, 429, 500, 502, 504) and attempt < max_retries:
-                delay = base_delay * (2 ** attempt) + (0.1 * attempt)  # exponential backoff with jitter
-                logger.info("Retrying in %.1f seconds...", delay)
-                time.sleep(delay)
-                continue
-            else:
-                raise RuntimeError("The tutor service returned an error. Try again in a moment.") from e
-        except Exception as e:
-            last_exception = e
-            logger.warning("Notes chat request failed (attempt %d/%d): %s", attempt + 1, max_retries + 1, e)
-            if attempt < max_retries:
-                delay = base_delay * (2 ** attempt)
-                time.sleep(delay)
-                continue
-            else:
-                raise RuntimeError("Could not reach the tutor service.") from e
-
-    try:
-        parts = (
-            data.get("candidates", [{}])[0]
-            .get("content", {})
-            .get("parts", [])
-        )
-        text_out = "".join(p.get("text", "") for p in parts if isinstance(p, dict))
-    except (IndexError, TypeError, AttributeError):
-        text_out = ""
-
-    text_out = (text_out or "").strip()
-    if not text_out:
-        raise RuntimeError("Empty response from tutor model.")
-    return text_out
+            except Exception as e:
+                last_error = e
+                logger.warning("Notes chat %s request failed (attempt %d/%d): %s", provider, attempt + 1, max_retries + 1, e)
+                if attempt < max_retries:
+                    delay = base_delay * (2 ** attempt)
+                    time.sleep(delay)
+                    continue
+                break
+    
+    # If we get here, all providers failed
+    raise RuntimeError(f"All LLM providers failed. Last error: {last_error}")
