@@ -34,7 +34,7 @@ function NotesChatPanel({ sourceText, summary }) {
         setLoading(true);
 
         try {
-            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            const headers = { 'Content-Type': 'application/json' };
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
