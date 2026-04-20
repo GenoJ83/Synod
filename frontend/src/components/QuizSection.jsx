@@ -5,12 +5,13 @@ import {
     HelpCircle, Trophy, RefreshCw
 } from 'lucide-react';
 
-const QuizSection = ({ quiz }) => {
+const QuizSection = ({ quiz, onQuizComplete }) => {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
     const [answeredTotal, setAnsweredTotal] = useState(0);
+    const [answers, setAnswers] = useState([]); // Track user answers
 
     const shuffleInPlace = (arr) => {
         for (let i = arr.length - 1; i > 0; i--) {
@@ -51,7 +52,8 @@ const QuizSection = ({ quiz }) => {
                 question: q.question,
                 options: opts,
                 correct: idx,
-                type: 'mcq'
+                type: 'mcq',
+                explanation: q.explanation
             };
         });
 
@@ -104,6 +106,16 @@ const QuizSection = ({ quiz }) => {
         setSelectedAnswer(index);
         setAnsweredTotal(prev => prev + 1);
 
+        // Track which answer was selected
+        const currentQ = displayQuestions[currentQuestion];
+        setAnswers(prev => [...prev, {
+            questionIndex: currentQuestion,
+            selected: index,
+            correct: currentQ.correct,
+            type: currentQ.type,
+            question: currentQ.question
+        }]);
+
         if (index === displayQuestions[currentQuestion].correct) {
             setScore(prev => prev + 1);
         }
@@ -115,6 +127,17 @@ const QuizSection = ({ quiz }) => {
             setSelectedAnswer(null);
         } else {
             setShowResults(true);
+            // Notify parent of quiz completion with detailed results
+            if (onQuizComplete) {
+                onQuizComplete({
+                    score,
+                    total: displayQuestions.length,
+                    answered: answeredTotal,
+                    percentage: Math.round((score / Math.max(1, answeredTotal)) * 100),
+                    answers,
+                    questions: displayQuestions
+                });
+            }
         }
     };
 
@@ -124,6 +147,7 @@ const QuizSection = ({ quiz }) => {
         setShowResults(false);
         setScore(0);
         setAnsweredTotal(0);
+        setAnswers([]);
     };
 
     const endQuizEarly = () => {
@@ -131,7 +155,55 @@ const QuizSection = ({ quiz }) => {
     };
 
     const downloadReport = () => {
-        const content = `Synod Analysis Assessment Report\n================================\nScore: ${score} / ${answeredTotal || displayQuestions.length} (${Math.round((score / Math.max(1, answeredTotal || displayQuestions.length)) * 100)}%)\n\nThank you for using Synod!`;
+        const timestamp = new Date().toLocaleString();
+        const percentage = Math.round((score / Math.max(1, answeredTotal || displayQuestions.length)) * 100);
+        
+        // Build detailed report
+        let content = `Synod Assessment Report\n`;
+        content += `===============================================\n\n`;
+        content += `Generated: ${timestamp}\n`;
+        content += `Overall Score: ${score} / ${answeredTotal || displayQuestions.length} (${percentage}%)\n\n`;
+        
+        // Summary by question type
+        const typeStats = {};
+        answers.forEach((ans) => {
+            if (!typeStats[ans.type]) {
+                typeStats[ans.type] = { total: 0, correct: 0 };
+            }
+            typeStats[ans.type].total++;
+            if (ans.selected === ans.correct) {
+                typeStats[ans.type].correct++;
+            }
+        });
+        
+        content += `Performance by Category:\n`;
+        content += `-------------------------\n`;
+        Object.entries(typeStats).forEach(([type, stats]) => {
+            const typePercent = Math.round((stats.correct / stats.total) * 100);
+            const typeLabel = type === 'mcq' ? 'Multiple Choice' :
+                            type === 'fib' ? 'Fill in the Blank' :
+                            type === 'true_false' ? 'True/False' :
+                            type === 'comprehension' ? 'Comprehension' : type;
+            content += `${typeLabel}: ${stats.correct}/${stats.total} (${typePercent}%)\n`;
+        });
+        
+        content += `\nDetailed Review:\n`;
+        content += `----------------\n`;
+        answers.forEach((ans, idx) => {
+            content += `\nQuestion ${idx + 1} (${ans.type}):\n`;
+            content += `  ${ans.question}\n`;
+            const isCorrect = ans.selected === ans.correct;
+            content += `  Your answer: ${displayQuestions[ans.questionIndex]?.options[ans.selected] || 'Not answered'}\n`;
+            content += `  Correct answer: ${displayQuestions[ans.questionIndex]?.options[ans.correct]}\n`;
+            content += `  Status: ${isCorrect ? '✓ Correct' : '✗ Incorrect'}\n`;
+            if (displayQuestions[ans.questionIndex]?.explanation) {
+                content += `  Explanation: ${displayQuestions[ans.questionIndex].explanation}\n`;
+            }
+        });
+        
+        content += `\n===============================================\n`;
+        content += `Thank you for using Synod! Continue revisiting your Knowledge Archive to reinforce learning.\n`;
+        
         const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
@@ -227,8 +299,10 @@ const QuizSection = ({ quiz }) => {
                     {question.options.map((option, i) => {
                         const isSelected = selectedAnswer === i;
                         const isCorrect = i === question.correct;
-                        const showCorrect = selectedAnswer !== null && isCorrect;
-                        const showWrong = isSelected && !isCorrect;
+                        // Show correct answer if an answer has been selected
+                        const showCorrectHighlight = selectedAnswer !== null && isCorrect;
+                        // Show wrong styling only on the selected answer that is incorrect
+                        const showWrongHighlight = isSelected && selectedAnswer !== null && !isCorrect;
 
                         return (
                             <button
@@ -238,25 +312,27 @@ const QuizSection = ({ quiz }) => {
                                 className={`
                                     p-6 rounded-2xl border text-left transition-all flex items-center justify-between group
                                     ${isSelected ? 'scale-[1.02]' : 'hover:scale-[1.01]'}
-                                    ${showCorrect ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500' :
-                                        showWrong ? 'bg-red-500/10 border-red-500 text-red-500' :
-                                            isSelected ? 'border-blue-500 bg-blue-500/5 text-blue-500' :
-                                                'border-app-border bg-app-card/50 hover:bg-app-card hover:border-app-muted'}
+                                    ${showCorrectHighlight ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500' :
+                                        showWrongHighlight ? 'bg-red-500/10 border-red-500 text-red-500' :
+                                            selectedAnswer !== null && !isCorrect ? 'border-app-border bg-app-card/50 opacity-60' :
+                                                isSelected ? 'border-blue-500 bg-blue-500/5 text-blue-500' :
+                                                    'border-app-border bg-app-card/50 hover:bg-app-card hover:border-app-muted'}
                                 `}
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={`w-8 h-8 rounded-lg border flex items-center justify-center font-bold text-xs transition-colors
-                                        ${showCorrect ? 'bg-emerald-500 border-emerald-400 text-white' :
-                                            showWrong ? 'bg-red-500 border-red-400 text-white' :
-                                                isSelected ? 'bg-blue-500 border-blue-400 text-white' :
-                                                    'bg-app-bg border-app-border text-app-muted group-hover:border-app-muted'}
+                                        ${showCorrectHighlight ? 'bg-emerald-500 border-emerald-400 text-white' :
+                                            showWrongHighlight ? 'bg-red-500 border-red-400 text-white' :
+                                                selectedAnswer !== null && !isCorrect ? 'bg-app-bg border-app-border text-app-muted' :
+                                                    isSelected ? 'bg-blue-500 border-blue-400 text-white' :
+                                                        'bg-app-bg border-app-border text-app-muted group-hover:border-app-muted'}
                                     `}>
                                         {String.fromCharCode(65 + i)}
                                     </div>
                                     <span className="font-medium">{option}</span>
                                 </div>
-                                {showCorrect && <CheckCircle2 className="w-5 h-5" />}
-                                {showWrong && <AlertCircle className="w-5 h-5" />}
+                                {showCorrectHighlight && <CheckCircle2 className="w-5 h-5" />}
+                                {showWrongHighlight && <AlertCircle className="w-5 h-5" />}
                             </button>
                         );
                     })}

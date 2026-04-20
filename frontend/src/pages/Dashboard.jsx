@@ -86,6 +86,8 @@ function Dashboard() {
                     console.log("Saving to history (Firestore)...");
                     const docRef = await addDoc(collection(db, "history"), newEntry);
                     console.log("Saved to history with ID:", docRef.id);
+                    // Attach the doc ID to the entry so we can update it later (e.g., quiz score)
+                    newEntry.id = docRef.id;
                 } catch (fbErr) {
                     console.error("Firestore error (non-blocking):", fbErr);
                 }
@@ -122,6 +124,8 @@ function Dashboard() {
                 console.log("Saving to history (Firestore)...");
                 const docRef = await addDoc(collection(db, "history"), newEntry);
                 console.log("Saved to history with ID:", docRef.id);
+                // Attach the doc ID to the entry so we can update it later (e.g., quiz score)
+                newEntry.id = docRef.id;
             } catch (fbErr) {
                 console.error("Firestore error (non-blocking):", fbErr);
             }

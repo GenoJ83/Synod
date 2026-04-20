@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     History as HistoryIcon, Search, Calendar, ChevronRight,
-    Trash2, ArrowLeft, Clock, Sun, Moon, LogOut
+    Trash2, ArrowLeft, Clock, Sun, Moon, LogOut, Trophy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
 import { db } from '../firebase';
-import { collection, query, where, getDocs, deleteDoc, doc, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
 const History = () => {
     const [history, setHistory] = useState([]);
@@ -172,8 +172,47 @@ const History = () => {
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
-                                        <h3 className="text-lg font-bold mb-3 group-hover:text-blue-500 transition-colors line-clamp-2">{item.title || 'Untitled Analysis'}</h3>
-                                        <p className="text-app-muted text-sm line-clamp-3 mb-6 flex-1 italic">"{item.summary || 'No summary available'}"</p>
+                                         <h3 className="text-lg font-bold mb-3 group-hover:text-blue-500 transition-colors line-clamp-2 flex items-start gap-2">
+                                            {item.quizScore != null && <Trophy className="w-4 h-4 text-amber-500 mt-1 shrink-0" />}
+                                            {item.title || 'Untitled Analysis'}
+                                         </h3>
+                                         <p className="text-app-muted text-sm line-clamp-3 mb-4 flex-1 italic">"{item.summary || 'No summary available'}"</p>
+
+                                         {item.quizScore != null && (
+                                            <div className="mb-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-app-muted uppercase tracking-wider">Quiz Score</span>
+                                                    <div className={`h-2 w-2 rounded-full ${item.quizScore >= 70 ? 'bg-emerald-500' : item.quizScore >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <div className="flex-1 h-1.5 bg-app-border rounded-full overflow-hidden">
+                                                        <div 
+                                                            className={`h-full ${item.quizScore >= 70 ? 'bg-emerald-500' : item.quizScore >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                                            style={{ width: `${item.quizScore}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-xs font-bold text-app-fg">{item.quizScore}%</span>
+                                                </div>
+                                            </div>
+                                         )}
+
+                                         {item.quizScore != null && (
+                                            <div className="mb-4">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-xs font-bold text-app-muted uppercase tracking-wider">Quiz Score</span>
+                                                    <div className={`h-2 w-2 rounded-full ${item.quizScore >= 70 ? 'bg-emerald-500' : item.quizScore >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex-1 h-2 bg-app-border rounded-full overflow-hidden">
+                                                        <div 
+                                                            className={`h-full transition-all ${item.quizScore >= 70 ? 'bg-emerald-500' : item.quizScore >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                                            style={{ width: `${item.quizScore}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-sm font-bold text-app-fg">{item.quizScore}%</span>
+                                                </div>
+                                            </div>
+                                         )}
 
                                         <div className="pt-6 border-t border-app-border flex items-center justify-between">
                                             <div className="flex gap-1">

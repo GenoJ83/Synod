@@ -109,16 +109,54 @@ def _call_gemini(model: str, key: str, base_url: str, prompt: str) -> Optional[D
             "maxOutputTokens": 8192,
         },
     }
-    with httpx.Client(timeout=90.0) as client:
-        r = client.post(url, json=body)
-        if r.status_code == 429 or r.status_code == 503:
-            raise Exception(f"Gemini Busy ({r.status_code})")
-        r.raise_for_status()
-        data = r.json()
-        
-        parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-        text_out = "".join(p.get("text", "") for p in parts if isinstance(p, dict))
-        return _parse_json_object(text_out)
+    
+    # Retry configuration
+    max_retries = 3
+    base_delay = 1.0
+    
+    for attempt in range(max_retries + 1):
+        try:
+            with httpx.Client(timeout=90.0) as client:
+                r = client.post(url, json=body)
+            
+            # Handle specific status codes that should be retried
+            if r.status_code in (429, 503, 500, 502, 504):
+                if attempt < max_retries:
+                    delay = base_delay * (2 ** attempt) + (0.1 * attempt)
+                    logger.warning(
+                        "Gemini %s returned %d, retrying in %.1f s (attempt %d/%d)",
+                        model, r.status_code, delay, attempt + 1, max_retries + 1
+                    )
+                    time.sleep(delay)
+                    continue
+                else:
+                    raise Exception(f"Gemini Busy ({r.status_code}) after {max_retries} retries")
+            
+            r.raise_for_status()
+            data = r.json()
+            
+            parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+            text_out = "".join(p.get("text", "") for p in parts if isinstance(p, dict))
+            return _parse_json_object(text_out)
+            
+        except httpx.HTTPStatusError as e:
+            # For non-retried status codes (e.g., 400, 401, 403), fail immediately
+            status_code = e.response.status_code if e.response else "unknown"
+            url_str = str(e.request.url) if e.request else "unknown URL"
+            if key in url_str:
+                url_str = url_str.replace(key, "API_KEY_REDACTED")
+            log_msg = f"Gemini HTTP error {status_code}: {e} - URL: {url_str}"
+            logger.error(log_msg)
+            raise Exception(log_msg) from e
+        except Exception as e:
+            if attempt < max_retries:
+                delay = base_delay * (2 ** attempt)
+                logger.warning("Gemini request failed, retrying in %.1f s: %s", delay, e)
+                time.sleep(delay)
+                continue
+            raise
+    
+    return None
 
 def _call_openai_compatible(provider: str, model: str, key: str, base_url: str, prompt: str) -> Optional[Dict[str, Any]]:
     url = f"{base_url}/chat/completions"
@@ -138,12 +176,49 @@ def _call_openai_compatible(provider: str, model: str, key: str, base_url: str, 
         "response_format": {"type": "json_object"} if provider != "groq" else None # Groq doesn't always support json_object mode on all models
     }
     
-    with httpx.Client(timeout=90.0) as client:
-        r = client.post(url, headers=headers, json=body)
-        if r.status_code == 429 or r.status_code == 503:
-            raise Exception(f"{provider} Busy ({r.status_code})")
-        r.raise_for_status()
-        data = r.json()
-        
-        text_out = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        return _parse_json_object(text_out)
+    # Retry configuration
+    max_retries = 3
+    base_delay = 1.0
+    
+    for attempt in range(max_retries + 1):
+        try:
+            with httpx.Client(timeout=90.0) as client:
+                r = client.post(url, headers=headers, json=body)
+            
+            # Handle specific status codes that should be retried
+            if r.status_code in (429, 503, 500, 502, 504):
+                if attempt < max_retries:
+                    delay = base_delay * (2 ** attempt) + (0.1 * attempt)
+                    logger.warning(
+                        "%s (%s) returned %d, retrying in %.1f s (attempt %d/%d)",
+                        provider, model, r.status_code, delay, attempt + 1, max_retries + 1
+                    )
+                    time.sleep(delay)
+                    continue
+                else:
+                    raise Exception(f"{provider} Busy ({r.status_code}) after {max_retries} retries")
+            
+            r.raise_for_status()
+            data = r.json()
+            
+            text_out = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            return _parse_json_object(text_out)
+            
+        except httpx.HTTPStatusError as e:
+            # For non-retried status codes, fail immediately
+            status_code = e.response.status_code if e.response else "unknown"
+            url_str = str(e.request.url) if e.request else "unknown URL"
+            if key in url_str:
+                url_str = url_str.replace(key, "API_KEY_REDACTED")
+            log_msg = f"{provider} HTTP error {status_code}: {e} - URL: {url_str}"
+            logger.error(log_msg)
+            raise Exception(log_msg) from e
+        except Exception as e:
+            if attempt < max_retries:
+                delay = base_delay * (2 ** attempt)
+                logger.warning("%s request failed, retrying in %.1f s: %s", provider, delay, e)
+                time.sleep(delay)
+                continue
+            raise
+    
+    return None

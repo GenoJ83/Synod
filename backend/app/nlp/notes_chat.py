@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import time
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -143,17 +144,52 @@ def gemini_notes_chat_reply(
         },
     }
 
-    try:
-        with httpx.Client(timeout=timeout_s) as client:
-            r = client.post(url, json=body)
-            r.raise_for_status()
-            data = r.json()
-    except httpx.HTTPStatusError as e:
-        logger.warning("Notes chat HTTP error: %s", e)
-        raise RuntimeError("The tutor service returned an error. Try again in a moment.") from e
-    except Exception as e:
-        logger.warning("Notes chat request failed: %s", e)
-        raise RuntimeError("Could not reach the tutor service.") from e
+    # Retry configuration
+    max_retries = 3
+    base_delay = 1.0  # seconds
+    last_exception = None
+
+    for attempt in range(max_retries + 1):
+        try:
+            with httpx.Client(timeout=timeout_s) as client:
+                r = client.post(url, json=body)
+                r.raise_for_status()
+                data = r.json()
+            break  # Success, exit retry loop
+        except httpx.HTTPStatusError as e:
+            last_exception = e
+            status_code = e.response.status_code if e.response else "unknown"
+            
+            # Redact API key from logs
+            url_str = str(e.request.url) if e.request else "unknown URL"
+            if api_key in url_str:
+                url_str = url_str.replace(api_key, "API_KEY_REDACTED")
+            
+            logger.warning(
+                "Notes chat HTTP error (attempt %d/%d): %s - %s",
+                attempt + 1,
+                max_retries + 1,
+                status_code,
+                url_str
+            )
+            
+            # Only retry on specific transient status codes
+            if status_code in (503, 429, 500, 502, 504) and attempt < max_retries:
+                delay = base_delay * (2 ** attempt) + (0.1 * attempt)  # exponential backoff with jitter
+                logger.info("Retrying in %.1f seconds...", delay)
+                time.sleep(delay)
+                continue
+            else:
+                raise RuntimeError("The tutor service returned an error. Try again in a moment.") from e
+        except Exception as e:
+            last_exception = e
+            logger.warning("Notes chat request failed (attempt %d/%d): %s", attempt + 1, max_retries + 1, e)
+            if attempt < max_retries:
+                delay = base_delay * (2 ** attempt)
+                time.sleep(delay)
+                continue
+            else:
+                raise RuntimeError("Could not reach the tutor service.") from e
 
     try:
         parts = (

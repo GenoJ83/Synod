@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import re
+import time
 from typing import Any, Dict, Optional
 
 import httpx
@@ -82,17 +83,45 @@ def explain_concept_with_gemini(
         },
     }
 
-    try:
-        with httpx.Client(timeout=timeout_s) as client:
-            r = client.post(url, json=body)
-            r.raise_for_status()
-            data = r.json()
-    except httpx.HTTPStatusError as e:
-        logger.warning("Gemini concept explain HTTP error: %s", e)
-        return None
-    except Exception as e:
-        logger.warning("Gemini concept explain request failed: %s", e)
-        return None
+    # Retry configuration
+    max_retries = 3
+    base_delay = 1.0  # seconds
+
+    for attempt in range(max_retries + 1):
+        try:
+            with httpx.Client(timeout=timeout_s) as client:
+                r = client.post(url, json=body)
+                r.raise_for_status()
+                data = r.json()
+            break  # Success
+        except httpx.HTTPStatusError as e:
+            status_code = e.response.status_code if e.response else "unknown"
+            
+            # Redact API key from logs
+            url_str = str(e.request.url) if e.request else "unknown URL"
+            if api_key in url_str:
+                url_str = url_str.replace(api_key, "API_KEY_REDACTED")
+            
+            logger.warning(
+                "Gemini concept explain HTTP error (attempt %d/%d): %s - %s",
+                attempt + 1,
+                max_retries + 1,
+                status_code,
+                url_str
+            )
+            
+            if status_code in (503, 429, 500, 502, 504) and attempt < max_retries:
+                delay = base_delay * (2 ** attempt) + (0.1 * attempt)
+                time.sleep(delay)
+                continue
+            return None
+        except Exception as e:
+            logger.warning("Gemini concept explain request failed (attempt %d/%d): %s", attempt + 1, max_retries + 1, e)
+            if attempt < max_retries:
+                delay = base_delay * (2 ** attempt)
+                time.sleep(delay)
+                continue
+            return None
 
     try:
         parts = (
